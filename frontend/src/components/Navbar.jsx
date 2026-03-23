@@ -25,9 +25,13 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-10 text-sm">
             <div className="flex items-center space-x-6">
+              <Link to="/domain-registry" className="hover:text-teal-200 transition-colors">
+                .bw Domain Registry
+              </Link>
+              <Link to="/live-qos" className="hover:text-teal-200 transition-colors">
+                Live QoS Monitoring
+              </Link>
               <a href="#" className="hover:text-teal-200 transition-colors">Search BOCRA</a>
-              <a href="#" className="hover:text-teal-200 transition-colors">BOCRA Portal</a>
-              <a href="#" className="hover:text-teal-200 transition-colors">QOS Monitoring</a>
             </div>
             <div className="flex items-center space-x-4">
               <span>Plot 50671 Independence Avenue, Gaborone</span>

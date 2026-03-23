@@ -19,6 +19,8 @@ import LicenseApplication from './pages/LicenseApplication';
 import Complaints from './pages/Complaints';
 import QoSReporting from './pages/QoSReporting';
 import AdminDashboard from './pages/AdminDashboard';
+import DomainRegistry from './pages/DomainRegistry';
+import LiveQoSMonitoring from './pages/LiveQoSMonitoring';
 
 function App() {
   return (
@@ -40,6 +42,8 @@ function App() {
           <Route path="/complaints" element={<Complaints />} />
           <Route path="/qos-reporting" element={<QoSReporting />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/domain-registry" element={<DomainRegistry />} />
+          <Route path="/live-qos" element={<LiveQoSMonitoring />} />
         </Routes>
         <Footer />
         <AccessibilityMenu />

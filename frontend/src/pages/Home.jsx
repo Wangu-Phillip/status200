@@ -143,6 +143,22 @@ const Home = () => {
             <p className="text-xl text-gray-600">Comprehensive regulatory and compliance services</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Link to="/domain-registry">
+              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-teal-500">
+                <CardHeader>
+                  <CardTitle className="text-lg">.bw Domain Registry</CardTitle>
+                  <CardDescription>Register and manage your .bw domain names</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+            <Link to="/live-qos">
+              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-teal-500">
+                <CardHeader>
+                  <CardTitle className="text-lg">Live QoS Monitoring</CardTitle>
+                  <CardDescription>Real-time network performance dashboard</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
             <Link to="/type-approval">
               <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-teal-500">
                 <CardHeader>
