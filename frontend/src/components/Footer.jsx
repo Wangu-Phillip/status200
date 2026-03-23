@@ -126,7 +126,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center text-sm">
-            <p>&copy; 2025 Botswana Communications Regulatory Authority. All rights reserved.</p>
+            <p>&copy; 2025 Botswana Communications Regulatory Authority. All rights reserved. | Built by STATUS 200</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="hover:text-teal-400 transition-colors">
                 Privacy Policy
