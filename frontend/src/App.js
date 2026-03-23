@@ -5,6 +5,12 @@ import { Toaster } from './components/ui/toaster';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
+import About from './pages/About';
+import Mandate from './pages/Mandate';
+import Projects from './pages/Projects';
+import Documents from './pages/Documents';
+import Media from './pages/Media';
+import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TypeApproval from './pages/TypeApproval';
@@ -20,6 +26,12 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/mandate" element={<Mandate />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/media" element={<Media />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/type-approval" element={<TypeApproval />} />

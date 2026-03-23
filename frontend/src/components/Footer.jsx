@@ -31,15 +31,37 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-teal-400 transition-colors">
+                <Link to="/about" className="hover:text-teal-400 transition-colors">
                   About BOCRA
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-teal-400 transition-colors">
+                <Link to="/mandate" className="hover:text-teal-400 transition-colors">
                   Our Mandate
-                </a>
+                </Link>
               </li>
+              <li>
+                <Link to="/projects" className="hover:text-teal-400 transition-colors">
+                  Projects
+                </Link>
+              </li>
+              <li>
+                <Link to="/documents" className="hover:text-teal-400 transition-colors">
+                  Documents
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-teal-400 transition-colors">
+                  Contact Us
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Services */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Services</h3>
+            <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/type-approval" className="hover:text-teal-400 transition-colors">
                   Type Approval
@@ -55,36 +77,14 @@ const Footer = () => {
                   File Complaint
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          {/* Services */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Services</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="hover:text-teal-400 transition-colors">
-                  Telecommunications
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-teal-400 transition-colors">
-                  Broadcasting
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-teal-400 transition-colors">
-                  Postal Services
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-teal-400 transition-colors">
-                  Internet & ICT
-                </a>
-              </li>
               <li>
                 <Link to="/qos-reporting" className="hover:text-teal-400 transition-colors">
                   QoS Monitoring
+                </Link>
+              </li>
+              <li>
+                <Link to="/media" className="hover:text-teal-400 transition-colors">
+                  Media Center
                 </Link>
               </li>
             </ul>

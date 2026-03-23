@@ -62,33 +62,54 @@ const Navbar = () => {
                 Home
               </Button>
             </Link>
-            <Button variant="ghost" className="text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-              About
-              <ChevronDown className="ml-1 h-4 w-4" />
-            </Button>
-            <Button variant="ghost" className="text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-              Mandate
-              <ChevronDown className="ml-1 h-4 w-4" />
-            </Button>
-            <Link to="/type-approval">
+            <Link to="/about">
               <Button
                 variant="ghost"
-                className={`${isActive('/type-approval') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
+                className={`${isActive('/about') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
               >
-                Type Approval
+                About
               </Button>
             </Link>
-            <Link to="/complaints">
+            <Link to="/mandate">
               <Button
                 variant="ghost"
-                className={`${isActive('/complaints') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
+                className={`${isActive('/mandate') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
               >
-                Complaints
+                Mandate
               </Button>
             </Link>
-            <Button variant="ghost" className="text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-              Media
-            </Button>
+            <Link to="/projects">
+              <Button
+                variant="ghost"
+                className={`${isActive('/projects') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
+              >
+                Projects
+              </Button>
+            </Link>
+            <Link to="/documents">
+              <Button
+                variant="ghost"
+                className={`${isActive('/documents') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
+              >
+                Documents
+              </Button>
+            </Link>
+            <Link to="/media">
+              <Button
+                variant="ghost"
+                className={`${isActive('/media') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
+              >
+                Media
+              </Button>
+            </Link>
+            <Link to="/contact">
+              <Button
+                variant="ghost"
+                className={`${isActive('/contact') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
+              >
+                Contact
+              </Button>
+            </Link>
           </div>
 
           {/* Auth Buttons */}
@@ -139,12 +160,31 @@ const Navbar = () => {
                 Home
               </Button>
             </Link>
-            <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-              About
-            </Button>
-            <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-              Mandate
-            </Button>
+            <Link to="/about" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
+                About
+              </Button>
+            </Link>
+            <Link to="/mandate" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
+                Mandate
+              </Button>
+            </Link>
+            <Link to="/projects" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
+                Projects
+              </Button>
+            </Link>
+            <Link to="/documents" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
+                Documents
+              </Button>
+            </Link>
+            <Link to="/media" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
+                Media
+              </Button>
+            </Link>
             <Link to="/type-approval" onClick={() => setMobileMenuOpen(false)}>
               <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
                 Type Approval
@@ -153,6 +193,11 @@ const Navbar = () => {
             <Link to="/complaints" onClick={() => setMobileMenuOpen(false)}>
               <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
                 Complaints
+              </Button>
+            </Link>
+            <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
+                Contact
               </Button>
             </Link>
             <div className="pt-4 border-t border-gray-200 space-y-2">
