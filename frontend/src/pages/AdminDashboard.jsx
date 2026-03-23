@@ -6,6 +6,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { adminApplications, qosMetrics } from '../mockData';
+import Analytics from '../components/Analytics';
 import {
   Users,
   FileText,
@@ -84,6 +85,9 @@ const AdminDashboard = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
           <p className="text-lg text-gray-600">BOCRA Staff Portal - Application Review & Management</p>
         </div>
+
+        {/* Analytics Dashboard */}
+        <Analytics userType="admin" />
 
         {/* Stats Overview */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">

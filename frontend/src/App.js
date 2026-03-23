@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from './components/ui/toaster';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import AccessibilityMenu from './components/AccessibilityMenu';
 import Home from './pages/Home';
 import About from './pages/About';
 import Mandate from './pages/Mandate';
@@ -41,6 +42,7 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
         <Footer />
+        <AccessibilityMenu />
         <Toaster />
       </BrowserRouter>
     </div>

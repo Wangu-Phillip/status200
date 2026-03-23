@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Badge } from '../components/ui/badge';
 import { FileText, AlertCircle, Upload, CheckCircle, Clock, XCircle, Plus } from 'lucide-react';
 import { userApplications, userComplaints } from '../mockData';
+import Analytics from '../components/Analytics';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -50,6 +51,9 @@ const Dashboard = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome, {user.name}</h1>
           <p className="text-lg text-gray-600">{user.organization || 'Client Portal'}</p>
         </div>
+
+        {/* Analytics Component */}
+        <Analytics userType="client" />
 
         {/* Quick Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">

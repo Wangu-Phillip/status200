@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import GlobalSearch from './GlobalSearch';
+import NotificationCenter from './NotificationCenter';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -114,6 +116,8 @@ const Navbar = () => {
 
           {/* Auth Buttons */}
           <div className="hidden lg:flex items-center space-x-3">
+            <GlobalSearch />
+            {user && <NotificationCenter />}
             {user ? (
               <>
                 <Link to="/dashboard">

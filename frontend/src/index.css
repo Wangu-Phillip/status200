@@ -113,3 +113,56 @@ code {
         border-bottom-color: inherit;
     }
 }
+
+
+/* Accessibility Enhancements */
+.high-contrast {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    filter: contrast(1.2);
+}
+
+.high-contrast .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+}
+
+.large-text {
+    line-height: 1.8 !important;
+}
+
+.large-text p, .large-text span, .large-text div {
+    line-height: 1.8 !important;
+}
+
+/* Skip to main content link */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 100;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* Focus visible improvements */
+*:focus-visible {
+    outline: 2px solid #0d9488;
+    outline-offset: 2px;
+}
+
+/* Keyboard navigation helper */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid #0d9488 !important;
+    outline-offset: 2px !important;
+}
