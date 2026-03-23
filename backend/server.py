@@ -1,7 +1,9 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Depends
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import Column, String, DateTime, func
 import os
 import logging
 from pathlib import Path
@@ -14,10 +16,18 @@ from datetime import datetime, timezone
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# PostgreSQL connection
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql+asyncpg://user:password@localhost:5432/status200')
+
+engine = create_async_engine(DATABASE_URL, echo=True)
+async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+class Base(DeclarativeBase):
+    pass
+
+async def get_db():
+    async with async_session_maker() as session:
+        yield session
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -25,14 +35,27 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+@app.on_event("startup")
+async def startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+
+# Define Database Model
+class StatusCheckDB(Base):
+    __tablename__ = "status_checks"
     
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    client_name = Column(String, nullable=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+# Pydantic Models for API
+class StatusCheckResponse(BaseModel):
+    id: str
     client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
 
 class StatusCheckCreate(BaseModel):
     client_name: str
@@ -42,28 +65,24 @@ class StatusCheckCreate(BaseModel):
 async def root():
     return {"message": "Hello World"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
+@api_router.post("/status", response_model=StatusCheckResponse)
+async def create_status_check(input: StatusCheckCreate, db: AsyncSession = Depends(get_db)):
+    status_check = StatusCheckDB(
+        id=str(uuid.uuid4()),
+        client_name=input.client_name
+    )
     
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
+    db.add(status_check)
+    await db.commit()
+    await db.refresh(status_check)
     
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+    return status_check
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
+@api_router.get("/status", response_model=List[StatusCheckResponse])
+async def get_status_checks(db: AsyncSession = Depends(get_db)):
+    from sqlalchemy import select
+    result = await db.execute(select(StatusCheckDB))
+    status_checks = result.scalars().all()
     return status_checks
 
 # Include the router in the main app
@@ -85,5 +104,5 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+async def shutdown_db_engine():
+    await engine.dispose()
