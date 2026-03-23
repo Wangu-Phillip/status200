@@ -1,0 +1,148 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { MapPin, Phone, Mail, Facebook, Twitter, Linkedin, Youtube } from 'lucide-react';
+
+const Footer = () => {
+  return (
+    <footer className="bg-gray-900 text-gray-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid md:grid-cols-4 gap-8">
+          {/* About */}
+          <div>
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold">B</span>
+              </div>
+              <span className="ml-2 text-xl font-bold text-white">BOCRA</span>
+            </div>
+            <p className="text-sm leading-relaxed mb-4">
+              Botswana Communications Regulatory Authority regulates the communications sector including
+              telecommunications, broadcasting, postal services, and ICT.
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Quick Links</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/" className="hover:text-teal-400 transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <a href="#" className="hover:text-teal-400 transition-colors">
+                  About BOCRA
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-teal-400 transition-colors">
+                  Our Mandate
+                </a>
+              </li>
+              <li>
+                <Link to="/type-approval" className="hover:text-teal-400 transition-colors">
+                  Type Approval
+                </Link>
+              </li>
+              <li>
+                <Link to="/license-application" className="hover:text-teal-400 transition-colors">
+                  License Application
+                </Link>
+              </li>
+              <li>
+                <Link to="/complaints" className="hover:text-teal-400 transition-colors">
+                  File Complaint
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Services */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Services</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <a href="#" className="hover:text-teal-400 transition-colors">
+                  Telecommunications
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-teal-400 transition-colors">
+                  Broadcasting
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-teal-400 transition-colors">
+                  Postal Services
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-teal-400 transition-colors">
+                  Internet & ICT
+                </a>
+              </li>
+              <li>
+                <Link to="/qos-reporting" className="hover:text-teal-400 transition-colors">
+                  QoS Monitoring
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Contact Us</h3>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start">
+                <MapPin className="h-5 w-5 mr-2 flex-shrink-0 text-teal-400" />
+                <span>Plot 50671 Independence Avenue<br />Gaborone, Botswana</span>
+              </li>
+              <li className="flex items-center">
+                <Phone className="h-5 w-5 mr-2 text-teal-400" />
+                <span>+267 395 7755</span>
+              </li>
+              <li className="flex items-center">
+                <Mail className="h-5 w-5 mr-2 text-teal-400" />
+                <span>info@bocra.org.bw</span>
+              </li>
+            </ul>
+            <div className="flex space-x-3 mt-6">
+              <a href="#" className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-teal-600 transition-colors">
+                <Facebook className="h-4 w-4" />
+              </a>
+              <a href="#" className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-teal-600 transition-colors">
+                <Twitter className="h-4 w-4" />
+              </a>
+              <a href="#" className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-teal-600 transition-colors">
+                <Linkedin className="h-4 w-4" />
+              </a>
+              <a href="#" className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-teal-600 transition-colors">
+                <Youtube className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-800 mt-12 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center text-sm">
+            <p>&copy; 2025 Botswana Communications Regulatory Authority. All rights reserved.</p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <a href="#" className="hover:text-teal-400 transition-colors">
+                Privacy Policy
+              </a>
+              <a href="#" className="hover:text-teal-400 transition-colors">
+                Terms of Service
+              </a>
+              <a href="#" className="hover:text-teal-400 transition-colors">
+                Cookie Policy
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
