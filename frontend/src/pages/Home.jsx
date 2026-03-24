@@ -52,6 +52,16 @@ const Home = () => {
     <div className="min-h-screen bg-white">
       {/* Stripe-inspired Hero Section */}
       <section className="relative pt-32 pb-24 overflow-hidden">
+        {/* Cultural Background Element */}
+        <div className="absolute top-0 right-0 w-full h-full -z-10 opacity-30 select-none pointer-events-none">
+          <img 
+            src="/botswana_heritage.png" 
+            alt="Botswana Heritage" 
+            className="w-full h-full object-cover blur-[80px] scale-110 opacity-40 mix-blend-multiply" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white"></div>
+        </div>
+        
         <div className="absolute top-0 left-0 w-full h-[120%] stripe-gradient -skew-y-6 origin-top-left -z-10 opacity-[0.03]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
