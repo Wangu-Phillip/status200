@@ -141,25 +141,36 @@ const Navbar = () => {
                 )}
               </div>
               
-              <div className="hidden sm:flex items-center space-x-2">
-                <Link to="/admin">
-                  <Button variant="outline" className="rounded-xl border-teal-500/30 text-teal-600 hover:bg-teal-50 px-5 font-bold shadow-sm">
-                    Admin Portal
-                  </Button>
-                </Link>
-                
+              <div className="hidden sm:flex items-center space-x-3">
                 {user ? (
-                  <Link to="/dashboard">
-                    <Button className="rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white px-6">
-                      Citizen Portal
-                    </Button>
-                  </Link>
+                  // Logged In View: Show ONLY their allowed portal to prevent confusing redirects
+                  user.userType === 'admin' ? (
+                    <Link to="/admin">
+                      <Button className="rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white px-8 shadow-lg shadow-teal-500/20 font-extrabold tracking-wide">
+                        Enter Admin Portal
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to="/dashboard">
+                      <Button className="rounded-[1.25rem] border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white px-8 font-extrabold tracking-wide">
+                        Enter Citizen Portal
+                      </Button>
+                    </Link>
+                  )
                 ) : (
-                  <Link to="/login">
-                    <Button className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-6 shadow-lg shadow-teal-500/20">
-                      Login
-                    </Button>
-                  </Link>
+                  // Logged Out View: Completely separate entry point buttons
+                  <>
+                    <Link to="/login?role=admin">
+                      <Button variant="ghost" className="rounded-xl text-teal-600 hover:bg-teal-50 font-bold px-6">
+                        BOCRA Staff
+                      </Button>
+                    </Link>
+                    <Link to="/login">
+                      <Button className="rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white px-8 shadow-lg shadow-teal-500/20 font-extrabold tracking-wide">
+                        Citizen Portal
+                      </Button>
+                    </Link>
+                  </>
                 )}
               </div>
 
@@ -226,33 +237,44 @@ const Navbar = () => {
             </div>
             
             <div className="pt-4 pb-8 flex flex-col gap-3">
-              <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="outline" className="w-full h-12 rounded-xl border-teal-500/30 text-teal-600 hover:bg-teal-50 shadow-sm font-bold text-lg">
-                  Admin Portal
-                </Button>
-              </Link>
-              
               {user ? (
+                // Logged In Mobile View
                 <>
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg">
-                      Citizen Portal
-                    </Button>
-                  </Link>
+                  {user.userType === 'admin' ? (
+                    <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full h-12 rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-500/20 font-bold text-lg">
+                        Enter Admin Portal
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full h-12 rounded-[1.25rem] bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg">
+                        Enter Citizen Portal
+                      </Button>
+                    </Link>
+                  )}
                   <Button 
                     variant="outline" 
                     onClick={handleLogout}
-                    className="w-full h-12 rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-lg transition-colors"
+                    className="w-full h-12 rounded-[1.25rem] border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-lg transition-colors"
                   >
                     Sign Out
                   </Button>
                 </>
               ) : (
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full h-12 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg shadow-lg">
-                    Login / Register
-                  </Button>
-                </Link>
+                // Logged Out Mobile View
+                <>
+                  <Link to="/login?role=admin" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full h-12 rounded-[1.25rem] border-teal-500/30 text-teal-600 hover:bg-teal-50 shadow-sm font-bold text-lg">
+                      BOCRA Staff Login
+                    </Button>
+                  </Link>
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full h-12 rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg shadow-lg">
+                      Citizen Portal
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
           </div>
