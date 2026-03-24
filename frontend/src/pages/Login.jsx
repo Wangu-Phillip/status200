@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
-import { Separator } from '../components/ui/separator';
 import { useToast } from '../hooks/use-toast';
-import { Mail, Lock, User, Building2, Shield } from 'lucide-react';
+import { Mail, Lock, User, Building2, Shield, Loader2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { DEPARTMENTS, DEPARTMENT_LABELS } from '../utils/persistence';
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, register, loading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -26,63 +28,73 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Mock login/register - will be replaced with actual API call
-    const userData = {
-      name: formData.name || 'John Doe',
-      email: formData.email,
-      userType: formData.userType,
-      organization: formData.organization,
-      department: formData.userType === 'admin' ? formData.department : null,
-    };
-    localStorage.setItem('bocra_user', JSON.stringify(userData));
-    
-    toast({
-      title: isLogin ? 'Login Successful' : 'Registration Successful',
-      description: `Welcome ${userData.name}!`,
-    });
-    
-    // Redirect based on user type
-    if (formData.userType === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/dashboard');
+    setIsSubmitting(true);
+
+    try {
+      if (isLogin) {
+        // Login
+        await login(formData.email, formData.password);
+        toast({
+          title: 'Login Successful',
+          description: `Welcome back!`,
+        });
+        // Redirect based on stored user type
+        const storedUser = JSON.parse(localStorage.getItem('bocra_user'));
+        if (storedUser?.userType === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        // Register
+        await register(
+          formData.email,
+          formData.password,
+          formData.name,
+          formData.userType,
+          formData.organization,
+          formData.userType === 'admin' ? formData.department : null
+        );
+        toast({
+          title: 'Registration Successful',
+          description: `Welcome ${formData.name}!`,
+        });
+        // Redirect based on user type
+        if (formData.userType === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    // Mock Google login - will be replaced with actual OAuth
-    toast({
-      title: 'Google Login',
-      description: 'Google OAuth integration coming soon!',
-    });
-  };
-
-  const handleQuickDemoLogin = (role, dept = null) => {
-    const isClient = role === 'client';
-    const userData = isClient ? {
-      name: 'John Citizen',
-      email: 'citizen@example.com',
-      userType: 'client',
-      organization: 'None',
-      department: null,
-    } : {
-      name: `Admin (${dept ? DEPARTMENT_LABELS[dept].split(' ')[0] : 'General'})`,
-      email: `${dept || 'admin'}@bocra.org.bw`,
-      userType: 'admin',
-      organization: 'BOCRA',
-      department: dept || DEPARTMENTS.LICENSING, 
-    };
-    
-    localStorage.setItem('bocra_user', JSON.stringify(userData));
-    
-    toast({
-      title: `${isClient ? 'Citizen' : 'Admin'} Login Successful`,
-      description: `Welcome to the ${isClient ? 'Portal' : 'Admin Dashboard'}!`,
-    });
-    
-    navigate(isClient ? '/dashboard' : '/admin');
+  const handleQuickDemoLogin = async (email, password, role, dept = null) => {
+    try {
+      await login(email, password);
+      const isClient = role === 'client';
+      toast({
+        title: `${isClient ? 'Citizen' : 'Admin'} Login Successful`,
+        description: `Welcome to the ${isClient ? 'Citizen Portal' : 'Admin Dashboard'}!`,
+      });
+      navigate(isClient ? '/dashboard' : '/admin');
+    } catch (error) {
+      toast({
+        title: 'Login Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -121,6 +133,7 @@ const Login = () => {
                         onChange={handleInputChange}
                         className="pl-10"
                         required={!isLogin}
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -133,8 +146,42 @@ const Login = () => {
                       placeholder="Your Company Ltd"
                       value={formData.organization}
                       onChange={handleInputChange}
+                      disabled={isSubmitting}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="userType">Account Type</Label>
+                    <select
+                      id="userType"
+                      name="userType"
+                      value={formData.userType}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-teal-500"
+                      disabled={isSubmitting}
+                    >
+                      <option value="client">Citizen</option>
+                      <option value="admin">Admin Staff</option>
+                    </select>
+                  </div>
+                  {formData.userType === 'admin' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="department">Department</Label>
+                      <select
+                        id="department"
+                        name="department"
+                        value={formData.department}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-teal-500"
+                        disabled={isSubmitting}
+                      >
+                        <option value="">Select Department</option>
+                        <option value="licensing">Licensing</option>
+                        <option value="complaints">Complaints</option>
+                        <option value="qos">Quality of Service</option>
+                        <option value="tenders">Tenders</option>
+                      </select>
+                    </div>
+                  )}
                 </>
               )}
               
@@ -151,6 +198,7 @@ const Login = () => {
                     onChange={handleInputChange}
                     className="pl-10"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -167,6 +215,7 @@ const Login = () => {
                     onChange={handleInputChange}
                     className="pl-10"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -177,8 +226,19 @@ const Login = () => {
                   </Button>
                 </div>
               )}
-              <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white">
-                {isLogin ? 'Sign In' : 'Create Account'}
+              <Button 
+                type="submit" 
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                disabled={isSubmitting || authLoading}
+              >
+                {isSubmitting || authLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {isLogin ? 'Signing In...' : 'Creating Account...'}
+                  </>
+                ) : (
+                  isLogin ? 'Sign In' : 'Create Account'
+                )}
               </Button>
             </form>
 
@@ -187,7 +247,8 @@ const Login = () => {
               <div className="flex justify-center mb-4">
                 <Button
                   type="button"
-                  onClick={() => handleQuickDemoLogin('client')}
+                  onClick={() => handleQuickDemoLogin('citizen@example.com', 'demo123456', 'client')}
+                  disabled={isSubmitting || authLoading}
                   className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/10 rounded-xl font-bold py-6"
                 >
                   <User className="w-5 h-5 mr-3" />
@@ -209,7 +270,8 @@ const Login = () => {
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   type="button"
-                  onClick={() => handleQuickDemoLogin('admin', DEPARTMENTS.LICENSING)}
+                  onClick={() => handleQuickDemoLogin('licensing@bocra.org.bw', 'admin123456', 'admin', 'licensing')}
+                  disabled={isSubmitting || authLoading}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
                 >
                   <Shield className="w-3.5 h-3.5 mr-2" />
@@ -217,7 +279,8 @@ const Login = () => {
                 </Button>
                 <Button
                   type="button"
-                  onClick={() => handleQuickDemoLogin('admin', DEPARTMENTS.COMPLAINTS)}
+                  onClick={() => handleQuickDemoLogin('complaints@bocra.org.bw', 'admin123456', 'admin', 'complaints')}
+                  disabled={isSubmitting || authLoading}
                   className="w-full bg-orange-500 hover:bg-orange-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
                 >
                   <Shield className="w-3.5 h-3.5 mr-2" />
@@ -225,7 +288,8 @@ const Login = () => {
                 </Button>
                 <Button
                   type="button"
-                  onClick={() => handleQuickDemoLogin('admin', DEPARTMENTS.QOS)}
+                  onClick={() => handleQuickDemoLogin('qos@bocra.org.bw', 'admin123456', 'admin', 'qos')}
+                  disabled={isSubmitting || authLoading}
                   className="w-full bg-teal-500 hover:bg-teal-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
                 >
                   <Shield className="w-3.5 h-3.5 mr-2" />
@@ -233,7 +297,8 @@ const Login = () => {
                 </Button>
                 <Button
                   type="button"
-                  onClick={() => handleQuickDemoLogin('admin', DEPARTMENTS.TENDERS)}
+                  onClick={() => handleQuickDemoLogin('tenders@bocra.org.bw', 'admin123456', 'admin', 'tenders')}
+                  disabled={isSubmitting || authLoading}
                   className="w-full bg-purple-500 hover:bg-purple-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
                 >
                   <Shield className="w-3.5 h-3.5 mr-2" />
@@ -249,6 +314,7 @@ const Login = () => {
                 variant="link"
                 className="text-teal-600 hover:text-teal-700 px-1"
                 onClick={() => setIsLogin(!isLogin)}
+                disabled={isSubmitting}
               >
                 {isLogin ? 'Sign up' : 'Sign in'}
               </Button>
