@@ -195,6 +195,26 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
+              <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Theme Preference</span>
+              <button 
+                onClick={toggleTheme}
+                className="flex items-center space-x-2 p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-teal-50 hover:text-teal-600 transition-all"
+                aria-label="Toggle Theme"
+              >
+                {theme === 'light' ? (
+                  <>
+                    <Moon className="h-5 w-5" />
+                    <span className="font-semibold text-sm">Switch to Dark</span>
+                  </>
+                ) : (
+                  <>
+                    <Sun className="h-5 w-5" />
+                    <span className="font-semibold text-sm">Switch to Light</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
