@@ -21,6 +21,7 @@ import QoSReporting from './pages/QoSReporting';
 import AdminDashboard from './pages/AdminDashboard';
 import DomainRegistry from './pages/DomainRegistry';
 import LiveQoSMonitoring from './pages/LiveQoSMonitoring';
+import Tenders from './pages/Tenders';
 
 import Ruby from './components/Chatbot';
 
@@ -63,6 +64,7 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/domain-registry" element={<DomainRegistry />} />
           <Route path="/live-qos" element={<LiveQoSMonitoring />} />
+          <Route path="/tenders" element={<Tenders />} />
         </Routes>
       </Layout>
     </BrowserRouter>

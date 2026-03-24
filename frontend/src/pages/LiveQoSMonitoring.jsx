@@ -28,14 +28,16 @@ const LiveQoSMonitoring = () => {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
 
+  const [activeView, setActiveView] = useState('Real-time');
+
   useEffect(() => {
-    if (autoRefresh) {
+    if (autoRefresh && activeView === 'Real-time') {
       const interval = setInterval(() => {
         setLastUpdated(new Date());
       }, 30000); 
       return () => clearInterval(interval);
     }
-  }, [autoRefresh]);
+  }, [autoRefresh, activeView]);
 
   const operators = [
     {
@@ -151,11 +153,15 @@ const LiveQoSMonitoring = () => {
           <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-8">
              <div>
                 <h2 className="text-3xl font-bold text-white mb-2">Technical Insight</h2>
-                <div className="h-1 w-12 bg-teal-500 rounded-full"></div>
+                <div className="h-1 w-12 bg-[#00897B] rounded-full"></div>
              </div>
              <div className="flex items-center space-x-3 bg-slate-900/50 p-1.5 rounded-2xl border border-white/5">
                 {['Real-time', 'Regional', 'Historical'].map((t) => (
-                  <button key={t} className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${t === 'Real-time' ? 'bg-teal-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+                  <button 
+                    key={t} 
+                    onClick={() => setActiveView(t)}
+                    className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeView === t ? 'bg-[#00897B] text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
                     {t}
                   </button>
                 ))}
@@ -178,7 +184,7 @@ const LiveQoSMonitoring = () => {
                            <p className="text-slate-500 text-xs mt-1 font-bold uppercase tracking-widest">Network Operator</p>
                         </div>
                       </div>
-                      <Badge className={`border-none font-bold uppercase tracking-widest text-[9px] px-2.5 py-1 rounded-lg ${op.status === 'Compliant' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                      <Badge className={`border-none font-bold uppercase tracking-widest text-[9px] px-2.5 py-1 rounded-lg ${op.status === 'Compliant' ? 'bg-[#2E7D32]/20 text-[#2E7D32]' : 'bg-[#C62828]/20 text-[#C62828]'}`}>
                          {op.status}
                       </Badge>
                    </div>

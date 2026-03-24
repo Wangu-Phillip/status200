@@ -57,6 +57,30 @@ const Dashboard = () => {
 
   if (!user) return null;
 
+  const statCards = [
+    { label: 'Total Applications', value: '42', trend: '+12%', color: 'text-teal-500' },
+    { label: 'Active Complaints', value: '08', trend: '-2%', color: 'text-amber-500' },
+    { label: 'Node Trust Score', value: '82%', trend: '+5%', color: 'text-blue-500' },
+    { label: 'Verified Devices', value: '154', trend: '+18%', color: 'text-emerald-500' },
+  ];
+
+  const recentActivity = [
+    { id: 1, title: 'Network License Renewal', desc: 'BOCRA-INFRA (APP003) is awaiting documents.', status: 'Pending Documents', type: 'app', time: '2024-03-24' },
+    { id: 2, title: 'Broadcasting Complaint', desc: 'Complaint registered against Regional Operator.', status: 'Under Review', type: 'complaint', time: '2024-03-23' },
+    { id: 3, title: 'Type Approval Granted', desc: 'Device TP-502 has been successfully verified.', status: 'Approved', type: 'system', time: '2024-03-22' },
+    { id: 4, title: 'Spectrum Fee Flagged', desc: 'Unpaid dues detected for Q1 2024.', status: 'Rejected / Flagged', type: 'app', time: '2024-03-21' },
+  ];
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Approved': return '#2E7D32';
+      case 'Under Review': return '#1565C0';
+      case 'Rejected / Flagged': return '#C62828';
+      case 'Pending Documents': return '#F9A825';
+      default: return '#1e293b';
+    }
+  };
+
   const renderContent = () => {
     // ... (rest of renderContent remains same, but I'll ensure it's not truncated)
     switch (activeTab) {
@@ -145,7 +169,10 @@ const Dashboard = () => {
                       </div>
                       <div className="text-right hidden sm:block">
                         <p className="text-slate-400 font-black text-xs tracking-tight">{formatDate(item.time)}</p>
-                        <p className="text-[9px] text-slate-600 font-black uppercase tracking-[0.2em] mt-3 px-2 py-1 bg-slate-950 rounded-lg border border-white/5">Auto-Verified</p>
+                        <div className="mt-3 inline-flex items-center px-3 py-1 bg-slate-950 rounded-lg border border-white/5 space-x-2">
+                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getStatusColor(item.status) }}></div>
+                           <span className="text-[9px] text-slate-300 font-extrabold uppercase tracking-widest">{item.status}</span>
+                        </div>
                       </div>
                     </div>
                   ))}

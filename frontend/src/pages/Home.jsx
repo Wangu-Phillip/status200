@@ -15,29 +15,29 @@ const Home = () => {
       title: 'TELECOMMUNICATIONS',
       icon: Radio,
       description: 'Regulating cellular networks and infrastructure for a connected Botswana.',
-      color: 'text-teal-600',
-      bg: 'bg-teal-50',
+      color: 'text-[#00897B]',
+      bg: 'bg-[#4DB6AC]/10',
     },
     {
       title: 'BROADCASTING',
       icon: Tv,
       description: 'Managing commercial radio and television broadcasting services.',
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
+      color: 'text-[#1565C0]',
+      bg: 'bg-blue-500/10',
     },
     {
       title: 'POSTAL',
       icon: Mail,
       description: 'Ensuring safe, reliable, and affordable postal delivery services.',
-      color: 'text-indigo-600',
-      bg: 'bg-indigo-50',
+      color: 'text-[#00695C]',
+      bg: 'bg-[#00695C]/10',
     },
     {
       title: 'INTERNET',
       icon: Wifi,
       description: 'Management of .bw registry and ICT infrastructure regulation.',
-      color: 'text-cyan-600',
-      bg: 'bg-cyan-50',
+      color: 'text-[#F9A825]',
+      bg: 'bg-amber-500/10',
     },
   ];
 
@@ -62,26 +62,26 @@ const Home = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white"></div>
         </div>
         
-        <div className="absolute top-0 left-0 w-full h-[120%] stripe-gradient -skew-y-6 origin-top-left -z-10 opacity-[0.03]"></div>
+        <div className="absolute top-0 left-0 w-full h-[120%] bg-gradient-to-br from-[#00695C]/5 via-[#00897B]/5 to-transparent -skew-y-6 origin-top-left -z-10"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
-              <div className="inline-flex items-center space-x-2 bg-teal-50 text-teal-700 px-4 py-1.5 rounded-full text-sm font-medium border border-teal-100 animate-in fade-in slide-in-from-bottom-4">
+              <div className="inline-flex items-center space-x-2 bg-[#4DB6AC]/10 text-[#00695C] px-4 py-1.5 rounded-full text-sm font-bold border border-[#4DB6AC]/20 animate-in fade-in slide-in-from-bottom-4">
                 <ShieldCheck className="w-4 h-4" />
-                <span>Empowering Botswana's Connections</span>
+                <span className="uppercase tracking-widest text-[10px]">Empowering Botswana's Connections</span>
               </div>
-              <h1 className="text-6xl md:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-500">
+              <h1 className="text-6xl md:text-7xl font-black tracking-tight text-slate-900 leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-500">
                 Regulating for a 
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-blue-600">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#00695C] to-[#00897B]">
                   Digital Future.
                 </span>
               </h1>
-              <p className="text-xl text-slate-600 max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-700">
+              <p className="text-xl text-slate-600 max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-700 font-medium">
                 The Botswana Communications Regulatory Authority (BOCRA) ensures excellence in telecommunications, broadcasting, and postal services across the nation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4 animate-in fade-in slide-in-from-bottom-16 duration-1000">
                 <Link to="/login">
-                  <Button size="xl" className="w-full sm:w-auto h-14 px-8 text-lg rounded-2xl shadow-lg shadow-teal-500/20 bg-teal-600 hover:bg-teal-700">
+                  <Button size="xl" className="w-full sm:w-auto h-16 px-10 text-lg rounded-2xl shadow-xl shadow-[#00897B]/20 bg-[#00897B] hover:bg-[#4DB6AC] font-black uppercase tracking-widest text-xs">
                     Access Client Portal
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
