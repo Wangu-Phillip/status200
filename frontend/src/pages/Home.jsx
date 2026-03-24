@@ -57,9 +57,9 @@ const Home = () => {
           <img 
             src="/botswana_heritage.png" 
             alt="Botswana Heritage" 
-            className="w-full h-full object-cover object-right blur-[10px] scale-105 opacity-[0.15]" 
+            className="w-full h-full object-cover object-center blur-[2px] scale-100 opacity-40" 
           />
-          <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/80 to-white"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent"></div>
         </div>
         
         <div className="absolute top-0 left-0 w-full h-[120%] bg-gradient-to-br from-[#00695C]/5 via-[#00897B]/5 to-transparent -skew-y-6 origin-top-left -z-10"></div>
