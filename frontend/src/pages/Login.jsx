@@ -20,8 +20,6 @@ const Login = () => {
     password: '',
     name: '',
     organization: '',
-    userType: 'client',
-    department: '',
   });
 
   const handleInputChange = (e) => {
@@ -53,20 +51,15 @@ const Login = () => {
           formData.email,
           formData.password,
           formData.name,
-          formData.userType,
+          'client', // Always register as client
           formData.organization,
-          formData.userType === 'admin' ? formData.department : null
+          null // No department for citizen registration
         );
         toast({
           title: 'Registration Successful',
           description: `Welcome ${formData.name}!`,
         });
-        // Redirect based on user type
-        if (formData.userType === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard');
-        }
+        navigate('/dashboard');
       }
     } catch (error) {
       toast({
@@ -133,39 +126,6 @@ const Login = () => {
                       disabled={isSubmitting}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="userType">Account Type</Label>
-                    <select
-                      id="userType"
-                      name="userType"
-                      value={formData.userType}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-teal-500"
-                      disabled={isSubmitting}
-                    >
-                      <option value="client">Citizen</option>
-                      <option value="admin">Admin Staff</option>
-                    </select>
-                  </div>
-                  {formData.userType === 'admin' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="department">Department</Label>
-                      <select
-                        id="department"
-                        name="department"
-                        value={formData.department}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-teal-500"
-                        disabled={isSubmitting}
-                      >
-                        <option value="">Select Department</option>
-                        <option value="licensing">Licensing</option>
-                        <option value="complaints">Complaints</option>
-                        <option value="qos">Quality of Service</option>
-                        <option value="tenders">Tenders</option>
-                      </select>
-                    </div>
-                  )}
                 </>
               )}
               
