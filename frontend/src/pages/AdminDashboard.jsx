@@ -118,9 +118,9 @@ const AdminDashboard = () => {
   const getStatusBadge = (status) => {
     const config = {
       'Approved': { className: 'bg-emerald-500 hover:bg-emerald-600', icon: CheckCircle },
-      'Under Review': { className: 'bg-blue-500 hover:bg-blue-600', icon: Clock },
+      'Under Review': { className: 'bg-[#003366] hover:bg-[#003366]', icon: Clock },
       'Pending Review': { className: 'bg-amber-500 hover:bg-amber-600', icon: Clock },
-      'Rejected': { className: 'bg-red-500 hover:bg-red-600', icon: XCircle },
+      'Rejected': { className: 'bg-[#B91C1C] hover:bg-[#991b1b]', icon: XCircle },
     };
     const c = config[status] || config['Pending Review'];
     const Icon = c.icon;
@@ -136,7 +136,7 @@ const AdminDashboard = () => {
     const colors = {
       High: 'bg-red-100 text-red-800 border-red-200',
       Medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      Low: 'bg-green-100 text-green-800 border-green-200',
+      Low: 'bg-[#E6F4EC] text-[#1A6B3C] border-green-200',
     };
     return <Badge variant="outline" className={colors[priority]}>{priority}</Badge>;
   };
@@ -163,7 +163,7 @@ const AdminDashboard = () => {
   if (!user) return null;
 
   const DeptIcon = getDeptIcon(user.department);
-  const deptColor = DEPARTMENT_COLORS[user.department] || { bg: 'bg-teal-500', text: 'text-teal-600', light: 'bg-teal-50' };
+  const deptColor = DEPARTMENT_COLORS[user.department] || { bg: 'bg-[#003366]', text: 'text-[#003366]', light: 'bg-[#E8F0F9]' };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -236,7 +236,7 @@ const AdminDashboard = () => {
         {/* User Info */}
         <div className="p-4 border-t border-slate-700/50">
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-10 h-10 rounded-full bg-[#003366] flex items-center justify-center text-white font-bold text-sm">
               {user.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'AD'}
             </div>
             <div className="flex-1 min-w-0">
@@ -281,14 +281,14 @@ const AdminDashboard = () => {
                   description: `You are now viewing the ${DEPARTMENT_LABELS[newDept]} dashboard.`,
                 });
               }}
-              className={`flex h-9 items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors cursor-pointer hover:bg-slate-50 font-medium`}
+              className={`flex h-9 items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003366] transition-colors cursor-pointer hover:bg-slate-50 font-medium`}
             >
               <option value={DEPARTMENTS.LICENSING}>🛡️ Licensing</option>
               <option value={DEPARTMENTS.COMPLAINTS}>⚖️ Complaints</option>
               <option value={DEPARTMENTS.QOS}>📊 Quality of Service</option>
               <option value={DEPARTMENTS.TENDERS}>💼 Tenders</option>
             </select>
-            <Badge variant="outline" className="text-sm px-3 py-1.5 border-teal-200 text-teal-700 bg-teal-50">
+            <Badge variant="outline" className="text-sm px-3 py-1.5 border-[#003366]/20 text-[#0A4D8C] bg-[#E8F0F9]">
               <Shield className="h-3.5 w-3.5 mr-1.5" />
               Admin Access
             </Badge>
@@ -367,7 +367,7 @@ const AdminDashboard = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="flex h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="flex h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
               >
                 <option value="all">All Status</option>
                 <option value="Pending Review">Pending Review</option>
@@ -406,7 +406,7 @@ const AdminDashboard = () => {
                       <div className="flex items-center gap-4 text-sm text-slate-500">
                         <span className="flex items-center gap-1.5">
                           <Hash className="h-3.5 w-3.5" />
-                          <span className="font-mono font-semibold text-teal-600">{sub.id}</span>
+                          <span className="font-mono font-semibold text-[#003366]">{sub.id}</span>
                         </span>
                         <span>•</span>
                         <span>{sub.citizenName} ({sub.citizenEmail})</span>
@@ -449,7 +449,7 @@ const AdminDashboard = () => {
                           size="sm"
                           variant="ghost"
                           onClick={() => { handleAddNote(sub.id); }}
-                          className="text-teal-600"
+                          className="text-[#003366]"
                         >
                           <Send className="h-4 w-4" />
                         </Button>
@@ -477,7 +477,7 @@ const AdminDashboard = () => {
                           <>
                             <Button
                               size="sm"
-                              className="bg-blue-500 hover:bg-blue-600 text-white"
+                              className="bg-[#003366] hover:bg-[#003366] text-white"
                               onClick={() => handleStatusChange(sub.id, 'Under Review')}
                             >
                               <Clock className="h-4 w-4 mr-1.5" />

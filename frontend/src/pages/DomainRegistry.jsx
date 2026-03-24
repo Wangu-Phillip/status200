@@ -46,7 +46,7 @@ const DomainRegistry = () => {
       icon: DollarSign,
       title: 'Affordable',
       description: 'No maintenance fees charged to registrars – keeping your domain costs low.',
-      color: 'text-blue-600',
+      color: 'text-[#003366]',
     },
     {
       icon: Clock,
@@ -64,7 +64,7 @@ const DomainRegistry = () => {
       icon: Users,
       title: 'Trusted',
       description: 'Over 10,000+ domains registered by trusted registrants across Botswana.',
-      color: 'text-teal-600',
+      color: 'text-[#003366]',
     },
     {
       icon: Lock,
@@ -99,7 +99,7 @@ const DomainRegistry = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 py-20">
+      <section className="bg-[#003366] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center text-white">
             <Globe className="h-20 w-20 mx-auto mb-6" />
@@ -108,10 +108,10 @@ const DomainRegistry = () => {
               Secure your online presence with Botswana's trusted .bw domain - Safe, Affordable & Locally Relevant
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Badge className="bg-white text-teal-600 text-lg px-6 py-3 hover:bg-gray-100">
+              <Badge className="bg-white text-[#003366] text-lg px-6 py-3 hover:bg-gray-100">
                 10,000+ Registered Domains
               </Badge>
-              <Badge className="bg-white text-teal-600 text-lg px-6 py-3 hover:bg-gray-100">
+              <Badge className="bg-white text-[#003366] text-lg px-6 py-3 hover:bg-gray-100">
                 70+ Accredited Registrars
               </Badge>
             </div>
@@ -138,7 +138,7 @@ const DomainRegistry = () => {
                     className="pl-10 h-12 text-lg"
                   />
                 </div>
-                <Button type="submit" className="bg-teal-600 hover:bg-teal-700 h-12 px-8">
+                <Button type="submit" className="bg-[#003366] hover:bg-[#0A4D8C] h-12 px-8">
                   Search
                 </Button>
               </form>
@@ -159,7 +159,7 @@ const DomainRegistry = () => {
                   href="http://whois.nic.net.bw/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-teal-600 hover:text-teal-700 text-sm font-medium"
+                  className="text-[#003366] hover:text-[#0A4D8C] text-sm font-medium"
                 >
                   Advanced WHOIS Lookup →
                 </a>
@@ -184,7 +184,7 @@ const DomainRegistry = () => {
               >
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-2xl font-bold text-teal-600">{zone.zone}</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-[#003366]">{zone.zone}</CardTitle>
                     {zone.available ? (
                       <Badge className="bg-green-500">Available</Badge>
                     ) : (
@@ -197,7 +197,7 @@ const DomainRegistry = () => {
                   <div className="text-sm text-gray-600 mb-4">Starting at</div>
                   <div className="text-xl font-bold text-gray-900 mb-4">{zone.price}</div>
                   {zone.available && (
-                    <Button variant="outline" className="w-full border-teal-600 text-teal-600 hover:bg-teal-50">
+                    <Button variant="outline" className="w-full border-[#003366] text-[#003366] hover:bg-[#E8F0F9]">
                       Register
                     </Button>
                   )}
@@ -244,9 +244,9 @@ const DomainRegistry = () => {
             <p className="text-xl text-gray-600">Simple 3-step process</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center border-t-4 border-t-teal-600">
+            <Card className="text-center border-t-4 border-t-[#003366]">
               <CardContent className="pt-8">
-                <div className="w-16 h-16 bg-teal-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                <div className="w-16 h-16 bg-[#003366] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                   1
                 </div>
                 <h3 className="text-xl font-bold mb-3">Search & Check</h3>
@@ -255,9 +255,9 @@ const DomainRegistry = () => {
                 </p>
               </CardContent>
             </Card>
-            <Card className="text-center border-t-4 border-t-cyan-600">
+            <Card className="text-center border-t-4 border-t-[#003366]">
               <CardContent className="pt-8">
-                <div className="w-16 h-16 bg-cyan-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                <div className="w-16 h-16 bg-[#003366] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                   2
                 </div>
                 <h3 className="text-xl font-bold mb-3">Choose Registrar</h3>
@@ -266,9 +266,9 @@ const DomainRegistry = () => {
                 </p>
               </CardContent>
             </Card>
-            <Card className="text-center border-t-4 border-t-blue-600">
+            <Card className="text-center border-t-4 border-t-[#003366]">
               <CardContent className="pt-8">
-                <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                <div className="w-16 h-16 bg-[#003366] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                   3
                 </div>
                 <h3 className="text-xl font-bold mb-3">Register & Go Live</h3>
@@ -297,15 +297,15 @@ const DomainRegistry = () => {
                 <CardContent>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center text-gray-600">
-                      <FileText className="h-4 w-4 mr-2 text-teal-600" />
+                      <FileText className="h-4 w-4 mr-2 text-[#003366]" />
                       {registrar.contact}
                     </div>
                     <div className="flex items-center text-gray-600">
-                      <Clock className="h-4 w-4 mr-2 text-teal-600" />
+                      <Clock className="h-4 w-4 mr-2 text-[#003366]" />
                       {registrar.phone}
                     </div>
                   </div>
-                  <Button className="mt-4 w-full bg-teal-600 hover:bg-teal-700">
+                  <Button className="mt-4 w-full bg-[#003366] hover:bg-[#0A4D8C]">
                     Visit Registrar <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -313,7 +313,7 @@ const DomainRegistry = () => {
             ))}
           </div>
           <div className="text-center mt-8">
-            <Button variant="outline" className="border-teal-600 text-teal-600 hover:bg-teal-50">
+            <Button variant="outline" className="border-[#003366] text-[#003366] hover:bg-[#E8F0F9]">
               View All Accredited Registrars
             </Button>
           </div>
@@ -321,13 +321,13 @@ const DomainRegistry = () => {
       </section>
 
       {/* Become a Registrar CTA */}
-      <section className="py-16 bg-gradient-to-r from-teal-600 to-cyan-600">
+      <section className="py-16 bg-[#003366]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h2 className="text-4xl font-bold mb-6">Want to Become a .bw Registrar?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Join our network of accredited registrars. Accreditation process takes only 7 working days.
           </p>
-          <Button size="lg" className="bg-white text-teal-600 hover:bg-gray-100">
+          <Button size="lg" className="bg-[#F47920] hover:bg-[#C25E00] text-white border-0">
             Apply for Accreditation
           </Button>
         </div>

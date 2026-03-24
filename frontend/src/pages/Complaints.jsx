@@ -72,18 +72,18 @@ const Complaints = () => {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-lg mx-auto px-4">
           <Card className="shadow-2xl border-0 overflow-hidden">
-            <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-8 text-center">
+            <div className="bg-gradient-to-r from-[#003366] to-[#0A4D8C] p-8 text-center">
               <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-10 w-10 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-white">Complaint Submitted!</h2>
-              <p className="text-teal-100 mt-2">Your complaint has been registered with BOCRA</p>
+              <p className="text-[#E8F0F9] mt-2">Your complaint has been registered with BOCRA</p>
             </div>
             <CardContent className="p-8 space-y-6">
               <div className="bg-slate-50 rounded-xl p-6 text-center border-2 border-dashed border-slate-200">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Your Reference Token</p>
                 <div className="flex items-center justify-center gap-3">
-                  <Hash className="h-5 w-5 text-teal-600" />
+                  <Hash className="h-5 w-5 text-[#003366]" />
                   <span className="text-2xl font-mono font-bold text-slate-900">{submittedToken}</span>
                   <button
                     onClick={() => {
@@ -100,15 +100,15 @@ const Complaints = () => {
                 <p className="font-semibold text-slate-800">What happens next?</p>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>
+                    <span className="w-5 h-5 rounded-full bg-[#E8F0F9] text-[#003366] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>
                     Your complaint will be reviewed by the BOCRA Complaints Department
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
+                    <span className="w-5 h-5 rounded-full bg-[#E8F0F9] text-[#003366] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
                     You will receive email updates on the progress
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
+                    <span className="w-5 h-5 rounded-full bg-[#E8F0F9] text-[#003366] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
                     Use your reference token above to follow up on your complaint
                   </li>
                 </ul>
@@ -116,7 +116,7 @@ const Complaints = () => {
               <div className="flex gap-3">
                 <Button
                   onClick={() => navigate('/dashboard')}
-                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-12"
+                  className="flex-1 bg-[#003366] hover:bg-[#0A4D8C] text-white rounded-xl h-12"
                 >
                   Go to Dashboard
                 </Button>
@@ -282,10 +282,10 @@ const Complaints = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900">Supporting Evidence (Optional)</h3>
                 <p className="text-sm text-gray-600">Upload bills, screenshots, correspondence, or other relevant documents</p>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-teal-500 transition-colors">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-[#003366] transition-colors">
                   <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <Label htmlFor="file-upload" className="cursor-pointer">
-                    <span className="text-teal-600 font-semibold hover:text-teal-700">Click to upload</span>
+                    <span className="text-[#003366] font-semibold hover:text-[#0A4D8C]">Click to upload</span>
                     <span className="text-gray-600"> or drag and drop</span>
                   </Label>
                   <p className="text-sm text-gray-500 mt-2">PDF, JPG, PNG, DOC (max. 5MB each)</p>
@@ -302,7 +302,7 @@ const Complaints = () => {
                     {files.map((file, index) => (
                       <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                         <div className="flex items-center">
-                          <FileText className="h-5 w-5 text-teal-600 mr-2" />
+                          <FileText className="h-5 w-5 text-[#003366] mr-2" />
                           <span className="text-sm text-gray-700">{file.name}</span>
                         </div>
                         <Button
@@ -332,7 +332,7 @@ const Complaints = () => {
                 <Button type="button" variant="outline" onClick={() => navigate('/')}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white px-8">
+                <Button type="submit" className="bg-[#003366] hover:bg-[#0A4D8C] text-white px-8">
                   Submit Complaint
                 </Button>
               </div>

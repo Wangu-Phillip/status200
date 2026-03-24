@@ -121,8 +121,8 @@ const Documents = () => {
   const getCategoryColor = (category) => {
     const colors = {
       Legislation: 'bg-purple-100 text-purple-800',
-      Framework: 'bg-blue-100 text-blue-800',
-      Guidelines: 'bg-green-100 text-green-800',
+      Framework: 'bg-[#E8F0F9] text-blue-800',
+      Guidelines: 'bg-[#E6F4EC] text-[#1A6B3C]',
       Regulations: 'bg-red-100 text-red-800',
       Policy: 'bg-yellow-100 text-yellow-800',
       Standards: 'bg-indigo-100 text-indigo-800',
@@ -134,7 +134,7 @@ const Documents = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-teal-600 to-cyan-600 py-20">
+      <section className="bg-[#003366] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <FileText className="h-16 w-16 mx-auto mb-6" />
           <h1 className="text-5xl font-bold mb-6">Documents & Legislation</h1>
@@ -183,8 +183,8 @@ const Documents = () => {
               <Card key={doc.id} className="hover:shadow-lg transition-all duration-300">
                 <CardHeader>
                   <div className="flex items-start justify-between mb-2">
-                    <div className="w-14 h-14 bg-teal-100 rounded-lg flex items-center justify-center">
-                      <FileText className="h-7 w-7 text-teal-600" />
+                    <div className="w-14 h-14 bg-[#E8F0F9] rounded-lg flex items-center justify-center">
+                      <FileText className="h-7 w-7 text-[#003366]" />
                     </div>
                     <Badge className={getCategoryColor(doc.category)}>{doc.category}</Badge>
                   </div>
@@ -202,7 +202,7 @@ const Documents = () => {
                   <p className="text-sm text-gray-600 mb-4 line-clamp-3">{doc.description}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500">{doc.size}</span>
-                    <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white">
+                    <Button size="sm" className="bg-[#F47920] hover:bg-[#C25E00] text-white">
                       <Download className="h-4 w-4 mr-2" />
                       Download
                     </Button>
@@ -222,7 +222,7 @@ const Documents = () => {
             {categories.slice(1).map((category) => (
               <Card key={category} className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="pt-6 text-center">
-                  <div className="text-3xl font-bold text-teal-600 mb-2">
+                  <div className="text-3xl font-bold text-[#003366] mb-2">
                     {documents.filter((d) => d.category === category).length}
                   </div>
                   <div className="font-semibold text-gray-900">{category}</div>

@@ -86,19 +86,19 @@ const LiveQoSMonitoring = () => {
       {/* Dynamic Network Hero */}
       <section className="relative pt-12 pb-24 overflow-hidden border-b border-white/5">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(20,184,166,0.1),transparent)] flex items-center justify-center -z-10">
-          <div className="w-[800px] h-[800px] border border-teal-500/10 rounded-full animate-ping duration-[10000ms]"></div>
-          <div className="absolute w-[600px] h-[600px] border border-teal-500/5 rounded-full animate-ping duration-[7000ms]"></div>
+          <div className="w-[800px] h-[800px] border border-[#003366]/10 rounded-full animate-ping duration-[10000ms]"></div>
+          <div className="absolute w-[600px] h-[600px] border border-[#003366]/5 rounded-full animate-ping duration-[7000ms]"></div>
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
             <div className="max-w-2xl text-center lg:text-left">
-              <div className="inline-flex items-center space-x-2 bg-teal-500/10 text-teal-400 px-4 py-1.5 rounded-full text-xs font-bold border border-teal-500/20 mb-8 animate-in fade-in slide-in-from-bottom-4">
+              <div className="inline-flex items-center space-x-2 bg-[#003366]/10 text-[#E8F0F9] px-4 py-1.5 rounded-full text-xs font-bold border border-[#003366]/20 mb-8 animate-in fade-in slide-in-from-bottom-4">
                 <Activity className="w-4 h-4 animate-pulse" />
                 <span className="uppercase tracking-widest leading-none">Global NOC Intelligence</span>
               </div>
               <h1 className="text-5xl md:text-6xl font-black tracking-tight text-white mb-6 animate-in fade-in slide-in-from-bottom-8">
-                Network <span className="text-teal-400">Quality</span> <br/>
+                Network <span className="text-[#E8F0F9]">Quality</span> <br/>
                 Pulse Monitor
               </h1>
               <p className="text-slate-400 text-lg max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-12">
@@ -108,7 +108,7 @@ const LiveQoSMonitoring = () => {
 
             <div className="w-full lg:w-[450px] animate-in fade-in zoom-in duration-700">
                <Card className="bg-[#0f172a]/80 backdrop-blur-xl border-slate-800 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#003366]/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                   <div className="relative space-y-6">
                      <div className="flex items-center justify-between">
                         <span className="text-slate-500 text-xs font-bold uppercase tracking-widest">System Health</span>
@@ -123,7 +123,7 @@ const LiveQoSMonitoring = () => {
                            <span className="text-white font-bold">72.4%</span>
                         </div>
                         <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                           <div className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 w-[72%] rounded-full shadow-[0_2px_10px_rgba(20,184,166,0.5)]"></div>
+                           <div className="h-full bg-gradient-to-r from-[#F5F5F3]0 to-emerald-500 w-[72%] rounded-full shadow-[0_2px_10px_rgba(20,184,166,0.5)]"></div>
                         </div>
                      </div>
                      <div className="grid grid-cols-2 gap-4 pt-2">
@@ -136,7 +136,7 @@ const LiveQoSMonitoring = () => {
                            <p className="text-sm font-bold text-slate-200">1,248 Nodes</p>
                         </div>
                      </div>
-                     <Button className="w-full h-14 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-bold shadow-xl shadow-teal-500/20" onClick={() => setAutoRefresh(!autoRefresh)}>
+                     <Button className="w-full h-14 rounded-2xl bg-[#003366] hover:bg-[#003366] text-white font-bold shadow-xl shadow-teal-500/20" onClick={() => setAutoRefresh(!autoRefresh)}>
                         <RefreshCw className={`w-4 h-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
                         {autoRefresh ? 'Watching Pulse...' : 'Resume Monitor'}
                      </Button>
@@ -170,13 +170,13 @@ const LiveQoSMonitoring = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {operators.map((op, i) => (
-              <Card key={i} className="bg-[#0a0f1e] border-slate-800 rounded-[2.5rem] overflow-hidden group hover:border-teal-500/30 transition-all shadow-2xl">
+              <Card key={i} className="bg-[#0a0f1e] border-slate-800 rounded-[2.5rem] overflow-hidden group hover:border-[#003366]/30 transition-all shadow-2xl">
                 <div className="p-8 pb-4 relative overflow-hidden">
-                   <div className="absolute -top-10 -right-10 w-32 h-32 bg-teal-500/5 rounded-full blur-3xl group-hover:bg-teal-500/10 transition-all"></div>
+                   <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#003366]/5 rounded-full blur-3xl group-hover:bg-[#003366]/10 transition-all"></div>
                    
                    <div className="flex items-center justify-between mb-8 relative">
                       <div className="flex items-center space-x-4">
-                        <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-blue-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-xl shadow-teal-500/10">
+                        <div className="w-14 h-14 bg-gradient-to-br from-[#F5F5F3]0 to-blue-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-xl shadow-teal-500/10">
                            {op.logo.charAt(0)}
                         </div>
                         <div>
@@ -218,12 +218,12 @@ const LiveQoSMonitoring = () => {
                 <div className="mt-auto border-t border-white/5 p-8 pt-6 bg-white/[0.01]">
                    <div className="flex justify-between items-center mb-4">
                       <span className="text-xs font-bold text-slate-400 tracking-wider">National Coverage</span>
-                      <span className="text-xs font-bold text-teal-400">{op.coverage.overall}%</span>
+                      <span className="text-xs font-bold text-[#E8F0F9]">{op.coverage.overall}%</span>
                    </div>
                    <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
-                      <div className="h-full bg-teal-600 rounded-full" style={{ width: `${op.coverage.overall}%` }}></div>
+                      <div className="h-full bg-[#003366] rounded-full" style={{ width: `${op.coverage.overall}%` }}></div>
                    </div>
-                   <button className="w-full mt-6 py-3 rounded-xl bg-slate-900 border border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:border-teal-500 hover:text-teal-400 transition-all flex items-center justify-center space-x-2">
+                   <button className="w-full mt-6 py-3 rounded-xl bg-slate-900 border border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:border-[#003366] hover:text-[#E8F0F9] transition-all flex items-center justify-center space-x-2">
                        <span>Detailed Spectrum Analysis</span>
                        <ArrowUpRight className="w-3 h-3" />
                    </button>
@@ -248,7 +248,7 @@ const LiveQoSMonitoring = () => {
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
-                    { label: 'Voice Quality', icon: Phone, color: 'text-blue-400', bg: 'bg-blue-500/10', val: '4.2' },
+                    { label: 'Voice Quality', icon: Phone, color: 'text-blue-400', bg: 'bg-[#003366]/10', val: '4.2' },
                     { label: 'Call Success', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10', val: '98.5%' },
                     { label: 'Availability', icon: Signal, color: 'text-emerald-400', bg: 'bg-emerald-500/10', val: '99.9%' },
                     { label: 'Node Health', icon: Cpu, color: 'text-purple-400', bg: 'bg-purple-500/10', val: '94%' },
@@ -267,11 +267,11 @@ const LiveQoSMonitoring = () => {
             </div>
 
             <div className="relative">
-               <div className="absolute inset-0 bg-teal-500/10 blur-[120px] rounded-full"></div>
+               <div className="absolute inset-0 bg-[#003366]/10 blur-[120px] rounded-full"></div>
                <div className="relative bg-[#0f172a] border border-white/10 p-10 rounded-[3rem] shadow-2xl">
                   <div className="flex items-center justify-between mb-8">
                      <div className="flex items-center space-x-3">
-                        <Gauge className="w-5 h-5 text-teal-400" />
+                        <Gauge className="w-5 h-5 text-[#E8F0F9]" />
                         <h3 className="text-lg font-bold text-white">Spectral Efficiency</h3>
                      </div>
                      <Download className="w-4 h-4 text-slate-500 hover:text-white cursor-pointer" />
@@ -282,7 +282,7 @@ const LiveQoSMonitoring = () => {
                      {[45, 78, 52, 90, 65, 88, 70, 95, 80, 55, 60, 48].map((h, i) => (
                        <div key={i} className="flex-1 space-y-2">
                           <div 
-                            className={`w-full bg-gradient-to-t from-teal-600/20 to-teal-500 rounded-t-lg transition-all duration-1000 delay-${i * 100} hover:brightness-110`} 
+                            className={`w-full bg-gradient-to-t from-[#003366]/20 to-[#0A4D8C] rounded-t-lg transition-all duration-1000 delay-${i * 100} hover:brightness-110`} 
                             style={{ height: `${h}%` }}
                           ></div>
                           <div className="h-1.5 w-full bg-slate-800 rounded-full"></div>
@@ -304,7 +304,7 @@ const LiveQoSMonitoring = () => {
       {/* Footer Info */}
       <section className="py-24 border-t border-white/5">
         <div className="max-w-3xl mx-auto text-center px-4">
-           <Globe className="w-12 h-12 text-teal-500 mx-auto mb-8 animate-spin-slow" />
+           <Globe className="w-12 h-12 text-[#003366] mx-auto mb-8 animate-spin-slow" />
            <h3 className="text-2xl font-bold text-white mb-6">Regional Compliance Framework</h3>
            <p className="text-slate-500 leading-relaxed mb-10">
              BOCRA's QoS framework is aligned with ITU standards and SADC regional guidelines. We provide this data to foster competition, ensure market transparency, and safeguard the interests of every citizen in Botswana.

@@ -2,25 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
 
 body {
     margin: 0;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-        sans-serif;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'DM Sans', sans-serif;
 }
 
 code {
-    font-family:
-        source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+    font-family: 'DM Mono', source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 @layer base {
@@ -31,32 +28,44 @@ code {
         --card-foreground: 222 47% 11%;
         --popover: 0 0% 100%;
         --popover-foreground: 222 47% 11%;
-        --primary: 174 100% 27%; /* #00897B approx */
+
+        /* ── PRIMARY: BOCRA Navy ── */
+        --primary: 210 100% 20%;          /* #003366 */
         --primary-foreground: 0 0% 100%;
+
         --secondary: 210 40% 96.1%;
         --secondary-foreground: 222 47% 11%;
         --muted: 210 40% 96.1%;
         --muted-foreground: 215.4 16.3% 46.9%;
-        --accent: 174 100% 95%;
-        --accent-foreground: 174 100% 27%;
+
+        /* ── ACCENT: BOCRA Orange ── */
+        --accent: 28 90% 52%;             /* #F47920 */
+        --accent-foreground: 0 0% 100%;
+
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 210 40% 98%;
         --border: 214.3 31.8% 91.4%;
         --input: 214.3 31.8% 91.4%;
-        --ring: 174 100% 27%;
-        --radius: 1.25rem;
+        --ring: 210 100% 20%;             /* Navy focus ring */
+        --radius: 0.75rem;
 
-        /* Official BOCRA Palette */
-        --bocra-dark: #00695C;
-        --bocra-medium: #00897B;
-        --bocra-light: #4DB6AC;
-        
-        /* BOCRA Status Colors */
-        --status-approved: #2E7D32;
-        --status-review: #1565C0;
-        --status-rejected: #C62828;
-        --status-pending: #F9A825;
+        /* ── BOCRA OFFICIAL BRAND PALETTE ── */
+        --bocra-navy:        #003366;     /* Primary */
+        --bocra-navy-dark:   #001F40;     /* Footer, dark hero */
+        --bocra-navy-mid:    #0A4D8C;     /* Hover on navy */
+        --bocra-navy-tint:   #E8F0F9;     /* Card fills, info bg */
+        --bocra-orange:      #F47920;     /* Accent, CTAs, active */
+        --bocra-orange-dark: #C25E00;     /* Hover on orange */
+        --bocra-orange-tint: #FFF0E6;     /* Highlight areas */
+        --bocra-surface:     #F5F5F3;     /* Page background */
+
+        /* ── STATUS COLORS ── */
+        --status-approved: #1A6B3C;
+        --status-review:   #0A4D8C;
+        --status-rejected: #B91C1C;
+        --status-pending:  #C25E00;
     }
+
     .dark {
         --background: 224 71% 4%;
         --foreground: 213 31% 91%;
@@ -64,19 +73,19 @@ code {
         --card-foreground: 213 31% 91%;
         --popover: 224 71% 4%;
         --popover-foreground: 213 31% 91%;
-        --primary: 174 100% 27%;
+        --primary: 210 100% 20%;
         --primary-foreground: 0 0% 100%;
         --secondary: 224 71% 12%;
         --secondary-foreground: 213 31% 91%;
         --muted: 224 71% 12%;
         --muted-foreground: 215 20.2% 65.1%;
-        --accent: 224 71% 12%;
-        --accent-foreground: 210 40% 98%;
+        --accent: 28 90% 52%;
+        --accent-foreground: 0 0% 100%;
         --destructive: 0 62.8% 30.6%;
         --destructive-foreground: 213 31% 91%;
         --border: 224 71% 12%;
         --input: 224 71% 12%;
-        --ring: 174 100% 27%;
+        --ring: 210 100% 20%;
     }
 }
 
@@ -90,8 +99,10 @@ code {
     .text-balance {
         text-wrap: balance;
     }
+
+    /* ── BOCRA stripe-card: replaces old teal gradient ── */
     .stripe-gradient {
-        background: linear-gradient(135deg, #0d9488 0%, #0891b2 50%, #2563eb 100%);
+        background: linear-gradient(135deg, #003366 0%, #0A4D8C 50%, #003366 100%);
     }
     .stripe-card {
         @apply relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1;
@@ -103,16 +114,31 @@ code {
     .stripe-card:hover::before {
         @apply opacity-100;
     }
+
+    /* ── BOTSWANA BASKET WEAVE PATTERN ── */
+    /* Traditional Tswana interlocking square pattern */
     .basket-pattern {
-        background-color: transparent;
-        background-image:  linear-gradient(135deg, currentColor 25%, transparent 25%), linear-gradient(225deg, currentColor 25%, transparent 25%), linear-gradient(45deg, currentColor 25%, transparent 25%), linear-gradient(315deg, currentColor 25%, transparent 25%);
-        background-position:  10px 0, 10px 0, 0 0, 0 0;
-        background-size: 20px 20px;
+        background-image:
+            linear-gradient(45deg, currentColor 25%, transparent 25%),
+            linear-gradient(-45deg, currentColor 25%, transparent 25%),
+            linear-gradient(45deg, transparent 75%, currentColor 75%),
+            linear-gradient(-45deg, transparent 75%, currentColor 75%);
+        background-size: 12px 12px;
+        background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
         background-repeat: repeat;
     }
+
+    /* Overlay helper — always transparent pointer, never blocks interaction */
     .heritage-overlay {
-        @apply absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-multiply blur-[1px];
+        @apply absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-multiply;
     }
+
+    /* ── BOCRA BRAND UTILITY CLASSES ── */
+    .bocra-navy       { color: #003366; }
+    .bocra-orange     { color: #F47920; }
+    .bg-bocra-navy    { background-color: #003366; }
+    .bg-bocra-orange  { background-color: #F47920; }
+    .border-bocra     { border-color: #003366; }
 }
 
 @layer base {
@@ -124,53 +150,38 @@ code {
     }
 }
 
-/* Accessibility Enhancements */
+/* ── ACCESSIBILITY ── */
 .high-contrast {
     --background: 0 0% 100%;
     --foreground: 0 0% 0%;
     filter: contrast(1.2);
 }
-
 .large-text {
     line-height: 1.8 !important;
 }
-
-/* Skip to main content link */
 .skip-link {
     position: absolute;
     top: -40px;
     left: 0;
     @apply bg-primary text-primary-foreground p-2 z-[100] transition-all;
 }
-
 .skip-link:focus {
     top: 0;
 }
-
-/* Focus visible improvements */
 *:focus-visible {
     @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
 }
 
-/* ─── Mobile & Tablet Responsiveness ─────────────────────────────── */
+/* ── SCROLLBAR ── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Scrollbar hidden for dashboard sidebars */
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-.no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* Touch-friendly target sizes */
+/* ── RESPONSIVE ── */
 @media (max-width: 768px) {
     button, a, [role="button"] {
         min-height: 44px;
         min-width: 44px;
     }
-    
-    /* Admin sidebar mobile overlay */
     .admin-sidebar-mobile {
         transform: translateX(-100%);
         transition: transform 0.3s ease;
@@ -178,31 +189,18 @@ code {
     .admin-sidebar-mobile.open {
         transform: translateX(0);
     }
-
-    /* Home hero text scaling */
     .hero-title {
         font-size: 2.25rem !important;
         line-height: 1.2 !important;
     }
-
-    /* Dashboard stat cards stack */
     .stat-grid {
         grid-template-columns: 1fr 1fr !important;
     }
 }
-
 @media (max-width: 480px) {
-    .hero-title {
-        font-size: 1.875rem !important;
-    }
-    .stat-grid {
-        grid-template-columns: 1fr !important;
-    }
+    .hero-title { font-size: 1.875rem !important; }
+    .stat-grid  { grid-template-columns: 1fr !important; }
 }
-
-/* Tablet adjustments */
 @media (min-width: 769px) and (max-width: 1024px) {
-    .admin-content-area {
-        margin-left: 0 !important;
-    }
+    .admin-content-area { margin-left: 0 !important; }
 }

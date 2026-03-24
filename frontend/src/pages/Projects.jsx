@@ -112,8 +112,8 @@ const Projects = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      'In Progress': 'bg-blue-100 text-blue-800',
-      Completed: 'bg-green-100 text-green-800',
+      'In Progress': 'bg-[#E8F0F9] text-blue-800',
+      Completed: 'bg-[#E6F4EC] text-[#1A6B3C]',
       Planning: 'bg-yellow-100 text-yellow-800',
       'On Hold': 'bg-red-100 text-red-800',
     };
@@ -123,10 +123,10 @@ const Projects = () => {
   const getCategoryColor = (category) => {
     const colors = {
       Infrastructure: 'bg-purple-100 text-purple-800',
-      'Digital Transformation': 'bg-teal-100 text-teal-800',
+      'Digital Transformation': 'bg-[#E8F0F9] text-[#001F40]',
       Policy: 'bg-indigo-100 text-indigo-800',
       Cybersecurity: 'bg-red-100 text-red-800',
-      Technology: 'bg-cyan-100 text-cyan-800',
+      Technology: 'bg-[#E8F0F9] text-[#001F40]',
     };
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
@@ -134,7 +134,7 @@ const Projects = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-teal-600 to-cyan-600 py-20">
+      <section className="bg-[#003366] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <Briefcase className="h-16 w-16 mx-auto mb-6" />
           <h1 className="text-5xl font-bold mb-6">Our Projects</h1>
@@ -150,14 +150,14 @@ const Projects = () => {
           <div className="grid md:grid-cols-4 gap-6">
             <Card className="bg-white shadow-lg">
               <CardContent className="pt-6 text-center">
-                <Briefcase className="h-8 w-8 text-teal-600 mx-auto mb-2" />
+                <Briefcase className="h-8 w-8 text-[#003366] mx-auto mb-2" />
                 <div className="text-3xl font-bold text-gray-900">{projects.length}</div>
                 <div className="text-sm text-gray-600">Total Projects</div>
               </CardContent>
             </Card>
             <Card className="bg-white shadow-lg">
               <CardContent className="pt-6 text-center">
-                <TrendingUp className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                <TrendingUp className="h-8 w-8 text-[#003366] mx-auto mb-2" />
                 <div className="text-3xl font-bold text-gray-900">
                   {projects.filter((p) => p.status === 'In Progress').length}
                 </div>
@@ -206,13 +206,13 @@ const Projects = () => {
                       </CardDescription>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-teal-600">{project.progress}%</div>
+                      <div className="text-3xl font-bold text-[#003366]">{project.progress}%</div>
                       <div className="text-sm text-gray-600">Complete</div>
                     </div>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div
-                      className="bg-gradient-to-r from-teal-500 to-cyan-500 h-3 rounded-full transition-all duration-500"
+                      className="bg-[#003366] h-3 rounded-full transition-all duration-500"
                       style={{ width: `${project.progress}%` }}
                     ></div>
                   </div>
@@ -224,14 +224,14 @@ const Projects = () => {
                     <ul className="grid md:grid-cols-2 gap-3">
                       {project.objectives.map((objective, index) => (
                         <li key={index} className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-teal-600 mr-2 flex-shrink-0 mt-0.5" />
+                          <CheckCircle className="h-5 w-5 text-[#003366] mr-2 flex-shrink-0 mt-0.5" />
                           <span className="text-gray-700">{objective}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                   <div className="mt-6 flex justify-end">
-                    <Button variant="outline" className="border-teal-600 text-teal-600 hover:bg-teal-50">
+                    <Button variant="outline" className="border-[#003366] text-[#003366] hover:bg-[#E8F0F9]">
                       View Project Details
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
