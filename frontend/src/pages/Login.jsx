@@ -5,9 +5,8 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { useToast } from '../hooks/use-toast';
-import { Mail, Lock, User, Building2, Shield, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { DEPARTMENTS, DEPARTMENT_LABELS } from '../utils/persistence';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -79,23 +78,7 @@ const Login = () => {
     }
   };
 
-  const handleQuickDemoLogin = async (email, password, role, dept = null) => {
-    try {
-      await login(email, password);
-      const isClient = role === 'client';
-      toast({
-        title: `${isClient ? 'Citizen' : 'Admin'} Login Successful`,
-        description: `Welcome to the ${isClient ? 'Citizen Portal' : 'Admin Dashboard'}!`,
-      });
-      navigate(isClient ? '/dashboard' : '/admin');
-    } catch (error) {
-      toast({
-        title: 'Login Failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -241,71 +224,6 @@ const Login = () => {
                 )}
               </Button>
             </form>
-
-            <div className="mt-8 pt-6 border-t border-slate-100">
-              <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Demo Quick Access</p>
-              <div className="flex justify-center mb-4">
-                <Button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('citizen@example.com', 'demo123456', 'client')}
-                  disabled={isSubmitting || authLoading}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/10 rounded-xl font-bold py-6"
-                >
-                  <User className="w-5 h-5 mr-3" />
-                  Citizen Portal
-                </Button>
-              </div>
-              
-              <div className="relative mt-6 mb-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500 font-bold tracking-wider">
-                    Staff Portals
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('licensing@bocra.org.bw', 'admin123456', 'admin', 'licensing')}
-                  disabled={isSubmitting || authLoading}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
-                >
-                  <Shield className="w-3.5 h-3.5 mr-2" />
-                  Licensing
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('complaints@bocra.org.bw', 'admin123456', 'admin', 'complaints')}
-                  disabled={isSubmitting || authLoading}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
-                >
-                  <Shield className="w-3.5 h-3.5 mr-2" />
-                  Complaints
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('qos@bocra.org.bw', 'admin123456', 'admin', 'qos')}
-                  disabled={isSubmitting || authLoading}
-                  className="w-full bg-teal-500 hover:bg-teal-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
-                >
-                  <Shield className="w-3.5 h-3.5 mr-2" />
-                  Quality of Service
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('tenders@bocra.org.bw', 'admin123456', 'admin', 'tenders')}
-                  disabled={isSubmitting || authLoading}
-                  className="w-full bg-purple-500 hover:bg-purple-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
-                >
-                  <Shield className="w-3.5 h-3.5 mr-2" />
-                  Tenders
-                </Button>
-              </div>
-            </div>
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-sm text-gray-600">
