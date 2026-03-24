@@ -38,6 +38,17 @@ export const submitApplication = (data) =>
     body: JSON.stringify(data),
   });
 
+export const updateApplication = (id, data) =>
+  apiCall(`/applications/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+export const deleteApplication = (id) =>
+  apiCall(`/applications/${id}`, {
+    method: 'DELETE',
+  });
+
 export const uploadApplicationDocument = (applicationId, documentData) =>
   apiCall(`/applications/${applicationId}/documents`, {
     method: 'POST',
@@ -57,6 +68,17 @@ export const submitComplaint = (data) =>
   apiCall('/complaints', {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+
+export const updateComplaint = (id, data) =>
+  apiCall(`/complaints/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+export const deleteComplaint = (id) =>
+  apiCall(`/complaints/${id}`, {
+    method: 'DELETE',
   });
 
 // =====================

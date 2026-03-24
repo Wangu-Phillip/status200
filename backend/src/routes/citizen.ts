@@ -179,6 +179,122 @@ router.post(
   }
 );
 
+// Update application
+router.put('/applications/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const { businessName, sector, description } = req.body;
+
+    // Verify application ownership
+    const application = await prisma.application.findUnique({
+      where: { id },
+    });
+
+    if (!application) {
+      res.status(404).json({ error: 'Application not found' });
+      return;
+    }
+
+    if (application.userId !== userId) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // Only allow editing applications that are not approved or rejected
+    if (['Approved', 'Rejected'].includes(application.status)) {
+      res.status(400).json({ error: 'Cannot edit applications with final status' });
+      return;
+    }
+
+    const updatedApplication = await prisma.application.update({
+      where: { id },
+      data: {
+        ...(businessName && { businessName }),
+        ...(sector && { sector }),
+        ...(description !== undefined && { description }),
+      },
+      include: { documents: true },
+    });
+
+    // Log activity
+    await prisma.activityLog.create({
+      data: {
+        id: uuidv4(),
+        userId: userId!,
+        action: 'application_updated',
+        actionType: 'application',
+        description: `Updated application: ${businessName || application.businessName}`,
+        entityId: id,
+        status: 'successful',
+      },
+    });
+
+    res.json(updatedApplication);
+  } catch (error) {
+    console.error('Update application error:', error);
+    res.status(500).json({ error: 'Failed to update application' });
+  }
+});
+
+// Delete application
+router.delete('/applications/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    const application = await prisma.application.findUnique({
+      where: { id },
+      include: { documents: true },
+    });
+
+    if (!application) {
+      res.status(404).json({ error: 'Application not found' });
+      return;
+    }
+
+    if (application.userId !== userId) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // Only allow deleting applications that are submitted/pending
+    if (!['Submitted', 'Pending Review', 'Pending Documents'].includes(application.status)) {
+      res.status(400).json({ error: 'Cannot delete applications with final status' });
+      return;
+    }
+
+    // Delete associated documents
+    if (application.documents && application.documents.length > 0) {
+      await prisma.document.deleteMany({
+        where: { applicationId: id },
+      });
+    }
+
+    await prisma.application.delete({
+      where: { id },
+    });
+
+    // Log activity
+    await prisma.activityLog.create({
+      data: {
+        id: uuidv4(),
+        userId: userId!,
+        action: 'application_deleted',
+        actionType: 'application',
+        description: `Deleted application: ${application.businessName}`,
+        entityId: id,
+        status: 'successful',
+      },
+    });
+
+    res.json({ message: 'Application deleted successfully' });
+  } catch (error) {
+    console.error('Delete application error:', error);
+    res.status(500).json({ error: 'Failed to delete application' });
+  }
+});
+
 // =====================
 // COMPLAINTS ROUTES
 // =====================
@@ -289,6 +405,123 @@ router.post('/complaints', authenticateToken, async (req: AuthRequest, res: Resp
   } catch (error) {
     console.error('Submit complaint error:', error);
     res.status(500).json({ error: 'Failed to submit complaint' });
+  }
+});
+
+// Update complaint
+router.put('/complaints/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const { complaintType, description, againstOperator, dateOfIncident } = req.body;
+
+    // Verify complaint ownership
+    const complaint = await prisma.complaint.findUnique({
+      where: { id },
+    });
+
+    if (!complaint) {
+      res.status(404).json({ error: 'Complaint not found' });
+      return;
+    }
+
+    if (complaint.userId !== userId) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // Only allow editing complaints that are not resolved or closed
+    if (['Resolved', 'Closed'].includes(complaint.status)) {
+      res.status(400).json({ error: 'Cannot edit resolved or closed complaints' });
+      return;
+    }
+
+    const updatedComplaint = await prisma.complaint.update({
+      where: { id },
+      data: {
+        ...(complaintType && { complaintType }),
+        ...(description !== undefined && { description }),
+        ...(againstOperator && { againstOperator }),
+        ...(dateOfIncident && { dateOfIncident: new Date(dateOfIncident) }),
+      },
+      include: { documents: true },
+    });
+
+    // Log activity
+    await prisma.activityLog.create({
+      data: {
+        id: uuidv4(),
+        userId: userId!,
+        action: 'complaint_updated',
+        actionType: 'complaint',
+        description: `Updated complaint against ${againstOperator || complaint.againstOperator}`,
+        entityId: id,
+        status: 'successful',
+      },
+    });
+
+    res.json(updatedComplaint);
+  } catch (error) {
+    console.error('Update complaint error:', error);
+    res.status(500).json({ error: 'Failed to update complaint' });
+  }
+});
+
+// Delete complaint
+router.delete('/complaints/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    const complaint = await prisma.complaint.findUnique({
+      where: { id },
+      include: { documents: true },
+    });
+
+    if (!complaint) {
+      res.status(404).json({ error: 'Complaint not found' });
+      return;
+    }
+
+    if (complaint.userId !== userId) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // Only allow deleting complaints that are registered or acknowledged
+    if (!['Registered', 'Acknowledged'].includes(complaint.status)) {
+      res.status(400).json({ error: 'Cannot delete complaints that are in progress or resolved' });
+      return;
+    }
+
+    // Delete associated documents
+    if (complaint.documents && complaint.documents.length > 0) {
+      await prisma.document.deleteMany({
+        where: { complaintId: id },
+      });
+    }
+
+    await prisma.complaint.delete({
+      where: { id },
+    });
+
+    // Log activity
+    await prisma.activityLog.create({
+      data: {
+        id: uuidv4(),
+        userId: userId!,
+        action: 'complaint_deleted',
+        actionType: 'complaint',
+        description: `Deleted complaint against ${complaint.againstOperator}`,
+        entityId: id,
+        status: 'successful',
+      },
+    });
+
+    res.json({ message: 'Complaint deleted successfully' });
+  } catch (error) {
+    console.error('Delete complaint error:', error);
+    res.status(500).json({ error: 'Failed to delete complaint' });
   }
 });
 

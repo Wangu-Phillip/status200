@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { MessageSquare, Clock, Filter, Search, MessageCircle, AlertCircle, Hash, CheckCircle, Plus, Loader2, X } from 'lucide-react';
+import { MessageSquare, Clock, Filter, Search, MessageCircle, AlertCircle, Hash, CheckCircle, Plus, Loader2, X, Edit2, Trash2 } from 'lucide-react';
 import * as api from '../../services/api';
+import ComplaintDetail from './ComplaintDetail';
 
 const ComplaintTimeline = ({ status }) => {
   const steps = ['Registered', 'Acknowledged', 'In Progress', 'Resolved'];
@@ -38,6 +39,10 @@ const ComplaintsView = () => {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewComplaintForm, setShowNewComplaintForm] = useState(false);
+  const [selectedComplaintId, setSelectedComplaintId] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState({
     complaintType: '',
     againstOperator: '',
@@ -81,6 +86,27 @@ const ComplaintsView = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleDeleteComplaint = async (complaintId) => {
+    try {
+      setDeleting(true);
+      await api.deleteComplaint(complaintId);
+      setDeleteConfirmId(null);
+      await fetchComplaints();
+      alert('Complaint deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete complaint:', error);
+      alert('Error deleting complaint: ' + error.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleEditComplaint = (complaintId, e) => {
+    e.stopPropagation();
+    setSelectedComplaintId(complaintId);
+    setShowDetailModal(true);
   };
 
   const filteredComplaints = complaints.filter(complaint =>
@@ -182,7 +208,10 @@ const ComplaintsView = () => {
       ) : filteredComplaints.length > 0 ? (
         <div className="grid md:grid-cols-2 gap-8">
           {filteredComplaints.map((complaint) => (
-            <div key={complaint.id} className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-8 hover:border-orange-500/30 transition-all flex flex-col group relative overflow-hidden cursor-default hover:bg-white/[0.02]">
+            <div 
+              key={complaint.id} 
+              className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-8 hover:border-orange-500/30 transition-all flex flex-col group relative overflow-hidden"
+            >
               <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-orange-500/10 transition-all"></div>
               
               <div className="flex items-center justify-between mb-8 relative">
@@ -195,9 +224,11 @@ const ComplaintsView = () => {
                      <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">{complaint.againstOperator}</p>
                   </div>
                 </div>
-                <Badge variant="outline" className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(complaint.status)}`}>
-                  {complaint.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(complaint.status)}`}>
+                    {complaint.status}
+                  </Badge>
+                </div>
               </div>
 
               <div className="flex-1 space-y-4 mb-8">
@@ -216,8 +247,71 @@ const ComplaintsView = () => {
                 </div>
               </div>
 
-              <div className="border-t border-[#1e293b] pt-4">
+              <div className="border-t border-[#1e293b] pt-4 mb-4">
                 <ComplaintTimeline status={complaint.status} />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditComplaint(complaint.id, e);
+                  }}
+                  className="flex-1 px-3 py-2.5 bg-slate-800/50 rounded-xl text-slate-500 hover:text-orange-400 hover:bg-orange-500/10 transition-all text-sm font-bold flex items-center justify-center gap-2"
+                  title="View details"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  View
+                </button>
+                {['Registered', 'Acknowledged'].includes(complaint.status) && (
+                  <>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditComplaint(complaint.id, e);
+                      }}
+                      className="p-2.5 bg-slate-800/50 rounded-xl text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
+                      title="Edit complaint"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    {deleteConfirmId === complaint.id ? (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteComplaint(complaint.id);
+                          }}
+                          disabled={deleting}
+                          className="px-2 py-1.5 bg-red-600 hover:bg-red-700 rounded text-white text-xs font-bold transition-all"
+                        >
+                          {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Confirm'}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirmId(null);
+                          }}
+                          className="px-2 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white text-xs font-bold transition-all"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteConfirmId(complaint.id);
+                        }}
+                        className="p-2.5 bg-slate-800/50 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        title="Delete complaint"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -227,6 +321,22 @@ const ComplaintsView = () => {
           <MessageSquare className="w-12 h-12 text-slate-600 mx-auto mb-4" />
           <p className="text-slate-500">No complaints found. {searchTerm && 'Try adjusting your search.'}</p>
         </div>
+      )}
+
+      {/* Complaint Detail Modal */}
+      {showDetailModal && selectedComplaintId && (
+        <ComplaintDetail
+          complaintId={selectedComplaintId}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedComplaintId(null);
+          }}
+          onUpdate={() => fetchComplaints()}
+          onDelete={() => {
+            setShowDetailModal(false);
+            fetchComplaints();
+          }}
+        />
       )}
     </div>
   );
