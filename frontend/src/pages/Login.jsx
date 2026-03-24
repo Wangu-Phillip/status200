@@ -6,7 +6,8 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { useToast } from '../hooks/use-toast';
-import { Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, User, Building2, Shield } from 'lucide-react';
+import { DEPARTMENTS, DEPARTMENT_LABELS } from '../utils/persistence';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const Login = () => {
     name: '',
     organization: '',
     userType: 'client',
+    department: '',
   });
 
   const handleInputChange = (e) => {
@@ -32,6 +34,7 @@ const Login = () => {
       email: formData.email,
       userType: formData.userType,
       organization: formData.organization,
+      department: formData.userType === 'admin' ? formData.department : null,
     };
     localStorage.setItem('bocra_user', JSON.stringify(userData));
     
@@ -121,6 +124,29 @@ const Login = () => {
                       <option value="admin">BOCRA Staff (Admin)</option>
                     </select>
                   </div>
+                  {formData.userType === 'admin' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="department">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-teal-600" />
+                          Department
+                        </div>
+                      </Label>
+                      <select
+                        id="department"
+                        name="department"
+                        value={formData.department}
+                        onChange={handleInputChange}
+                        required
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <option value="">Select Department...</option>
+                        {Object.entries(DEPARTMENT_LABELS).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </>
               )}
               <div className="space-y-2">

@@ -6,7 +6,8 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { useToast } from '../hooks/use-toast';
-import { AlertCircle, Upload, FileText } from 'lucide-react';
+import { AlertCircle, Upload, FileText, CheckCircle, Copy, Hash } from 'lucide-react';
+import { addSubmission, DEPARTMENTS } from '../utils/persistence';
 
 const Complaints = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Complaints = () => {
     description: '',
   });
   const [files, setFiles] = useState([]);
+  const [submittedToken, setSubmittedToken] = useState(null);
 
   const operators = ['BTC', 'Mascom', 'Orange', 'Yarona FM', 'Duma FM', 'Gabz FM', 'eBotswana', 'Other'];
   const complaintTypes = [
@@ -45,28 +47,93 @@ const Complaints = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    const submission = addSubmission({
+      type: 'complaint',
+      department: DEPARTMENTS.COMPLAINTS,
+      citizenName: formData.complainantName,
+      citizenEmail: formData.email,
+      subject: formData.subject,
+      description: `[${formData.complaintType}] Against: ${formData.operator}\n\n${formData.description}`,
+      priority: formData.complaintType === 'Data Privacy' ? 'High' : 'Medium',
+    });
+    
+    setSubmittedToken(submission.id);
+    
     toast({
       title: 'Complaint Submitted Successfully',
-      description: 'Your complaint has been filed. Reference: COM' + Math.floor(Math.random() * 10000),
+      description: `Reference Token: ${submission.id}`,
     });
-    setTimeout(() => {
-      const user = localStorage.getItem('bocra_user');
-      if (user) {
-        navigate('/dashboard');
-      } else {
-        setFormData({
-          complainantName: '',
-          email: '',
-          phone: '',
-          operator: '',
-          complaintType: 'Service Quality',
-          subject: '',
-          description: '',
-        });
-        setFiles([]);
-      }
-    }, 2000);
   };
+
+  // Token Success Modal
+  if (submittedToken) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-lg mx-auto px-4">
+          <Card className="shadow-2xl border-0 overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-8 text-center">
+              <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-10 w-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">Complaint Submitted!</h2>
+              <p className="text-teal-100 mt-2">Your complaint has been registered with BOCRA</p>
+            </div>
+            <CardContent className="p-8 space-y-6">
+              <div className="bg-slate-50 rounded-xl p-6 text-center border-2 border-dashed border-slate-200">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Your Reference Token</p>
+                <div className="flex items-center justify-center gap-3">
+                  <Hash className="h-5 w-5 text-teal-600" />
+                  <span className="text-2xl font-mono font-bold text-slate-900">{submittedToken}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(submittedToken);
+                      toast({ title: 'Copied!', description: 'Token copied to clipboard' });
+                    }}
+                    className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                  >
+                    <Copy className="h-4 w-4 text-slate-500" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-3 text-sm text-slate-600">
+                <p className="font-semibold text-slate-800">What happens next?</p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>
+                    Your complaint will be reviewed by the BOCRA Complaints Department
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
+                    You will receive email updates on the progress
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
+                    Use your reference token above to follow up on your complaint
+                  </li>
+                </ul>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => navigate('/dashboard')}
+                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-12"
+                >
+                  Go to Dashboard
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setSubmittedToken(null); setFormData({ complainantName: '', email: '', phone: '', operator: '', complaintType: 'Service Quality', subject: '', description: '' }); setFiles([]); }}
+                  className="flex-1 rounded-xl h-12"
+                >
+                  Submit Another
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

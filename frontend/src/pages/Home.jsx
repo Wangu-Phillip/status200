@@ -2,10 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { 
-  Radio, Tv, Mail, Wifi, FileText, AlertCircle, 
+import { useTheme } from '../context/ThemeProvider';
+import { Sun, Moon, Radio, Tv, Mail, Wifi, FileText, AlertCircle, 
   ArrowRight, Download, ShieldCheck, Zap, 
-  BarChart3, LifeBuoy, Globe, MessageSquare 
+  BarChart3, LifeBuoy, Globe, MessageSquare, Briefcase
 } from 'lucide-react';
 import { newsItems, documents } from '../mockData';
 
@@ -49,55 +49,62 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Stripe-inspired Hero Section */}
-      <section className="relative pt-32 pb-24 overflow-hidden">
-        {/* Cultural Background Element */}
-        <div className="absolute top-0 right-0 w-full h-full -z-10 select-none pointer-events-none overflow-hidden">
-          <img 
-            src="/botswana_heritage.png" 
-            alt="Botswana Heritage" 
-            className="w-full h-full object-cover object-center blur-[2px] scale-100 opacity-40" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent"></div>
-        </div>
+    <div className="min-h-screen bg-white relative">
+      {/* Global Heritage Background Pattern */}
+      <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden opacity-40">
+        <img 
+          src="/botswana_heritage.png" 
+          alt="Botswana Heritage" 
+          className="w-full h-full object-cover object-center scale-105" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/40 to-white/80"></div>
+      </div>
         
+      <section className="relative pt-32 pb-24 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-[120%] bg-gradient-to-br from-[#00695C]/5 via-[#00897B]/5 to-transparent -skew-y-6 origin-top-left -z-10"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Left Column: Content */}
             <div className="space-y-8">
-              <div className="inline-flex items-center space-x-2 bg-[#4DB6AC]/10 text-[#00695C] px-4 py-1.5 rounded-full text-sm font-bold border border-[#4DB6AC]/20 animate-in fade-in slide-in-from-bottom-4">
-                <ShieldCheck className="w-4 h-4" />
-                <span className="uppercase tracking-widest text-[10px]">Empowering Botswana's Connections</span>
-              </div>
-              <h1 className="text-6xl md:text-7xl font-black tracking-tight text-slate-900 leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-500">
-                Regulating for a 
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#00695C] to-[#00897B]">
-                  Digital Future.
+              <span className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-teal-50 text-teal-700 text-sm font-semibold mb-6 animate-fade-in border border-teal-100 shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                </span>
+                <span>Official Staff & Citizen Portal</span>
+              </span>
+              
+              <h1 className="text-5xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-8">
+                Modernizing Botswana's <br />
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00695C] to-[#4DB6AC]">
+                  Digital Frontier
                 </span>
               </h1>
-              <p className="text-xl text-slate-600 max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-700 font-medium">
-                The Botswana Communications Regulatory Authority (BOCRA) ensures excellence in telecommunications, broadcasting, and postal services across the nation.
+              
+              <p className="text-xl text-slate-600 mb-10 max-w-xl leading-relaxed">
+                Experience the next generation of regulatory services. Seamless, transparent, and 
+                citizen-centric solutions for a connected Botswana.
               </p>
-              <div className="flex flex-wrap gap-4 pt-4 animate-in fade-in slide-in-from-bottom-16 duration-1000">
-                <Link to="/login">
-                  <Button size="xl" className="w-full sm:w-auto h-16 px-10 text-lg rounded-2xl shadow-xl shadow-[#00897B]/20 bg-[#00897B] hover:bg-[#4DB6AC] font-black uppercase tracking-widest text-xs">
+              
+              <div className="flex flex-wrap gap-4">
+                <Link to="/dashboard">
+                  <Button className="h-14 px-8 rounded-2xl bg-[#00897B] hover:bg-[#4DB6AC] text-white text-lg font-semibold shadow-xl shadow-teal-500/20 group transition-all duration-300">
                     Access Portal
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
+                
                 <Link to="/tenders">
-                  <Button variant="outline" size="xl" className="w-full sm:w-auto h-16 px-10 text-lg rounded-2xl shadow-lg border-2 border-[#00897B] text-[#00897B] hover:bg-[#00897B]/10 font-black uppercase tracking-widest text-xs">
+                  <Button variant="outline" className="h-14 px-8 rounded-2xl border-2 border-teal-100 bg-white/50 backdrop-blur-sm text-slate-700 text-lg font-semibold hover:bg-teal-50 transition-all duration-300">
+                    <Briefcase className="mr-2 h-5 w-5 text-teal-600" />
                     Tenders Hub
-                  </Button>
-                </Link>
-                <Link to="/about">
-                  <Button variant="ghost" size="xl" className="w-full sm:w-auto h-16 px-10 text-lg rounded-2xl text-slate-500 font-black uppercase tracking-widest text-xs">
-                    Our Mandate
                   </Button>
                 </Link>
               </div>
             </div>
+
+            {/* Right Column: Illustration/Quick Links */}
             <div className="relative lg:block hidden animate-in fade-in zoom-in duration-1000">
               <div className="absolute -top-20 -right-20 w-96 h-96 bg-teal-200/30 rounded-full blur-3xl opacity-50"></div>
               <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl opacity-50"></div>

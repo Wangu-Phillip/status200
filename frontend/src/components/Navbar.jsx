@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Menu, X, ChevronDown, Globe, BarChart3, Search, Bell } from 'lucide-react';
+import { useTheme } from '../context/ThemeProvider';
+import { Menu, X, ChevronDown, Globe, BarChart3, Search, Bell, Sun, Moon, ShieldCheck, Zap, MessageSquare } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import NotificationCenter from './NotificationCenter';
 import {
@@ -16,6 +17,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const user = localStorage.getItem('bocra_user');
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -120,6 +122,13 @@ const Navbar = () => {
             {/* Icons & CTA */}
             <div className="flex items-center space-x-4">
               <div className="hidden sm:flex items-center space-x-2 mr-2">
+                <button 
+                  onClick={toggleTheme}
+                  className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all"
+                  aria-label="Toggle Theme"
+                >
+                  {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                </button>
                 <button className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all">
                   <Search className="h-5 w-5" />
                 </button>
@@ -193,11 +202,6 @@ const Navbar = () => {
 
   );
 };
-
-// Mock icons for the services if not imported
-const ShieldCheck = (props) => <Globe {...props} />;
-const Zap = (props) => <Globe {...props} />;
-const MessageSquare = (props) => <Globe {...props} />;
 
 export default Navbar;
 

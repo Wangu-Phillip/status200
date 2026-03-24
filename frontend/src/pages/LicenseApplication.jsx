@@ -7,7 +7,8 @@ import { Textarea } from '../components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { useToast } from '../hooks/use-toast';
 import { licenseTypes } from '../mockData';
-import { Upload, FileText } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Copy, Hash } from 'lucide-react';
+import { addSubmission, DEPARTMENTS } from '../utils/persistence';
 
 const LicenseApplication = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const LicenseApplication = () => {
     duration: '1',
   });
   const [files, setFiles] = useState([]);
+  const [submittedToken, setSubmittedToken] = useState(null);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,14 +37,93 @@ const LicenseApplication = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    const submission = addSubmission({
+      type: 'license',
+      department: DEPARTMENTS.LICENSING,
+      citizenName: formData.applicantName,
+      citizenEmail: formData.email,
+      subject: `${formData.licenseType} - ${formData.duration} Year(s)`,
+      description: `Organization: ${formData.organization}\nAddress: ${formData.address}\nPurpose: ${formData.purpose}`,
+      priority: formData.duration >= 3 ? 'High' : 'Medium',
+    });
+    
+    setSubmittedToken(submission.id);
+    
     toast({
       title: 'License Application Submitted',
-      description: 'Your application has been submitted for review. Reference: LIC' + Math.floor(Math.random() * 10000),
+      description: `Reference Token: ${submission.id}`,
     });
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 2000);
   };
+
+  // Token Success Modal
+  if (submittedToken) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-lg mx-auto px-4">
+          <Card className="shadow-2xl border-0 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-8 text-center">
+              <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-10 w-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">Application Submitted!</h2>
+              <p className="text-blue-100 mt-2">Your license application is now under review</p>
+            </div>
+            <CardContent className="p-8 space-y-6">
+              <div className="bg-slate-50 rounded-xl p-6 text-center border-2 border-dashed border-slate-200">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Your Reference Token</p>
+                <div className="flex items-center justify-center gap-3">
+                  <Hash className="h-5 w-5 text-blue-600" />
+                  <span className="text-2xl font-mono font-bold text-slate-900">{submittedToken}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(submittedToken);
+                      toast({ title: 'Copied!', description: 'Token copied to clipboard' });
+                    }}
+                    className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                  >
+                    <Copy className="h-4 w-4 text-slate-500" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-3 text-sm text-slate-600">
+                <p className="font-semibold text-slate-800">What happens next?</p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>
+                    Your application will be reviewed by the BOCRA Licensing Department
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
+                    You may be contacted for additional documents or verification
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
+                    Use your reference token to track progress on your dashboard
+                  </li>
+                </ul>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => navigate('/dashboard')}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12"
+                >
+                  Go to Dashboard
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setSubmittedToken(null); setFormData({ licenseType: licenseTypes[0], applicantName: '', organization: '', email: '', phone: '', address: '', purpose: '', duration: '1' }); setFiles([]); }}
+                  className="flex-1 rounded-xl h-12"
+                >
+                  Submit Another
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

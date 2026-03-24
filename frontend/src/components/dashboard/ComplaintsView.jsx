@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Badge } from '../ui/badge';
-import { MessageSquare, Clock, Filter, Search, MessageCircle, AlertCircle } from 'lucide-react';
+import { MessageSquare, Clock, Filter, Search, MessageCircle, AlertCircle, Hash, CheckCircle } from 'lucide-react';
 import { userComplaints } from '../../mockData';
+import { getSubmissionsByDepartment, DEPARTMENTS } from '../../utils/persistence';
 
 const ComplaintTimeline = ({ status }) => {
   const steps = ['Submitted', 'Under Review', 'Response Sent', 'Resolved'];
-  const currentStep = steps.indexOf(status);
+  const statusMap = {
+    'Pending Review': 0,
+    'Under Review': 1,
+    'Approved': 3,
+    'Rejected': 3,
+    'Submitted': 0,
+  };
+  const currentStep = statusMap[status] ?? steps.indexOf(status);
   
   return (
     <div className="flex items-center w-full mt-8 space-x-2">
@@ -25,6 +33,9 @@ const ComplaintTimeline = ({ status }) => {
 };
 
 const ComplaintsView = () => {
+  // Get live complaints from persistence
+  const liveComplaints = getSubmissionsByDepartment(DEPARTMENTS.COMPLAINTS);
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
       <div className="flex items-center justify-between">
@@ -48,9 +59,50 @@ const ComplaintsView = () => {
         </div>
       </div>
 
+      {/* Live Complaints from Persistence */}
+      {liveComplaints.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-orange-400 flex items-center gap-2">
+            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+            Live Complaints ({liveComplaints.length})
+          </h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            {liveComplaints.map((sub) => (
+              <div key={sub.id} className="bg-[#0a0f1e] border border-[#1e293b] rounded-2xl p-6 hover:border-orange-500/30 transition-all group">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-orange-400" />
+                    <span className="font-mono font-bold text-orange-400 text-sm">{sub.id}</span>
+                  </div>
+                  <Badge variant="outline" className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    sub.status === 'Approved' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' :
+                    sub.status === 'Under Review' ? 'border-blue-500/30 text-blue-400 bg-blue-500/10' :
+                    sub.status === 'Rejected' ? 'border-red-500/30 text-red-400 bg-red-500/10' :
+                    'border-amber-500/30 text-amber-400 bg-amber-500/10'
+                  }`}>
+                    {sub.status}
+                  </Badge>
+                </div>
+                <h4 className="font-bold text-slate-200 mb-1">{sub.subject}</h4>
+                <p className="text-slate-500 text-xs">{sub.citizenName} • {sub.submittedDate}</p>
+                {sub.reviewedBy && (
+                  <div className="mt-3 pt-3 border-t border-[#1e293b]">
+                    <p className="text-xs text-slate-500">
+                      <span className="text-emerald-400 font-semibold">Reviewed by:</span> {sub.reviewedBy}
+                    </p>
+                  </div>
+                )}
+                <ComplaintTimeline status={sub.status} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Legacy Mock Complaints */}
       <div className="grid md:grid-cols-2 gap-8">
         {userComplaints.map((item) => (
-          <div key={item.id} className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-8 hover:border-orange-500/30 transition-all flex flex-col group relative overflow-hidden active:scale-95 cursor-pointer cursor-default hover:bg-white/[0.02]">
+          <div key={item.id} className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-8 hover:border-orange-500/30 transition-all flex flex-col group relative overflow-hidden cursor-default hover:bg-white/[0.02]">
             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-orange-500/10 transition-all"></div>
             
             <div className="flex items-center justify-between mb-8 relative">

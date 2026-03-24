@@ -1,14 +1,20 @@
 import React from 'react';
 import { Badge } from '../ui/badge';
-import { FileText, Clock, CheckCircle, AlertCircle, Search, Filter, ArrowUpRight } from 'lucide-react';
+import { FileText, Clock, CheckCircle, AlertCircle, Search, Filter, ArrowUpRight, Hash } from 'lucide-react';
 import { userApplications } from '../../mockData';
+import { getSubmissionsByDepartment, DEPARTMENTS } from '../../utils/persistence';
 
 const ApplicationsView = () => {
+  // Merge mock data with live submissions from persistence layer
+  const liveSubmissions = getSubmissionsByDepartment(DEPARTMENTS.LICENSING);
+  
   const getStatusStyle = (status) => {
     switch (status) {
       case 'Approved': return 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10';
       case 'Under Review': return 'border-teal-500/30 text-teal-400 bg-teal-500/10';
+      case 'Pending Review': return 'border-amber-500/30 text-amber-400 bg-amber-500/10';
       case 'Pending Documents': return 'border-amber-500/30 text-amber-400 bg-amber-500/10';
+      case 'Rejected': return 'border-red-500/30 text-red-400 bg-red-500/10';
       default: return 'border-slate-700 text-slate-400 bg-slate-800/50';
     }
   };
@@ -36,6 +42,41 @@ const ApplicationsView = () => {
         </div>
       </div>
 
+      {/* Live Submissions from Persistence */}
+      {liveSubmissions.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-teal-400 flex items-center gap-2">
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
+            Live Submissions
+          </h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            {liveSubmissions.map((sub) => (
+              <div key={sub.id} className="bg-[#0a0f1e] border border-[#1e293b] rounded-2xl p-6 hover:border-teal-500/30 transition-all group">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-teal-400" />
+                    <span className="font-mono font-bold text-teal-400 text-sm">{sub.id}</span>
+                  </div>
+                  <Badge variant="outline" className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(sub.status)}`}>
+                    {sub.status}
+                  </Badge>
+                </div>
+                <h4 className="font-bold text-slate-200 mb-1">{sub.subject}</h4>
+                <p className="text-slate-500 text-xs">{sub.citizenName} • {sub.submittedDate}</p>
+                {sub.reviewedBy && (
+                  <div className="mt-3 pt-3 border-t border-[#1e293b]">
+                    <p className="text-xs text-slate-500">
+                      <span className="text-emerald-400 font-semibold">Reviewed by:</span> {sub.reviewedBy}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Legacy Mock Applications */}
       <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] overflow-hidden shadow-2xl">
         <table className="w-full text-left border-collapse">
           <thead>
