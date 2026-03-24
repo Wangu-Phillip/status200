@@ -1,13 +1,84 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { 
   Settings, User, Bell, Shield, Key, Eye, Play, Trash2, LogOut, ChevronRight, 
-  CheckCircle, Globe, Palette, Sliders, AlertTriangle 
+  CheckCircle, Globe, Palette, Sliders, AlertTriangle, Loader2, Save, X 
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import * as api from '../../services/api';
 
 const SettingsView = () => {
+  const navigate = useNavigate();
   const [activeSubTab, setActiveSubTab] = useState('profile');
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    organization: '',
+  });
+  const [preferencesData, setPreferencesData] = useState({
+    darkMode: true,
+    compactLayout: false,
+    highContrast: false,
+    emailNotifications: true,
+  });
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getUserProfile();
+      setUser(data);
+      setProfileData({
+        name: data.name || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        organization: data.organization || '',
+      });
+      // Load preferences from localStorage
+      const saved = localStorage.getItem('bocra_preferences');
+      if (saved) setPreferencesData(JSON.parse(saved));
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      await api.updateUserProfile(profileData);
+      alert('Profile updated successfully!');
+      await fetchUserProfile();
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      alert('Error updating profile: ' + error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePreferenceChange = (key, value) => {
+    const updated = { ...preferencesData, [key]: value };
+    setPreferencesData(updated);
+    localStorage.setItem('bocra_preferences', JSON.stringify(updated));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('bocra_user');
+    localStorage.removeItem('bocra_token');
+    navigate('/login');
+  };
 
   const replayTour = () => {
     localStorage.removeItem('bocra_tour_seen');
@@ -23,6 +94,67 @@ const SettingsView = () => {
 
   const renderActiveTab = () => {
     switch (activeSubTab) {
+      case 'notifications':
+        return (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
+            <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl">
+              <h3 className="text-xl font-bold text-slate-100 flex items-center mb-8">
+                <Bell className="w-5 h-5 mr-3 text-blue-500" />
+                Notification Preferences
+              </h3>
+              <div className="space-y-6">
+                {[
+                  { id: 'email', label: 'Email Notifications', desc: 'Receive updates via email' },
+                  { id: 'sms', label: 'SMS Alerts', desc: 'Critical alerts sent to your phone' },
+                  { id: 'push', label: 'Browser Notifications', desc: 'Real-time web notifications' }
+                ].map((pref) => (
+                  <div key={pref.id} className="flex items-center justify-between p-6 bg-slate-900/30 rounded-3xl border border-[#1e293b] hover:border-[#334155] transition-all">
+                    <div>
+                      <p className="font-bold text-slate-200">{pref.label}</p>
+                      <p className="text-slate-500 text-sm mt-1">{pref.desc}</p>
+                    </div>
+                    <div className={`w-12 h-6 rounded-full relative transition-all cursor-pointer bg-teal-600`}>
+                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-lg left-7`}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        );
+      case 'preferences':
+        return (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
+            <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl">
+              <div className="flex items-center justify-between mb-10">
+                <h3 className="text-xl font-bold text-slate-100 flex items-center">
+                  <Palette className="w-5 h-5 mr-3 text-purple-500" />
+                  Interface Preferences
+                </h3>
+              </div>
+              <div className="space-y-6">
+                {[
+                  { key: 'darkMode', label: 'Dark Mode (Dashdark-X)', desc: 'Optimized for high-contrast visibility and reduced eye strain' },
+                  { key: 'compactLayout', label: 'Compact Layout', desc: 'Fits more information into the active dashboard area' },
+                  { key: 'highContrast', label: 'High Contrast Mode', desc: 'Enhanced accessibility for users with visual impairments' }
+                ].map((pref) => (
+                  <div key={pref.key} className="flex items-center justify-between p-6 bg-slate-900/30 rounded-3xl border border-[#1e293b] hover:border-[#334155] transition-all">
+                    <div className="max-w-md">
+                      <p className="font-bold text-slate-200">{pref.label}</p>
+                      <p className="text-slate-500 text-sm mt-1">{pref.desc}</p>
+                    </div>
+                    <div 
+                      onClick={() => handlePreferenceChange(pref.key, !preferencesData[pref.key])}
+                      className={`w-12 h-6 rounded-full relative transition-all cursor-pointer ${preferencesData[pref.key] ? 'bg-teal-600' : 'bg-slate-800'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-lg ${preferencesData[pref.key] ? 'left-7' : 'left-1'}`}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        );
       case 'security':
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
@@ -54,11 +186,11 @@ const SettingsView = () => {
                            <Globe className="w-4 h-4" />
                         </div>
                         <div>
-                           <p className="text-xs font-bold text-slate-300">Chrome on Windows (Gaborone)</p>
+                           <p className="text-xs font-bold text-slate-300">Chrome on Windows</p>
                            <p className="text-[10px] text-slate-600 uppercase font-bold">Current Session</p>
                         </div>
                      </div>
-                     <Button variant="ghost" className="text-xs text-rose-500 hover:text-rose-400 font-bold">Terminate</Button>
+                     <Button variant="ghost" className="text-xs text-slate-500 hover:text-slate-400 font-bold">Active</Button>
                   </div>
                 </div>
               </div>
@@ -109,38 +241,79 @@ const SettingsView = () => {
               <div className="flex items-start justify-between bg-slate-900/50 border border-[#1e293b] p-8 rounded-3xl group-hover:bg-slate-900 group-hover:border-teal-500/30 transition-all cursor-pointer relative overflow-hidden" onClick={replayTour}>
                  <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-teal-500/5 rounded-full blur-2xl group-hover:bg-teal-500/10 transition-all"></div>
                  <div className="flex-1 max-w-lg relative">
-                    <p className="font-bold text-slate-200 text-lg">Replay Ruby Tour</p>
-                    <p className="text-slate-500 text-sm mt-2 leading-relaxed">Want a refresher? This will reset your first-login tour and Ruby will guide you through the latest portal features again.</p>
+                    <p className="font-bold text-slate-200 text-lg">Replay Portal Tour</p>
+                    <p className="text-slate-500 text-sm mt-2 leading-relaxed">Want a refresher? This will reset your first-login tour and guides will walk you through portal features again.</p>
                  </div>
                  <div className="w-14 h-14 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-400 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-all">
                     <Play className="w-6 h-6 fill-teal-400" />
                  </div>
               </div>
             </section>
-            <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl">
-              <div className="flex items-center justify-between mb-10">
-                <h3 className="text-xl font-bold text-slate-100 flex items-center">
-                  <Palette className="w-5 h-5 mr-3 text-purple-500" />
-                  Interface Preferences
-                </h3>
-              </div>
-              <div className="space-y-6">
-                {[
-                  { label: 'Dark Mode (Dashdark-X)', desc: 'Optimized for high-contrast visibility and reduced eye strain', active: true },
-                  { label: 'Compact Layout', desc: 'Fits more information into the active dashboard area', active: false },
-                  { label: 'High Contrast Mode', desc: 'Enhanced accessibility for users with visual impairments', active: false }
-                ].map((pref, i) => (
-                  <div key={i} className="flex items-center justify-between p-6 bg-slate-900/30 rounded-3xl border border-[#1e293b] hover:border-[#334155] transition-all">
-                    <div className="max-w-md">
-                      <p className="font-bold text-slate-200">{pref.label}</p>
-                      <p className="text-slate-500 text-sm mt-1">{pref.desc}</p>
+
+            <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
+              <h3 className="text-xl font-bold text-slate-100 flex items-center mb-8 relative">
+                <User className="w-5 h-5 mr-3 text-teal-500" />
+                Profile Information
+              </h3>
+              
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-teal-400" />
+                </div>
+              ) : (
+                <form onSubmit={handleProfileUpdate} className="space-y-6 relative">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-300 mb-3">Full Name</label>
+                      <input 
+                        type="text" 
+                        value={profileData.name} 
+                        onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm"
+                      />
                     </div>
-                    <div className={`w-12 h-6 rounded-full relative transition-all cursor-pointer ${pref.active ? 'bg-teal-600' : 'bg-slate-800'}`}>
-                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-lg ${pref.active ? 'left-7' : 'left-1'}`}></div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-300 mb-3">Email Address</label>
+                      <input 
+                        type="email" 
+                        value={profileData.email} 
+                        disabled
+                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-500 text-sm opacity-60 cursor-not-allowed"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-300 mb-3">Phone Number</label>
+                      <input 
+                        type="tel" 
+                        value={profileData.phone} 
+                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-300 mb-3">Organization</label>
+                      <input 
+                        type="text" 
+                        value={profileData.organization} 
+                        onChange={(e) => setProfileData({...profileData, organization: e.target.value})}
+                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm"
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="flex gap-4 justify-end pt-6 border-t border-[#1e293b]">
+                    <Button variant="outline" className="rounded-xl px-8 py-3">Cancel</Button>
+                    <Button 
+                      type="submit" 
+                      disabled={saving}
+                      className="bg-teal-600 hover:bg-teal-500 rounded-xl px-8 py-3 text-white font-bold flex items-center"
+                    >
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                      {saving ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                  </div>
+                </form>
+              )}
             </section>
           </div>
         );
@@ -155,7 +328,23 @@ const SettingsView = () => {
           <p className="text-slate-500 mt-2 leading-relaxed">Manage your citizen profile, security preferences, and dashboard interface.</p>
         </div>
         <div className="flex items-center space-x-3">
-          <Button variant="outline" className="rounded-2xl border-[#1e293b] bg-[#0a0f1e] hover:bg-rose-500/10 hover:text-rose-400 group h-12 px-6 font-bold shadow-xl transition-all">
+          {showLogoutConfirm && (
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm">
+              <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-8 max-w-md">
+                <h3 className="text-lg font-bold text-slate-100 mb-4">Confirm Logout</h3>
+                <p className="text-slate-500 mb-6">Are you sure you want to log out?</p>
+                <div className="flex gap-4 justify-end">
+                  <Button variant="outline" onClick={() => setShowLogoutConfirm(false)} className="rounded-xl">Cancel</Button>
+                  <Button onClick={handleLogout} className="bg-rose-600 hover:bg-rose-500 rounded-xl text-white">Logout</Button>
+                </div>
+              </div>
+            </div>
+          )}
+          <Button 
+            onClick={() => setShowLogoutConfirm(true)}
+            variant="outline" 
+            className="rounded-2xl border-[#1e293b] bg-[#0a0f1e] hover:bg-rose-500/10 hover:text-rose-400 group h-12 px-6 font-bold shadow-xl transition-all"
+          >
              <LogOut className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" />
              Log Out
           </Button>
