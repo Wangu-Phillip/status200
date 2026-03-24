@@ -13,6 +13,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:seed": "tsx prisma/seed.ts",
+    "deploy": "npm run build && npm run prisma:migrate:deploy && npm run prisma:seed",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src --ext .ts"
   },
