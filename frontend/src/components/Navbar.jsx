@@ -53,7 +53,7 @@ const Navbar = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center group">
-              <img src="/logo.png" alt="BOCRA Logo" className="h-14 w-auto object-contain group-hover:scale-105 transition-transform" />
+              <img src="/logo.png" alt="BOCRA Logo" className="h-20 w-auto object-contain group-hover:scale-105 transition-all duration-300" />
             </Link>
 
             {/* Desktop Navigation */}
