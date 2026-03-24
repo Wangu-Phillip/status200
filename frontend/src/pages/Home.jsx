@@ -53,13 +53,13 @@ const Home = () => {
       {/* Stripe-inspired Hero Section */}
       <section className="relative pt-32 pb-24 overflow-hidden">
         {/* Cultural Background Element */}
-        <div className="absolute top-0 right-0 w-full h-full -z-10 opacity-30 select-none pointer-events-none">
+        <div className="absolute top-0 right-0 w-full h-full -z-10 select-none pointer-events-none overflow-hidden">
           <img 
             src="/botswana_heritage.png" 
             alt="Botswana Heritage" 
-            className="w-full h-full object-cover blur-[80px] scale-110 opacity-40 mix-blend-multiply" 
+            className="w-full h-full object-cover object-right blur-[10px] scale-105 opacity-[0.15]" 
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white"></div>
+          <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/80 to-white"></div>
         </div>
         
         <div className="absolute top-0 left-0 w-full h-[120%] bg-gradient-to-br from-[#00695C]/5 via-[#00897B]/5 to-transparent -skew-y-6 origin-top-left -z-10"></div>
@@ -79,15 +79,20 @@ const Home = () => {
               <p className="text-xl text-slate-600 max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-700 font-medium">
                 The Botswana Communications Regulatory Authority (BOCRA) ensures excellence in telecommunications, broadcasting, and postal services across the nation.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 pt-4 animate-in fade-in slide-in-from-bottom-16 duration-1000">
+              <div className="flex flex-wrap gap-4 pt-4 animate-in fade-in slide-in-from-bottom-16 duration-1000">
                 <Link to="/login">
                   <Button size="xl" className="w-full sm:w-auto h-16 px-10 text-lg rounded-2xl shadow-xl shadow-[#00897B]/20 bg-[#00897B] hover:bg-[#4DB6AC] font-black uppercase tracking-widest text-xs">
-                    Access Client Portal
+                    Access Portal
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
+                <Link to="/tenders">
+                  <Button variant="outline" size="xl" className="w-full sm:w-auto h-16 px-10 text-lg rounded-2xl shadow-lg border-2 border-[#00897B] text-[#00897B] hover:bg-[#00897B]/10 font-black uppercase tracking-widest text-xs">
+                    Tenders Hub
+                  </Button>
+                </Link>
                 <Link to="/about">
-                  <Button variant="outline" size="xl" className="w-full sm:w-auto h-14 px-8 text-lg rounded-2xl border-2">
+                  <Button variant="ghost" size="xl" className="w-full sm:w-auto h-16 px-10 text-lg rounded-2xl text-slate-500 font-black uppercase tracking-widest text-xs">
                     Our Mandate
                   </Button>
                 </Link>
