@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
+import citizenRoutes from './routes/citizen.js';
 
 // Setup environment variables
 const __filename = fileURLToPath(import.meta.url);
@@ -48,6 +49,9 @@ apiRouter.get('/', (_req: Request, res: Response) => {
 
 // Auth routes
 apiRouter.use('/auth', authRoutes);
+
+// Citizen routes (protected)
+apiRouter.use('/', citizenRoutes);
 
 // Create status check
 apiRouter.post('/status', async (req: Request, res: Response) => {

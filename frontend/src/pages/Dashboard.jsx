@@ -20,18 +20,22 @@ import {
   ChevronRight,
   ChevronLeft,
   Menu,
-  X as XIcon
+  X as XIcon,
+  Loader2
 } from 'lucide-react';
-import { userApplications, userComplaints } from '../mockData';
 import ApplicationsView from '../components/dashboard/ApplicationsView';
 import ComplaintsView from '../components/dashboard/ComplaintsView';
 import DocumentsView from '../components/dashboard/DocumentsView';
 import SettingsView from '../components/dashboard/SettingsView';
+import * as api from '../services/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [stats, setStats] = useState(null);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -52,9 +56,37 @@ const Dashboard = () => {
     return () => clearInterval(timer);
   }, [navigate]);
 
+  // Fetch dashboard stats
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const data = await api.getDashboardStats();
+        setStats(data);
+        setRecentActivity(data.recentActivity || []);
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+        // Use fallback data if API fails
+        setStats({
+          totalApplications: 0,
+          activeComplaints: 0,
+          nodeTrustScore: 82,
+          verifiedDevices: 0,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [user]);
+
   const handleLogout = (e) => {
     e.stopPropagation();
     localStorage.removeItem('bocra_user');
+    localStorage.removeItem('bocra_token');
     navigate('/login');
   };
 
@@ -74,17 +106,10 @@ const Dashboard = () => {
   if (!user) return null;
 
   const statCards = [
-    { label: 'Total Applications', value: '42', trend: '+12%', color: 'text-teal-500' },
-    { label: 'Active Complaints', value: '08', trend: '-2%', color: 'text-amber-500' },
-    { label: 'Node Trust Score', value: '82%', trend: '+5%', color: 'text-blue-500' },
-    { label: 'Verified Devices', value: '154', trend: '+18%', color: 'text-emerald-500' },
-  ];
-
-  const recentActivity = [
-    { id: 1, title: 'Network License Renewal', desc: 'BOCRA-INFRA (APP003) is awaiting documents.', status: 'Pending Documents', type: 'app', time: '2024-03-24' },
-    { id: 2, title: 'Broadcasting Complaint', desc: 'Complaint registered against Regional Operator.', status: 'Under Review', type: 'complaint', time: '2024-03-23' },
-    { id: 3, title: 'Type Approval Granted', desc: 'Device TP-502 has been successfully verified.', status: 'Approved', type: 'system', time: '2024-03-22' },
-    { id: 4, title: 'Spectrum Fee Flagged', desc: 'Unpaid dues detected for Q1 2024.', status: 'Rejected / Flagged', type: 'app', time: '2024-03-21' },
+    { label: 'Total Applications', value: stats?.totalApplications || '0', trend: '+12%', color: 'text-teal-500' },
+    { label: 'Active Complaints', value: stats?.activeComplaints || '0', trend: '-2%', color: 'text-amber-500' },
+    { label: 'Node Trust Score', value: `${stats?.nodeTrustScore || 82}%`, trend: '+5%', color: 'text-blue-500' },
+    { label: 'Verified Devices', value: stats?.verifiedDevices || '0', trend: '+18%', color: 'text-emerald-500' },
   ];
 
   const getStatusColor = (status) => {
@@ -97,8 +122,25 @@ const Dashboard = () => {
     }
   };
 
+  const getActivityIcon = (actionType) => {
+    switch (actionType) {
+      case 'application': return FileText;
+      case 'complaint': return MessageSquare;
+      case 'document': return Files;
+      default: return AlertCircle;
+    }
+  };
+
+  const getActivityColor = (actionType) => {
+    switch (actionType) {
+      case 'application': return 'bg-teal-500/10 text-teal-400 border-teal-500/20';
+      case 'complaint': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+      case 'document': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+    }
+  };
+
   const renderContent = () => {
-    // ... (rest of renderContent remains same, but I'll ensure it's not truncated)
     switch (activeTab) {
       case 'applications': return <ApplicationsView />;
       case 'complaints': return <ComplaintsView />;
@@ -135,14 +177,14 @@ const Dashboard = () => {
               </div>
               <div>
                 <h3 className="font-black text-xl text-white">Action Required</h3>
-                <p className="text-slate-400 text-sm mt-1 max-w-md font-medium">BOCRA-INFRA (APP003) is awaiting technical compliance documents for final review.</p>
+                <p className="text-slate-400 text-sm mt-1 max-w-md font-medium">Check your applications and complaints for any pending actions.</p>
               </div>
             </div>
             <Button 
                 onClick={() => setActiveTab('applications')}
                 className="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-white rounded-2xl px-10 h-14 shadow-xl shadow-amber-500/20 font-black uppercase tracking-widest text-xs group-hover:scale-105 transition-all"
             >
-              Resolve Now
+              View Items
             </Button>
           </div>
 
@@ -150,48 +192,54 @@ const Dashboard = () => {
             <div className="lg:col-span-2 space-y-8">
               <div className="flex items-center justify-between px-2">
                 <h2 className="text-2xl font-black tracking-tight text-white flex items-center gap-3">
-                   System Activity
+                   Recent Activity
                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                 </h2>
                 <div className="flex items-center space-x-6">
                    <button className="text-[10px] text-slate-500 font-bold uppercase tracking-widest hover:text-white transition-colors">Archive</button>
-                   <button onClick={() => setActiveTab('applications')} className="text-[10px] text-teal-400 font-bold uppercase tracking-widest hover:text-teal-300 transition-colors">Comprehensive Feed →</button>
+                   <button onClick={() => setActiveTab('applications')} className="text-[10px] text-teal-400 font-bold uppercase tracking-widest hover:text-teal-300 transition-colors">View All →</button>
                 </div>
               </div>
               
               <div className="bg-[#0a0f1e]/50 backdrop-blur-xl border border-[#1e293b] rounded-[3rem] overflow-hidden shadow-2xl">
                 <div className="divide-y divide-[#1e293b]">
-                  {recentActivity.map((item) => (
-                    <div key={item.id} className="p-8 hover:bg-white/[0.02] transition-all flex items-center justify-between group cursor-pointer">
-                      <div className="flex items-center space-x-6">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-lg ${
-                          item.type === 'app' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 
-                          item.type === 'complaint' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 
-                          'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                        }`}>
-                          {item.type === 'app' ? <FileText className="w-6 h-6" /> : 
-                           item.type === 'complaint' ? <MessageSquare className="w-6 h-6" /> : 
-                           <Files className="w-6 h-6" />}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <p className="font-black text-lg text-slate-100 group-hover:text-teal-400 transition-colors tracking-tight">
-                              {item.title}
-                            </p>
-                            {item.id === 1 && <Badge className="bg-amber-500/10 text-amber-500 border-none text-[8px] font-black uppercase tracking-widest">Urgent</Badge>}
-                          </div>
-                          <p className="text-slate-500 mt-1 text-sm font-medium">{item.desc}</p>
-                        </div>
-                      </div>
-                      <div className="text-right hidden sm:block">
-                        <p className="text-slate-400 font-black text-xs tracking-tight">{formatDate(item.time)}</p>
-                        <div className="mt-3 inline-flex items-center px-3 py-1 bg-slate-950 rounded-lg border border-white/5 space-x-2">
-                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getStatusColor(item.status) }}></div>
-                           <span className="text-[9px] text-slate-300 font-extrabold uppercase tracking-widest">{item.status}</span>
-                        </div>
-                      </div>
+                  {loading ? (
+                    <div className="p-8 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 animate-spin text-teal-400" />
                     </div>
-                  ))}
+                  ) : recentActivity && recentActivity.length > 0 ? (
+                    recentActivity.slice(0, 4).map((item) => {
+                      const IconComponent = getActivityIcon(item.actionType);
+                      return (
+                        <div key={item.id} className="p-8 hover:bg-white/[0.02] transition-all flex items-center justify-between group cursor-pointer">
+                          <div className="flex items-center space-x-6">
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-lg border ${getActivityColor(item.actionType)}`}>
+                              <IconComponent className="w-6 h-6" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <p className="font-black text-lg text-slate-100 group-hover:text-teal-400 transition-colors tracking-tight">
+                                  {item.description}
+                                </p>
+                              </div>
+                              <p className="text-slate-500 mt-1 text-sm font-medium">{item.action}</p>
+                            </div>
+                          </div>
+                          <div className="text-right hidden sm:block">
+                            <p className="text-slate-400 font-black text-xs tracking-tight">{formatDate(item.timestamp)}</p>
+                            <div className="mt-3 inline-flex items-center px-3 py-1 bg-slate-950 rounded-lg border border-white/5 space-x-2">
+                               <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getStatusColor(item.status) }}></div>
+                               <span className="text-[9px] text-slate-300 font-extrabold uppercase tracking-widest">{item.status}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="p-8 text-center text-slate-400">
+                      No recent activity
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -223,10 +271,10 @@ const Dashboard = () => {
                  <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">Node Trust Score</h3>
-                      <span className="text-teal-400 font-black text-sm">82%</span>
+                      <span className="text-teal-400 font-black text-sm">{stats?.nodeTrustScore || 82}%</span>
                     </div>
                     <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-white/5">
-                      <div className="h-full bg-gradient-to-r from-teal-600 to-teal-400 w-[82%] rounded-full shadow-[0_0_15px_rgba(20,184,166,0.4)]"></div>
+                      <div className="h-full bg-gradient-to-r from-teal-600 to-teal-400 rounded-full shadow-[0_0_15px_rgba(20,184,166,0.4)]" style={{ width: `${stats?.nodeTrustScore || 82}%` }}></div>
                     </div>
                     <Button variant="ghost" className="w-full mt-6 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/5" onClick={() => setActiveTab('settings')}>Audit Credentials</Button>
                  </div>
@@ -402,3 +450,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

@@ -1,12 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
-import { FileText, Clock, CheckCircle, AlertCircle, Search, Filter, ArrowUpRight, Hash } from 'lucide-react';
-import { userApplications } from '../../mockData';
-import { getSubmissionsByDepartment, DEPARTMENTS } from '../../utils/persistence';
+import { FileText, Clock, CheckCircle, AlertCircle, Search, Filter, ArrowUpRight, Hash, Loader2, Plus } from 'lucide-react';
+import * as api from '../../services/api';
+import { Button } from '../ui/button';
 
 const ApplicationsView = () => {
-  // Merge mock data with live submissions from persistence layer
-  const liveSubmissions = getSubmissionsByDepartment(DEPARTMENTS.LICENSING);
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchApplications();
+  }, [page]);
+
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getApplications({ page, limit: 10 });
+      setApplications(data.applications || []);
+    } catch (error) {
+      console.error('Failed to fetch applications:', error);
+      setApplications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredApplications = applications.filter(app =>
+    app.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    app.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   
   const getStatusStyle = (status) => {
     switch (status) {
@@ -24,9 +48,13 @@ const ApplicationsView = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">My Applications</h2>
-          <p className="text-slate-500 mt-2">Manage and track your regulatory license submissions</p>
+          <p className="text-slate-500 mt-2">Manage and track your regulatory license submissions ({applications.length})</p>
         </div>
         <div className="flex items-center space-x-3">
+          <Button className="flex items-center space-x-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-white font-bold text-sm">
+            <Plus className="w-4 h-4" />
+            <span>New Application</span>
+          </Button>
           <button className="flex items-center space-x-2 px-4 py-2.5 bg-[#0a0f1e] border border-[#1e293b] rounded-xl text-slate-400 hover:text-white transition-all text-sm font-bold">
             <Filter className="w-4 h-4" />
             <span>Filter</span>
@@ -36,45 +64,15 @@ const ApplicationsView = () => {
             <input 
               type="text" 
               placeholder="Search apps..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-[#0a0f1e] border border-[#1e293b] rounded-xl pl-10 pr-4 py-2.5 text-sm w-64 focus:ring-1 focus:ring-teal-500 outline-none transition-all placeholder:text-slate-700"
             />
           </div>
         </div>
       </div>
 
-      {/* Live Submissions from Persistence */}
-      {liveSubmissions.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-teal-400 flex items-center gap-2">
-            <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
-            Live Submissions
-          </h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            {liveSubmissions.map((sub) => (
-              <div key={sub.id} className="bg-[#0a0f1e] border border-[#1e293b] rounded-2xl p-6 hover:border-teal-500/30 transition-all group">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Hash className="w-4 h-4 text-teal-400" />
-                    <span className="font-mono font-bold text-teal-400 text-sm">{sub.id}</span>
-                  </div>
-                  <Badge variant="outline" className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(sub.status)}`}>
-                    {sub.status}
-                  </Badge>
-                </div>
-                <h4 className="font-bold text-slate-200 mb-1">{sub.subject}</h4>
-                <p className="text-slate-500 text-xs">{sub.citizenName} • {sub.submittedDate}</p>
-                {sub.reviewedBy && (
-                  <div className="mt-3 pt-3 border-t border-[#1e293b]">
-                    <p className="text-xs text-slate-500">
-                      <span className="text-emerald-400 font-semibold">Reviewed by:</span> {sub.reviewedBy}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
 
       {/* Legacy Mock Applications */}
       <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] overflow-hidden shadow-2xl relative w-full">
@@ -90,7 +88,7 @@ const ApplicationsView = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1e293b]">
-            {userApplications.map((app) => (
+            {filteredApplications.map((app) => (
               <tr key={app.id} className="hover:bg-white/[0.02] transition-colors group cursor-pointer">
                 <td className="px-8 py-6">
                   <div className="flex items-center space-x-3">
