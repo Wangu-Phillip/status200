@@ -39,6 +39,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
+import { Menu, X as XIcon } from 'lucide-react';
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -48,6 +50,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({});
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [adminNote, setAdminNote] = useState('');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('bocra_user');
@@ -146,8 +149,26 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Mobile Sidebar Toggle */}
+      <button
+        onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+        className="lg:hidden fixed top-4 left-4 z-[60] p-3 bg-slate-900 text-white rounded-xl shadow-lg"
+      >
+        {mobileSidebarOpen ? <XIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileSidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 bottom-0 w-72 bg-slate-900 text-white z-50 flex flex-col">
+      <div className={`fixed left-0 top-0 bottom-0 w-72 bg-slate-900 text-white z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 ${
+        mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
         {/* Logo */}
         <div className="p-6 border-b border-slate-700/50">
           <Link to="/" className="flex items-center gap-3">
@@ -212,11 +233,11 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="ml-72 p-8">
+      <div className="lg:ml-72 p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
               {DEPARTMENT_LABELS[user.department] || 'Admin'} Dashboard
             </h1>
             <p className="text-slate-500 mt-1">
@@ -232,7 +253,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <Card className="border-0 shadow-md bg-white">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -290,7 +311,7 @@ const AdminDashboard = () => {
         {/* Search & Filter */}
         <Card className="border-0 shadow-md mb-6">
           <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <Input

@@ -152,3 +152,57 @@ code {
     @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
 }
 
+/* ─── Mobile & Tablet Responsiveness ─────────────────────────────── */
+
+/* Scrollbar hidden for dashboard sidebars */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Touch-friendly target sizes */
+@media (max-width: 768px) {
+    button, a, [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Admin sidebar mobile overlay */
+    .admin-sidebar-mobile {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    .admin-sidebar-mobile.open {
+        transform: translateX(0);
+    }
+
+    /* Home hero text scaling */
+    .hero-title {
+        font-size: 2.25rem !important;
+        line-height: 1.2 !important;
+    }
+
+    /* Dashboard stat cards stack */
+    .stat-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 1.875rem !important;
+    }
+    .stat-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .admin-content-area {
+        margin-left: 0 !important;
+    }
+}

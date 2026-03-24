@@ -18,7 +18,9 @@ import {
   MoreVertical,
   Upload,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Menu,
+  X as XIcon
 } from 'lucide-react';
 import { userApplications, userComplaints } from '../mockData';
 import ApplicationsView from '../components/dashboard/ApplicationsView';
@@ -32,6 +34,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('bocra_user');
@@ -224,17 +227,35 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen bg-[#020617] text-slate-100 overflow-hidden dark font-sans">
+      {/* Mobile Sidebar Toggle */}
+      <button
+        onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+        className="lg:hidden fixed top-4 left-4 z-[60] p-3 bg-slate-800 text-teal-400 rounded-xl shadow-lg border border-white/10"
+      >
+        {mobileSidebarOpen ? <XIcon className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileSidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* Retractable Sidebar */}
       <aside 
         id="sidebar-nav" 
-        className={`bg-[#0a0f1e] border-r border-[#1e293b] flex flex-col h-full z-50 transition-all duration-500 ease-in-out relative ${
-          isSidebarCollapsed ? 'w-24' : 'w-80'
-        }`}
+        className={`bg-[#0a0f1e] border-r border-[#1e293b] flex flex-col h-full z-50 transition-all duration-500 ease-in-out relative 
+          ${isSidebarCollapsed ? 'w-24' : 'w-80'}
+          fixed lg:relative
+          ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
       >
         {/* Toggle Button */}
         <button 
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-4 top-10 w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white border-4 border-[#020617] hover:bg-teal-500 transition-all z-[60] shadow-xl group/toggle hover:scale-110 active:scale-90"
+          className="hidden lg:flex absolute -right-4 top-10 w-8 h-8 bg-teal-600 rounded-full items-center justify-center text-white border-4 border-[#020617] hover:bg-teal-500 transition-all z-[60] shadow-xl group/toggle hover:scale-110 active:scale-90"
         >
           {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
@@ -303,18 +324,18 @@ const Dashboard = () => {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
         {/* Modern Glass Header */}
-        <header className="sticky top-0 z-40 bg-[#020617]/70 backdrop-blur-2xl border-b border-white/5 px-12 py-8 flex items-center justify-between">
-          <div className="animate-in fade-in slide-in-from-top-4 duration-700">
-            <h1 className="text-3xl font-black tracking-tighter text-white">
+        <header className="sticky top-0 z-40 bg-[#020617]/70 backdrop-blur-2xl border-b border-white/5 px-4 sm:px-8 lg:px-12 py-4 sm:py-6 lg:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="animate-in fade-in slide-in-from-top-4 duration-700 pl-12 lg:pl-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tighter text-white">
               Hello, {user.name.split(' ')[0]}
               <span className="text-teal-500 ml-1">.</span>
             </h1>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
               <Clock className="w-3 h-3" />
-              Portal Ops Console • {formatDate(new Date())}
+              Portal • {formatDate(new Date())}
             </p>
           </div>
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-3 sm:space-x-6">
             <div className="relative group lg:block hidden animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-teal-400 transition-colors" />
               <input 
@@ -330,7 +351,7 @@ const Dashboard = () => {
               </button>
               <Button 
                  onClick={() => setActiveTab('settings')}
-                 className="rounded-[1.25rem] bg-teal-600 hover:bg-teal-500 text-white h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-teal-500/20 active:scale-95 transition-all"
+                 className="hidden sm:flex rounded-[1.25rem] bg-teal-600 hover:bg-teal-500 text-white h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-teal-500/20 active:scale-95 transition-all"
               >
                 Access Settings
               </Button>
@@ -338,7 +359,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="p-12 pb-24 space-y-12">
+        <div className="p-4 sm:p-8 lg:p-12 pb-24 space-y-8 sm:space-y-12">
           {renderContent()}
         </div>
       </main>

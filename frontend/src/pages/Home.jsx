@@ -60,7 +60,7 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/40 to-white/80"></div>
       </div>
         
-      <section className="relative pt-32 pb-24 overflow-hidden">
+      <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-24 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-[120%] bg-gradient-to-br from-[#00695C]/5 via-[#00897B]/5 to-transparent -skew-y-6 origin-top-left -z-10"></div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -75,28 +75,28 @@ const Home = () => {
                 <span>Official Staff & Citizen Portal</span>
               </span>
               
-              <h1 className="text-5xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-8">
-                Modernizing Botswana's <br />
+              <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-6 sm:mb-8">
+                Modernizing Botswana's <br className="hidden sm:block" />
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00695C] to-[#4DB6AC]">
                   Digital Frontier
                 </span>
               </h1>
               
-              <p className="text-xl text-slate-600 mb-10 max-w-xl leading-relaxed">
+              <p className="text-base sm:text-xl text-slate-600 mb-6 sm:mb-10 max-w-xl leading-relaxed">
                 Experience the next generation of regulatory services. Seamless, transparent, and 
                 citizen-centric solutions for a connected Botswana.
               </p>
               
               <div className="flex flex-wrap gap-4">
                 <Link to="/dashboard">
-                  <Button className="h-14 px-8 rounded-2xl bg-[#00897B] hover:bg-[#4DB6AC] text-white text-lg font-semibold shadow-xl shadow-teal-500/20 group transition-all duration-300">
+                  <Button className="h-12 sm:h-14 px-6 sm:px-8 rounded-2xl bg-[#00897B] hover:bg-[#4DB6AC] text-white text-base sm:text-lg font-semibold shadow-xl shadow-teal-500/20 group transition-all duration-300 w-full sm:w-auto">
                     Access Portal
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
                 
                 <Link to="/tenders">
-                  <Button variant="outline" className="h-14 px-8 rounded-2xl border-2 border-teal-100 bg-white/50 backdrop-blur-sm text-slate-700 text-lg font-semibold hover:bg-teal-50 transition-all duration-300">
+                  <Button variant="outline" className="h-12 sm:h-14 px-6 sm:px-8 rounded-2xl border-2 border-teal-100 bg-white/50 backdrop-blur-sm text-slate-700 text-base sm:text-lg font-semibold hover:bg-teal-50 transition-all duration-300 w-full sm:w-auto">
                     <Briefcase className="mr-2 h-5 w-5 text-teal-600" />
                     Tenders Hub
                   </Button>
@@ -104,18 +104,18 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Right Column: Illustration/Quick Links */}
-            <div className="relative lg:block hidden animate-in fade-in zoom-in duration-1000">
+            {/* Right Column: Quick Links - visible on all sizes */}
+            <div className="relative animate-in fade-in zoom-in duration-1000">
               <div className="absolute -top-20 -right-20 w-96 h-96 bg-teal-200/30 rounded-full blur-3xl opacity-50"></div>
               <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl opacity-50"></div>
-              <div className="relative glass border-slate-200 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden">
+              <div className="relative glass border-slate-200 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-8 shadow-2xl overflow-hidden">
                 <div className="heritage-overlay basket-pattern text-slate-900"></div>
                 <div className="relative grid grid-cols-2 gap-6">
                   {quickLinks.map((link, i) => (
                     <Link key={link.title} to={link.path}>
-                      <div className="group p-6 rounded-3xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-xl hover:border-teal-200 cursor-pointer">
-                        <div className="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600 mb-4 group-hover:scale-110 transition-transform">
-                          <link.icon className="w-6 h-6" />
+                      <div className="group p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-xl hover:border-teal-200 cursor-pointer">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                          <link.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
                         <h3 className="font-bold text-slate-800 mb-1">{link.title}</h3>
                         <p className="text-sm text-slate-500">{link.description}</p>
@@ -129,12 +129,12 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Notion-style Core Services Section */}
-      <section className="py-24 border-y border-slate-50 bg-slate-50/30">
+      {/* Core Services Section */}
+      <section className="py-16 sm:py-24 border-y border-slate-50 bg-slate-50/30 relative z-[1]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-16 gap-6">
             <div className="max-w-2xl">
-              <h2 className="text-4xl font-bold text-slate-900 mb-4">Regulatory Domains</h2>
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900 mb-4">Regulatory Domains</h2>
               <p className="text-lg text-slate-600">
                 We manage and oversee critical communication sectors to ensure global standards and locally relevant services.
               </p>
@@ -204,7 +204,7 @@ const Home = () => {
               </div>
             </div>
             <div className="order-1 lg:order-2">
-              <h2 className="text-4xl font-bold text-slate-900 mb-6">Transparency Matters</h2>
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900 mb-6">Transparency Matters</h2>
               <p className="text-lg text-slate-600 mb-8 leading-relaxed">
                 As a regulatory body, we believe in open data. We provide real-time insights into the performance and quality of service (QoS) across all operators in Botswana.
               </p>
@@ -236,18 +236,18 @@ const Home = () => {
       </section>
 
       {/* Modern News & Resources */}
-      <section className="py-24 bg-slate-50/50">
+      <section className="py-16 sm:py-24 bg-slate-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-16">
-            <h2 className="text-4xl font-bold text-slate-900">News & Insights</h2>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 sm:mb-16 gap-4">
+            <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">News & Insights</h2>
             <Link to="/media">
               <Button variant="outline" className="rounded-xl px-6">View Archive</Button>
             </Link>
           </div>
-          <div className="grid lg:grid-cols-3 gap-10">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10">
             {newsItems.slice(0, 3).map((news) => (
               <div key={news.id} className="group cursor-pointer">
-                <div className="aspect-[16/10] bg-slate-200 rounded-[2rem] mb-6 overflow-hidden relative">
+                <div className="aspect-[16/10] bg-slate-200 rounded-2xl sm:rounded-[2rem] mb-4 sm:mb-6 overflow-hidden relative">
                   <img 
                     src={news.image || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop`} 
                     alt={news.title}
@@ -260,7 +260,7 @@ const Home = () => {
                     <span className="text-slate-300">•</span>
                     <span className="text-slate-500 font-medium">{news.date}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900 group-hover:text-teal-600 transition-colors leading-snug">
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-900 group-hover:text-teal-600 transition-colors leading-snug">
                     {news.title}
                   </h3>
                   <p className="text-slate-600 line-clamp-2">
