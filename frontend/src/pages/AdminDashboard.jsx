@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useToast } from '../components/ui/use-toast';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
@@ -51,6 +53,7 @@ const AdminDashboard = () => {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [adminNote, setAdminNote] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const userData = localStorage.getItem('bocra_user');
@@ -83,6 +86,10 @@ const AdminDashboard = () => {
     updateSubmissionStatus(token, newStatus, user.name);
     refreshData();
     setSelectedSubmission(null);
+    toast({
+      title: 'Status Updated',
+      description: `Submission ${token} has been moved to ${newStatus}.`,
+    });
   };
 
   const handleAddNote = (token) => {
@@ -90,6 +97,17 @@ const AdminDashboard = () => {
     addAdminNote(token, adminNote);
     setAdminNote('');
     refreshData();
+    toast({
+      title: 'Note Added',
+      description: `Internal admin note saved for ${token}.`,
+    });
+  };
+
+  const handleDisabledMock = (feature) => {
+    toast({
+      title: 'Development Preview',
+      description: `${feature} module will be available in the upcoming release phase.`,
+    });
   };
 
   const handleLogout = () => {
@@ -196,18 +214,18 @@ const AdminDashboard = () => {
             <BarChart3 className="h-4 w-4" />
             Dashboard
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm transition-colors">
+          <button onClick={() => handleDisabledMock('Detailed Submissions')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm transition-colors">
             <FileText className="h-4 w-4" />
             Submissions
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm transition-colors">
+          <button onClick={() => handleDisabledMock('Staff Directory')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm transition-colors">
             <Users className="h-4 w-4" />
             Staff Directory
           </button>
 
           <p className="px-3 text-xs text-slate-500 uppercase tracking-wider font-semibold mt-6 mb-3">Quick Actions</p>
           <button
-            onClick={refreshData}
+            onClick={() => { refreshData(); toast({ title: 'Data Refreshed', description: 'Latest submissions loaded.' }); }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm transition-colors"
           >
             <RefreshCw className="h-4 w-4" />
