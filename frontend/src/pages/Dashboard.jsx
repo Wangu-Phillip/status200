@@ -259,7 +259,7 @@ const Dashboard = () => {
       {/* Retractable Sidebar */}
       <aside 
         id="sidebar-nav" 
-        className={`bg-[#0a0f1e] border-r border-[#1e293b] flex flex-col h-full z-50 transition-all duration-500 ease-in-out relative 
+        className={`bg-[#0a0f1e] border-r border-[#1e293b] flex flex-col h-full z-50 transition-all duration-500 ease-in-out 
           ${isSidebarCollapsed ? 'w-24' : 'w-80'}
           fixed lg:relative
           ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
