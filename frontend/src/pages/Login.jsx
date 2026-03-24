@@ -59,7 +59,7 @@ const Login = () => {
     });
   };
 
-  const handleQuickDemoLogin = (role) => {
+  const handleQuickDemoLogin = (role, dept = null) => {
     const isClient = role === 'client';
     const userData = isClient ? {
       name: 'John Citizen',
@@ -68,11 +68,11 @@ const Login = () => {
       organization: 'None',
       department: null,
     } : {
-      name: 'Admin User',
-      email: 'admin@bocra.org.bw',
+      name: `Admin (${dept ? DEPARTMENT_LABELS[dept].split(' ')[0] : 'General'})`,
+      email: `${dept || 'admin'}@bocra.org.bw`,
       userType: 'admin',
       organization: 'BOCRA',
-      department: DEPARTMENTS.LICENSING, 
+      department: dept || DEPARTMENTS.LICENSING, 
     };
     
     localStorage.setItem('bocra_user', JSON.stringify(userData));
@@ -183,23 +183,61 @@ const Login = () => {
             </form>
 
             <div className="mt-8 pt-6 border-t border-slate-100">
-              <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Demo Quick Access</p>
-              <div className="grid grid-cols-2 gap-3">
+              <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Demo Quick Access</p>
+              <div className="flex justify-center mb-4">
                 <Button
                   type="button"
                   onClick={() => handleQuickDemoLogin('client')}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/10 rounded-xl font-bold"
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/10 rounded-xl font-bold py-6"
                 >
-                  <User className="w-4 h-4 mr-2" />
-                  Citizen
+                  <User className="w-5 h-5 mr-3" />
+                  Citizen Portal
+                </Button>
+              </div>
+              
+              <div className="relative mt-6 mb-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500 font-bold tracking-wider">
+                    Staff Portals
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('admin', DEPARTMENTS.LICENSING)}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
+                >
+                  <Shield className="w-3.5 h-3.5 mr-2" />
+                  Licensing
                 </Button>
                 <Button
                   type="button"
-                  onClick={() => handleQuickDemoLogin('admin')}
-                  className="w-full bg-teal-600 hover:bg-teal-700 text-white shadow-xl shadow-teal-500/20 rounded-xl font-bold"
+                  onClick={() => handleQuickDemoLogin('admin', DEPARTMENTS.COMPLAINTS)}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
                 >
-                  <Shield className="w-4 h-4 mr-2 text-teal-100" />
-                  Admin
+                  <Shield className="w-3.5 h-3.5 mr-2" />
+                  Complaints
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('admin', DEPARTMENTS.QOS)}
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
+                >
+                  <Shield className="w-3.5 h-3.5 mr-2" />
+                  Quality of Service
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin('admin', DEPARTMENTS.TENDERS)}
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
+                >
+                  <Shield className="w-3.5 h-3.5 mr-2" />
+                  Tenders
                 </Button>
               </div>
             </div>
