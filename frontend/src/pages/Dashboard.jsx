@@ -17,7 +17,8 @@ import {
   ArrowRight,
   MoreVertical,
   Upload,
-  ChevronRight
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
 import { userApplications, userComplaints } from '../mockData';
 import ApplicationsView from '../components/dashboard/ApplicationsView';
@@ -206,20 +207,18 @@ const Dashboard = () => {
         {/* Toggle Button */}
         <button 
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-3 top-24 w-6 h-12 bg-teal-600 rounded-full flex items-center justify-center text-white border-4 border-[#020617] hover:bg-teal-500 transition-colors z-[60] shadow-xl"
+          className="absolute -right-4 top-10 w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white border-4 border-[#020617] hover:bg-teal-500 transition-all z-[60] shadow-xl group/toggle hover:scale-110 active:scale-90"
         >
-          {isSidebarCollapsed ? <Plus className="w-3 h-3 rotate-45" /> : <MoreVertical className="w-3 h-3" />}
+          {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
 
-        <div className={`p-8 mb-6 transition-all duration-500 ${isSidebarCollapsed ? 'px-6' : ''}`}>
-          <Link to="/" className="flex items-center space-x-4 group">
-            <div className={`w-12 h-12 bg-teal-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-xl border border-white/10 group-hover:rotate-6 transition-transform shrink-0`}>B</div>
-            {!isSidebarCollapsed && (
-              <div className="animate-in fade-in slide-in-from-left-2 duration-500">
-                <span className="text-2xl font-black tracking-tighter block leading-none">BOCRA</span>
-                <span className="text-[8px] text-slate-500 font-black uppercase tracking-[0.3em] mt-1 block opacity-70">Citizen Hub</span>
-              </div>
-            )}
+        <div className={`p-6 mb-8 transition-all duration-500 flex items-center justify-center`}>
+          <Link to="/" className="group">
+            <img 
+              src="/logo.png" 
+              alt="BOCRA Logo" 
+              className={`object-contain transition-all duration-500 ${isSidebarCollapsed ? 'h-8' : 'h-14'}`} 
+            />
           </Link>
         </div>
 

@@ -25,14 +25,14 @@ const DomainRegistry = () => {
   const [searchResults, setSearchResults] = useState(null);
 
   const domainZones = [
-    { zone: '.co.bw', description: 'Commercial', price: '$26-$92/year', available: true },
-    { zone: '.org.bw', description: 'Organizations', price: '€58-€95/year', available: true },
-    { zone: '.net.bw', description: 'Network', price: '£47/year', available: true },
-    { zone: '.ac.bw', description: 'Academic', price: '£51/year', available: true },
-    { zone: '.gov.bw', description: 'Government', price: 'N/A', available: false },
-    { zone: '.shop.bw', description: 'E-commerce', price: 'Contact registrar', available: true },
-    { zone: '.agric.bw', description: 'Agriculture', price: 'Contact registrar', available: true },
-    { zone: '.me.bw', description: 'Personal', price: 'Contact registrar', available: true },
+    { zone: '.co.bw', description: 'Commercial', price: 'P250 - P850/year', available: true },
+    { zone: '.org.bw', description: 'Organizations', price: 'P150 - P550/year', available: true },
+    { zone: '.net.bw', description: 'Network', price: 'P200 - P600/year', available: true },
+    { zone: '.ac.bw', description: 'Academic', price: 'P100 - P350/year', available: true },
+    { zone: '.gov.bw', description: 'Government', price: 'Restricted', available: false },
+    { zone: '.shop.bw', description: 'E-commerce', price: 'P300 - P950/year', available: true },
+    { zone: '.agric.bw', description: 'Agriculture', price: 'P180 - P450/year', available: true },
+    { zone: '.me.bw', description: 'Personal', price: 'P150 - P400/year', available: true },
   ];
 
   const benefits = [
