@@ -52,16 +52,16 @@ const Navbar = () => {
         }`}>
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3 group">
-              <div className="relative">
+            <Link to="/" className="flex items-center space-x-4 group">
+              <div className="relative flex-shrink-0">
                 <div className="absolute -inset-1 bg-gradient-to-br from-teal-600 to-blue-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition-opacity"></div>
-                <div className="relative w-11 h-11 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                <div className="relative w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center text-white font-black text-2xl shadow-lg border border-white/10 group-hover:rotate-3 transition-transform">
                   B
                 </div>
               </div>
-              <div className="hidden sm:block">
-                <div className="text-xl font-extrabold text-slate-900 tracking-tight">BOCRA</div>
-                <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest leading-none">Regulatory Authority</div>
+              <div className="hidden sm:flex flex-col justify-center translate-y-[1px]">
+                <div className="text-2xl font-black text-slate-900 tracking-tighter leading-none mb-0.5">BOCRA</div>
+                <div className="text-[9px] text-slate-500 uppercase font-bold tracking-[0.2em] leading-none opacity-80">Regulatory Authority</div>
               </div>
             </Link>
 
