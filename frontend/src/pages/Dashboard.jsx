@@ -35,6 +35,7 @@ const Dashboard = () => {
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const userData = localStorage.getItem('bocra_user');
@@ -43,7 +44,19 @@ const Dashboard = () => {
     } else {
       setUser(JSON.parse(userData));
     }
+
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, [navigate]);
+
+  const handleLogout = (e) => {
+    e.stopPropagation();
+    localStorage.removeItem('bocra_user');
+    navigate('/login');
+  };
 
   const formatDate = (dateString) => {
     const options = { day: 'numeric', month: 'long', year: 'numeric' };
@@ -302,21 +315,33 @@ const Dashboard = () => {
         {/* User Info Bottom */}
         <div className={`p-6 border-t border-white/5 transition-all duration-500 ${isSidebarCollapsed ? 'px-4' : ''}`}>
           <div 
-             onClick={() => setActiveTab('settings')}
-             className={`flex items-center rounded-[1.5rem] bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all cursor-pointer group shadow-sm ${
-               isSidebarCollapsed ? 'p-3 justify-center' : 'p-4 space-x-4'
+             className={`flex items-center justify-between rounded-[1.5rem] bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all shadow-sm ${
+               isSidebarCollapsed ? 'p-3 flex-col gap-2' : 'p-4'
              }`}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500/20 to-blue-500/20 border border-white/5 flex items-center justify-center font-black text-sm shadow-xl text-teal-400 shrink-0 group-hover:scale-105 transition-transform">
-              {user.name.charAt(0)}
+            <div 
+              onClick={() => setActiveTab('settings')}
+              className="flex items-center space-x-4 cursor-pointer flex-1 min-w-0"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500/20 to-blue-500/20 border border-white/5 flex items-center justify-center font-black text-sm shadow-xl text-teal-400 shrink-0 hover:scale-105 transition-transform">
+                {user.name.charAt(0)}
+              </div>
+              {!isSidebarCollapsed && (
+                <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-left-2 duration-500">
+                  <p className="text-sm font-black truncate text-slate-100">{user.name}</p>
+                  <p className="text-[9px] text-teal-500 font-extrabold uppercase tracking-widest leading-none mt-1">Tier 1 Citizen</p>
+                </div>
+              )}
             </div>
             {!isSidebarCollapsed && (
-              <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-left-2 duration-500">
-                <p className="text-sm font-black truncate text-slate-100">{user.name}</p>
-                <p className="text-[9px] text-teal-500 font-extrabold uppercase tracking-widest leading-none mt-1">Tier 1 Citizen</p>
-              </div>
+              <button 
+                onClick={handleLogout}
+                className="p-2 ml-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                title="Sign Out"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             )}
-            {!isSidebarCollapsed && <LogOut className="w-4 h-4 text-slate-700 hover:text-rose-500 transition-colors" />}
           </div>
         </div>
       </aside>
@@ -332,7 +357,7 @@ const Dashboard = () => {
             </h1>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
               <Clock className="w-3 h-3" />
-              Portal • {formatDate(new Date())}
+              Portal • {formatDate(currentTime)}
             </p>
           </div>
           <div className="flex items-center space-x-3 sm:space-x-6">
@@ -340,14 +365,23 @@ const Dashboard = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-teal-400 transition-colors" />
               <input 
                 type="text" 
-                placeholder="Global Portal Search..." 
-                className="bg-white/5 border border-white/5 rounded-[1.25rem] pl-12 pr-6 py-3.5 text-xs font-bold w-72 focus:ring-1 focus:ring-teal-500 outline-none transition-all placeholder:text-slate-700 text-slate-100"
+                placeholder="Global Search..." 
+                className="bg-white/5 border border-white/5 rounded-[1.25rem] pl-10 pr-4 py-3 text-xs font-bold w-48 lg:w-72 focus:ring-1 focus:ring-teal-500 outline-none transition-all placeholder:text-slate-700 text-slate-100"
               />
             </div>
-            <div className="flex items-center space-x-3 animate-in fade-in slide-in-from-top-4 duration-700 delay-200">
-              <button className="p-3.5 bg-white/5 border border-white/5 rounded-[1.25rem] text-slate-500 hover:text-teal-400 relative group transition-all">
-                <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                <span className="absolute top-3.5 right-3.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-[#020617] shadow-lg shadow-rose-500/40"></span>
+            <div className="flex items-center space-x-2 sm:space-x-3 animate-in fade-in slide-in-from-top-4 duration-700 delay-200">
+              {user.userType === 'admin' && (
+                <Button 
+                   onClick={() => navigate('/admin')}
+                   variant="outline"
+                   className="rounded-[1.25rem] border-teal-500/30 text-teal-400 hover:bg-teal-500/10 h-10 sm:h-12 px-4 sm:px-6 font-bold text-xs shadow-xl active:scale-95 transition-all"
+                >
+                  Admin Portal
+                </Button>
+              )}
+              <button className="hidden sm:flex p-3 sm:p-3.5 bg-white/5 border border-white/5 rounded-[1.25rem] text-slate-500 hover:text-teal-400 relative group transition-all">
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform" />
+                <span className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-[#020617] shadow-lg shadow-rose-500/40"></span>
               </button>
               <Button 
                  onClick={() => setActiveTab('settings')}

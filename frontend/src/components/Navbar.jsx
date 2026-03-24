@@ -16,7 +16,8 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const user = localStorage.getItem('bocra_user');
+  const userData = localStorage.getItem('bocra_user');
+  const user = userData ? JSON.parse(userData) : null;
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -141,9 +142,9 @@ const Navbar = () => {
               </div>
               
               {user ? (
-                <Link to="/dashboard">
+                <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'}>
                   <Button className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-6 hidden sm:flex">
-                    Portal
+                    {user.userType === 'admin' ? 'Admin Portal' : 'Portal'}
                   </Button>
                 </Link>
               ) : (
@@ -214,6 +215,31 @@ const Navbar = () => {
                   </>
                 )}
               </button>
+            </div>
+            
+            <div className="pt-4 pb-8 flex flex-col gap-3">
+              {user ? (
+                <>
+                  <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg">
+                      {user.userType === 'admin' ? 'Open Admin Portal' : 'Open Portal'}
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleLogout}
+                    className="w-full h-12 rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-lg"
+                  >
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="w-full h-12 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg shadow-lg">
+                    Login / Register
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>

@@ -77,8 +77,9 @@ const ApplicationsView = () => {
       )}
 
       {/* Legacy Mock Applications */}
-      <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] overflow-hidden shadow-2xl">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] overflow-hidden shadow-2xl relative w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="border-b border-[#1e293b] bg-white/5">
               <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-slate-500">Application ID</th>
@@ -122,6 +123,7 @@ const ApplicationsView = () => {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
