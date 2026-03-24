@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from './components/ui/toaster';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import AccessibilityMenu from './components/AccessibilityMenu';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ThemeProvider } from './context/ThemeProvider';
 import { seedDemoData } from './utils/persistence';
@@ -43,7 +42,6 @@ const Layout = ({ children }) => {
       </div>
       {!isDashboard && <Footer />}
       <Ruby />
-      <AccessibilityMenu />
       <Toaster />
     </div>
   );

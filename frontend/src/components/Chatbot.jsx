@@ -147,7 +147,7 @@ const Ruby = () => {
   };
 
   return (
-    <div id="ruby-container" className={`fixed bottom-6 left-6 z-[200] flex flex-col items-start transition-all duration-500 ${isOpen ? 'w-[400px]' : 'w-16'}`}>
+    <div id="ruby-container" className={`fixed bottom-6 right-6 z-[200] flex flex-col items-start transition-all duration-500 ${isOpen ? 'w-[400px]' : 'w-16'}`}>
       {/* Mini Aura for Ruby eye */}
       {!isOpen && (
         <button
