@@ -29,7 +29,7 @@ const QoSReporting = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-teal-600">{qosMetrics.length}</div>
+              <div className="text-3xl font-bold text-[#003366]">{qosMetrics.length}</div>
             </CardContent>
           </Card>
           <Card>
@@ -66,7 +66,7 @@ const QoSReporting = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-600">
+              <div className="text-3xl font-bold text-[#003366]">
                 {(qosMetrics.reduce((sum, m) => sum + m.dataSpeed, 0) / qosMetrics.length).toFixed(1)} Mbps
               </div>
             </CardContent>
@@ -89,7 +89,7 @@ const QoSReporting = () => {
                     <CardTitle>Operator Performance Summary</CardTitle>
                     <CardDescription>Quality of Service metrics for {selectedMonth}</CardDescription>
                   </div>
-                  <Button variant="outline" className="border-teal-600 text-teal-600 hover:bg-teal-50">
+                  <Button variant="outline" className="bg-[#F47920] hover:bg-[#C25E00] text-white border-0">
                     <Download className="h-4 w-4 mr-2" />
                     Export Report
                   </Button>
@@ -105,12 +105,12 @@ const QoSReporting = () => {
                           <p className="text-sm text-gray-600">{metric.month}</p>
                         </div>
                         {metric.compliant ? (
-                          <Badge className="bg-green-500 hover:bg-green-600">
+                          <Badge className="bg-[#1A6B3C] hover:bg-[#155d30]">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Compliant
                           </Badge>
                         ) : (
-                          <Badge className="bg-red-500 hover:bg-red-600">
+                          <Badge className="bg-[#B91C1C] hover:bg-[#991b1b]">
                             <XCircle className="h-3 w-3 mr-1" />
                             Non-Compliant
                           </Badge>
@@ -129,7 +129,7 @@ const QoSReporting = () => {
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                             <div
-                              className="bg-teal-600 h-2 rounded-full"
+                              className="bg-[#003366] h-2 rounded-full"
                               style={{ width: `${metric.callSuccessRate}%` }}
                             ></div>
                           </div>
@@ -146,7 +146,7 @@ const QoSReporting = () => {
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                             <div
-                              className="bg-blue-600 h-2 rounded-full"
+                              className="bg-[#003366] h-2 rounded-full"
                               style={{ width: `${(metric.dataSpeed / 50) * 100}%` }}
                             ></div>
                           </div>
@@ -258,7 +258,7 @@ const QoSReporting = () => {
                           : 'Some parameters below regulatory thresholds. Corrective action plan required.'}
                       </p>
                       {!metric.compliant && (
-                        <Button size="sm" variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50 mt-2">
+                        <Button size="sm" variant="outline" className="border-[#F47920] text-[#C25E00] hover:bg-[#FFF0E6] mt-2">
                           View Action Plan
                         </Button>
                       )}

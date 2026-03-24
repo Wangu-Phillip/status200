@@ -36,7 +36,7 @@ const About = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-teal-600 to-cyan-600 py-20">
+      <section className="bg-[#003366] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h1 className="text-5xl font-bold mb-6">About BOCRA</h1>
           <p className="text-xl max-w-3xl mx-auto">
@@ -89,7 +89,7 @@ const About = () => {
               return (
                 <Card key={index} className="text-center">
                   <CardContent className="pt-8">
-                    <Icon className="h-12 w-12 text-teal-600 mx-auto mb-4" />
+                    <Icon className="h-12 w-12 text-[#003366] mx-auto mb-4" />
                     <div className="text-4xl font-bold text-gray-900 mb-2">{stat.value}</div>
                     <div className="text-gray-600">{stat.label}</div>
                   </CardContent>
@@ -104,10 +104,10 @@ const About = () => {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
-            <Card className="border-t-4 border-t-teal-600">
+            <Card className="border-t-4 border-t-[#003366]">
               <CardHeader>
                 <div className="flex items-center mb-4">
-                  <Target className="h-10 w-10 text-teal-600 mr-4" />
+                  <Target className="h-10 w-10 text-[#003366] mr-4" />
                   <CardTitle className="text-3xl">Our Mission</CardTitle>
                 </div>
               </CardHeader>
@@ -119,10 +119,10 @@ const About = () => {
                 </p>
               </CardContent>
             </Card>
-            <Card className="border-t-4 border-t-cyan-600">
+            <Card className="border-t-4 border-t-[#F47920]">
               <CardHeader>
                 <div className="flex items-center mb-4">
-                  <Eye className="h-10 w-10 text-cyan-600 mr-4" />
+                  <Eye className="h-10 w-10 text-[#003366] mr-4" />
                   <CardTitle className="text-3xl">Our Vision</CardTitle>
                 </div>
               </CardHeader>
@@ -151,8 +151,8 @@ const About = () => {
               return (
                 <Card key={index} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-4">
-                      <Icon className="h-8 w-8 text-teal-600" />
+                    <div className="w-16 h-16 bg-[#E8F0F9] rounded-full flex items-center justify-center mb-4">
+                      <Icon className="h-8 w-8 text-[#003366]" />
                     </div>
                     <CardTitle className="text-xl">{value.title}</CardTitle>
                   </CardHeader>
@@ -177,11 +177,11 @@ const About = () => {
             {[1, 2, 3].map((i) => (
               <Card key={i} className="text-center hover:shadow-lg transition-shadow">
                 <CardContent className="pt-8">
-                  <div className="w-32 h-32 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <div className="w-32 h-32 bg-gradient-to-br from-[#003366] to-[#0A4D8C] rounded-full mx-auto mb-4 flex items-center justify-center">
                     <Users className="h-16 w-16 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Leadership Member {i}</h3>
-                  <p className="text-teal-600 font-semibold mb-2">Executive Position</p>
+                  <p className="text-[#003366] font-semibold mb-2">Executive Position</p>
                   <p className="text-gray-600 text-sm">
                     Leading BOCRA's initiatives in regulatory excellence and sector development.
                   </p>

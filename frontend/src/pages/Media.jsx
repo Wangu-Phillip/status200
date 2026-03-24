@@ -105,11 +105,11 @@ const Media = () => {
 
   const getTypeColor = (type) => {
     const colors = {
-      'Press Release': 'bg-blue-100 text-blue-800',
-      'Media Release': 'bg-green-100 text-green-800',
-      'Public Notice': 'bg-orange-100 text-orange-800',
+      'Press Release': 'bg-[#E8F0F9] text-blue-800',
+      'Media Release': 'bg-[#E6F4EC] text-[#1A6B3C]',
+      'Public Notice': 'bg-[#FFF0E6] text-[#C25E00]',
       Event: 'bg-purple-100 text-purple-800',
-      Report: 'bg-teal-100 text-teal-800',
+      Report: 'bg-[#E8F0F9] text-[#001F40]',
     };
     return colors[type] || 'bg-gray-100 text-gray-800';
   };
@@ -117,7 +117,7 @@ const Media = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-teal-600 to-cyan-600 py-20">
+      <section className="bg-[#003366] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <Newspaper className="h-16 w-16 mx-auto mb-6" />
           <h1 className="text-5xl font-bold mb-6">Media Center</h1>
@@ -185,7 +185,7 @@ const Media = () => {
                     })}
                   </div>
                   <p className="text-gray-700 mb-6 leading-relaxed">{filteredNews[0].excerpt}</p>
-                  <Button className="bg-teal-600 hover:bg-teal-700 text-white w-fit">
+                  <Button className="bg-[#F47920] hover:bg-[#C25E00] text-white w-fit">
                     Read Full Article
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -217,13 +217,13 @@ const Media = () => {
                       {new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                     </div>
                   </div>
-                  <CardTitle className="text-lg leading-tight hover:text-teal-600 transition-colors">
+                  <CardTitle className="text-lg leading-tight hover:text-[#003366] transition-colors">
                     {item.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-base line-clamp-3 mb-4">{item.excerpt}</CardDescription>
-                  <Button variant="link" className="text-teal-600 hover:text-teal-700 px-0">
+                  <Button variant="link" className="text-[#003366] hover:text-[#0A4D8C] px-0 font-semibold">
                     Read More <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -243,30 +243,30 @@ const Media = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <Card className="text-center hover:shadow-lg transition-shadow">
               <CardContent className="pt-8">
-                <FileText className="h-12 w-12 text-teal-600 mx-auto mb-4" />
+                <FileText className="h-12 w-12 text-[#003366] mx-auto mb-4" />
                 <h3 className="font-semibold text-lg mb-2">Media Kit</h3>
                 <p className="text-gray-600 text-sm mb-4">BOCRA logos, branding guidelines, and official materials</p>
-                <Button variant="outline" className="border-teal-600 text-teal-600 hover:bg-teal-50">
+                <Button variant="outline" className="border-[#003366] text-[#003366] hover:bg-[#E8F0F9]">
                   Download Kit
                 </Button>
               </CardContent>
             </Card>
             <Card className="text-center hover:shadow-lg transition-shadow">
               <CardContent className="pt-8">
-                <Newspaper className="h-12 w-12 text-cyan-600 mx-auto mb-4" />
+                <Newspaper className="h-12 w-12 text-[#003366] mx-auto mb-4" />
                 <h3 className="font-semibold text-lg mb-2">Press Releases</h3>
                 <p className="text-gray-600 text-sm mb-4">Archive of official BOCRA press releases</p>
-                <Button variant="outline" className="border-cyan-600 text-cyan-600 hover:bg-cyan-50">
+                <Button variant="outline" className="border-[#003366] text-[#003366] hover:bg-[#E8F0F9]">
                   View Archive
                 </Button>
               </CardContent>
             </Card>
             <Card className="text-center hover:shadow-lg transition-shadow">
               <CardContent className="pt-8">
-                <Calendar className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+                <Calendar className="h-12 w-12 text-[#003366] mx-auto mb-4" />
                 <h3 className="font-semibold text-lg mb-2">Events Calendar</h3>
                 <p className="text-gray-600 text-sm mb-4">Upcoming BOCRA events and industry activities</p>
-                <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                <Button variant="outline" className="border-blue-600 text-[#003366] hover:bg-[#E8F0F9]">
                   View Calendar
                 </Button>
               </CardContent>

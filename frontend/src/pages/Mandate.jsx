@@ -9,7 +9,7 @@ const Mandate = () => {
       id: 'telecommunications',
       title: 'Telecommunications',
       icon: Radio,
-      color: 'from-teal-500 to-teal-600',
+      color: 'from-[#003366] to-[#0A4D8C]',
       description:
         'BOCRA regulates all aspects of telecommunications services to ensure competitive, reliable, and affordable services for all Botswana citizens.',
       responsibilities: [
@@ -27,7 +27,7 @@ const Mandate = () => {
       id: 'broadcasting',
       title: 'Broadcasting',
       icon: Tv,
-      color: 'from-cyan-500 to-cyan-600',
+      color: 'from-[#003366] to-[#0A4D8C]',
       description:
         'Regulation of commercial radio and television broadcasting to promote diversity, local content, and quality programming.',
       responsibilities: [
@@ -63,7 +63,7 @@ const Mandate = () => {
       id: 'internet',
       title: 'Internet & ICT',
       icon: Wifi,
-      color: 'from-teal-600 to-cyan-600',
+      color: 'from-[#003366] to-[#0A4D8C]',
       description:
         'Management of the .bw domain registry and regulation of Internet services to support Botswana\'s digital economy.',
       responsibilities: [
@@ -82,7 +82,7 @@ const Mandate = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-teal-600 to-cyan-600 py-20">
+      <section className="bg-[#003366] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h1 className="text-5xl font-bold mb-6">Our Mandate</h1>
           <p className="text-xl max-w-3xl mx-auto">
@@ -110,12 +110,12 @@ const Mandate = () => {
                   <ul className="space-y-3 mb-8">
                     {mandate.responsibilities.map((resp, i) => (
                       <li key={i} className="flex items-start">
-                        <CheckCircle className="h-6 w-6 text-teal-600 mr-3 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="h-6 w-6 text-[#003366] mr-3 flex-shrink-0 mt-0.5" />
                         <span className="text-gray-700">{resp}</span>
                       </li>
                     ))}
                   </ul>
-                  <Button className="bg-teal-600 hover:bg-teal-700 text-white">
+                  <Button className="bg-[#003366] hover:bg-[#0A4D8C] text-white">
                     Learn More
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -134,13 +134,13 @@ const Mandate = () => {
       })}
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-teal-600 to-cyan-600">
+      <section className="py-20 bg-[#003366]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">Questions About Our Regulatory Framework?</h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
             Our team is available to provide guidance on licensing, compliance, and regulatory matters
           </p>
-          <Button size="lg" className="bg-white text-teal-600 hover:bg-gray-100">
+          <Button size="lg" className="bg-[#F47920] hover:bg-[#C25E00] text-white border-0">
             Contact Regulatory Team
           </Button>
         </div>
