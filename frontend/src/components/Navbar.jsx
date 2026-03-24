@@ -1,15 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, X, ChevronDown, Globe, BarChart3, Search, Bell } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import NotificationCenter from './NotificationCenter';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const user = localStorage.getItem('bocra_user');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
@@ -18,228 +32,181 @@ const Navbar = () => {
     window.location.href = '/';
   };
 
+  const services = [
+    { name: '.bw Domain Registry', path: '/domain-registry', icon: Globe },
+    { name: 'Live QoS Monitoring', path: '/live-qos', icon: BarChart3 },
+    { name: 'Type Approval', path: '/type-approval', icon: ShieldCheck },
+    { name: 'License Applications', path: '/license-application', icon: Zap },
+    { name: 'Complaints', path: '/complaints', icon: MessageSquare },
+  ];
+
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
-      {/* Top Bar */}
-      <div className="bg-teal-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-10 text-sm">
-            <div className="flex items-center space-x-6">
-              <Link to="/domain-registry" className="hover:text-teal-200 transition-colors">
-                .bw Domain Registry
+    <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
+      scrolled ? 'py-3' : 'py-5'
+    }`}>
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-300 ${
+        scrolled ? 'max-w-6xl' : 'max-w-7xl'
+      }`}>
+        <div className={`glass border-slate-200/50 rounded-[2rem] px-6 py-2 transition-all duration-300 shadow-sm ${
+          scrolled ? 'shadow-xl bg-white/90 backdrop-blur-xl border-slate-200' : ''
+        }`}>
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-br from-teal-600 to-blue-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition-opacity"></div>
+                <div className="relative w-11 h-11 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                  B
+                </div>
+              </div>
+              <div className="hidden sm:block">
+                <div className="text-xl font-extrabold text-slate-900 tracking-tight">BOCRA</div>
+                <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest leading-none">Regulatory Authority</div>
+              </div>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-1">
+              <Link to="/">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${isActive('/') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                >
+                  Home
+                </Button>
               </Link>
-              <Link to="/live-qos" className="hover:text-teal-200 transition-colors">
-                Live QoS Monitoring
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="rounded-xl px-4 text-slate-600 hover:text-teal-600 hover:bg-teal-50">
+                    Services
+                    <ChevronDown className="ml-1 h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64 p-2 rounded-2xl glass-dark md:glass-light border-slate-200 shadow-2xl overflow-hidden relative">
+                  <div className="heritage-overlay basket-pattern text-slate-900 opacity-[0.02]"></div>
+                  <div className="relative">
+                    {services.map((service) => (
+                      <DropdownMenuItem key={service.name} asChild className="rounded-xl p-3 cursor-pointer focus:bg-teal-50 focus:text-teal-600">
+                        <Link to={service.path} className="flex items-center space-x-3 w-full">
+                          <div className="text-slate-400 group-focus:text-teal-500">
+                            {React.createElement(service.icon || Globe, { className: 'h-4 w-4' })}
+                          </div>
+                          <span className="font-medium text-sm">{service.name}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Link to="/about">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${isActive('/about') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                >
+                  About
+                </Button>
               </Link>
-              <a href="#" className="hover:text-teal-200 transition-colors">Search BOCRA</a>
+              <Link to="/documents">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${isActive('/documents') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                >
+                  Resources
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${isActive('/contact') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                >
+                  Contact
+                </Button>
+              </Link>
             </div>
+
+            {/* Icons & CTA */}
             <div className="flex items-center space-x-4">
-              <span>Plot 50671 Independence Avenue, Gaborone</span>
-              <span>|</span>
-              <span>+267 395 7755</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Navbar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">B</span>
+              <div className="hidden sm:flex items-center space-x-2 mr-2">
+                <button className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all">
+                  <Search className="h-5 w-5" />
+                </button>
+                {user && (
+                  <button className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all relative">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                  </button>
+                )}
               </div>
-              <div className="ml-3">
-                <div className="text-xl font-bold text-gray-900">BOCRA</div>
-                <div className="text-xs text-gray-600">Communications Regulatory Authority</div>
-              </div>
-            </div>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
-            <Link to="/">
-              <Button
-                variant="ghost"
-                className={`${isActive('/') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Home
-              </Button>
-            </Link>
-            <Link to="/about">
-              <Button
-                variant="ghost"
-                className={`${isActive('/about') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                About
-              </Button>
-            </Link>
-            <Link to="/mandate">
-              <Button
-                variant="ghost"
-                className={`${isActive('/mandate') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Mandate
-              </Button>
-            </Link>
-            <Link to="/projects">
-              <Button
-                variant="ghost"
-                className={`${isActive('/projects') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Projects
-              </Button>
-            </Link>
-            <Link to="/documents">
-              <Button
-                variant="ghost"
-                className={`${isActive('/documents') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Documents
-              </Button>
-            </Link>
-            <Link to="/media">
-              <Button
-                variant="ghost"
-                className={`${isActive('/media') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Media
-              </Button>
-            </Link>
-            <Link to="/contact">
-              <Button
-                variant="ghost"
-                className={`${isActive('/contact') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Contact
-              </Button>
-            </Link>
-          </div>
-
-          {/* Auth Buttons */}
-          <div className="hidden lg:flex items-center space-x-3">
-            <GlobalSearch />
-            {user && <NotificationCenter />}
-            {user ? (
-              <>
+              
+              {user ? (
                 <Link to="/dashboard">
-                  <Button variant="outline" className="border-teal-600 text-teal-600 hover:bg-teal-50">
-                    Dashboard
+                  <Button className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-6 hidden sm:flex">
+                    Portal
                   </Button>
                 </Link>
-                <Button onClick={handleLogout} className="bg-teal-600 hover:bg-teal-700 text-white">
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
+              ) : (
                 <Link to="/login">
-                  <Button variant="outline" className="border-teal-600 text-teal-600 hover:bg-teal-50">
+                  <Button className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-6 shadow-lg shadow-teal-500/20">
                     Login
                   </Button>
                 </Link>
-                <Link to="/login">
-                  <Button className="bg-teal-600 hover:bg-teal-700 text-white">
-                    Register
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
+              )}
 
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+              {/* Mobile Toggle */}
+              <button
+                className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-gray-200 bg-white">
-          <div className="px-4 py-4 space-y-2">
-            <Link to="/" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Home
-              </Button>
-            </Link>
-            <Link to="/about" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                About
-              </Button>
-            </Link>
-            <Link to="/mandate" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Mandate
-              </Button>
-            </Link>
-            <Link to="/projects" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Projects
-              </Button>
-            </Link>
-            <Link to="/documents" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Documents
-              </Button>
-            </Link>
-            <Link to="/media" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Media
-              </Button>
-            </Link>
-            <Link to="/type-approval" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Type Approval
-              </Button>
-            </Link>
-            <Link to="/complaints" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Complaints
-              </Button>
-            </Link>
-            <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Contact
-              </Button>
-            </Link>
-            <div className="pt-4 border-t border-gray-200 space-y-2">
-              {user ? (
-                <>
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Button onClick={handleLogout} variant="outline" className="w-full">
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">
-                      Login
-                    </Button>
-                  </Link>
-                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full">
-                      Register
-                    </Button>
-                  </Link>
-                </>
-              )}
+        <div className="lg:hidden fixed inset-0 z-50 pt-24 bg-white/80 backdrop-blur-3xl animate-in fade-in zoom-in duration-300 overflow-hidden">
+          <div className="heritage-overlay basket-pattern text-teal-900 opacity-[0.04]"></div>
+          <div className="px-6 space-y-4 relative">
+            {['Home', 'About', 'Documents', 'Contact'].map((item) => (
+              <Link 
+                key={item} 
+                to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-3xl font-bold text-slate-900 hover:text-teal-600 transition-colors"
+              >
+                {item}
+              </Link>
+            ))}
+            <div className="h-px bg-slate-100 my-6"></div>
+            <div className="grid grid-cols-1 gap-4">
+              {services.map((service) => (
+                <Link 
+                  key={service.name} 
+                  to={service.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-3 text-lg font-medium text-slate-600"
+                >
+                  <service.icon className="h-5 w-5 text-teal-600" />
+                  <span>{service.name}</span>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
       )}
     </nav>
+
   );
 };
 
+// Mock icons for the services if not imported
+const ShieldCheck = (props) => <Globe {...props} />;
+const Zap = (props) => <Globe {...props} />;
+const MessageSquare = (props) => <Globe {...props} />;
+
 export default Navbar;
+

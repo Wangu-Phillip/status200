@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from './components/ui/toaster';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -22,11 +22,30 @@ import AdminDashboard from './pages/AdminDashboard';
 import DomainRegistry from './pages/DomainRegistry';
 import LiveQoSMonitoring from './pages/LiveQoSMonitoring';
 
-function App() {
+import Ruby from './components/Chatbot';
+
+const Layout = ({ children }) => {
+  const location = useLocation();
+  const isDashboard = location.pathname.includes('/dashboard');
+
   return (
     <div className="App">
-      <BrowserRouter>
-        <Navbar />
+      {!isDashboard && <Navbar />}
+      <div className={isDashboard ? '' : 'pt-0'}>
+        {children}
+      </div>
+      {!isDashboard && <Footer />}
+      <Ruby />
+      <AccessibilityMenu />
+      <Toaster />
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
@@ -45,11 +64,8 @@ function App() {
           <Route path="/domain-registry" element={<DomainRegistry />} />
           <Route path="/live-qos" element={<LiveQoSMonitoring />} />
         </Routes>
-        <Footer />
-        <AccessibilityMenu />
-        <Toaster />
-      </BrowserRouter>
-    </div>
+      </Layout>
+    </BrowserRouter>
   );
 }
 
