@@ -10,10 +10,7 @@ const Footer = () => {
           {/* About */}
           <div>
             <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">B</span>
-              </div>
-              <span className="ml-2 text-xl font-bold text-white">BOCRA</span>
+              <img src="/logo.png" alt="BOCRA Logo" className="h-16 w-auto" />
             </div>
             <p className="text-sm leading-relaxed mb-4">
               Botswana Communications Regulatory Authority regulates the communications sector including

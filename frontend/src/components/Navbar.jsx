@@ -1,15 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useTheme } from '../context/ThemeProvider';
+import { Menu, X, ChevronDown, Globe, BarChart3, Search, Bell, Sun, Moon, ShieldCheck, Zap, MessageSquare } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import NotificationCenter from './NotificationCenter';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const user = localStorage.getItem('bocra_user');
+  const userData = localStorage.getItem('bocra_user');
+  const user = userData ? JSON.parse(userData) : null;
+  const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
@@ -18,218 +35,243 @@ const Navbar = () => {
     window.location.href = '/';
   };
 
+  const services = [
+    { name: '.bw Domain Registry', path: '/domain-registry', icon: Globe },
+    { name: 'Live QoS Monitoring', path: '/live-qos', icon: BarChart3 },
+    { name: 'Type Approval', path: '/type-approval', icon: ShieldCheck },
+    { name: 'License Applications', path: '/license-application', icon: Zap },
+    { name: 'Complaints', path: '/complaints', icon: MessageSquare },
+  ];
+
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
-      {/* Top Bar */}
-      <div className="bg-teal-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-10 text-sm">
-            <div className="flex items-center space-x-6">
-              <Link to="/domain-registry" className="hover:text-teal-200 transition-colors">
-                .bw Domain Registry
-              </Link>
-              <Link to="/live-qos" className="hover:text-teal-200 transition-colors">
-                Live QoS Monitoring
-              </Link>
-              <a href="#" className="hover:text-teal-200 transition-colors">Search BOCRA</a>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span>Plot 50671 Independence Avenue, Gaborone</span>
-              <span>|</span>
-              <span>+267 395 7755</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
+      scrolled ? 'py-3' : 'py-5'
+    }`}>
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-300 ${
+        scrolled ? 'max-w-6xl' : 'max-w-7xl'
+      }`}>
+        <div className={`glass border-slate-200/50 rounded-[2rem] px-6 py-2 transition-all duration-300 shadow-sm ${
+          scrolled ? 'shadow-xl bg-white/90 backdrop-blur-xl border-slate-200' : ''
+        }`}>
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link to="/" className="flex items-center group">
+              <img src="/logo.png" alt="BOCRA Logo" className="h-20 w-auto object-contain group-hover:scale-105 transition-all duration-300" />
+            </Link>
 
-      {/* Main Navbar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">B</span>
-              </div>
-              <div className="ml-3">
-                <div className="text-xl font-bold text-gray-900">BOCRA</div>
-                <div className="text-xs text-gray-600">Communications Regulatory Authority</div>
-              </div>
-            </div>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
-            <Link to="/">
-              <Button
-                variant="ghost"
-                className={`${isActive('/') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Home
-              </Button>
-            </Link>
-            <Link to="/about">
-              <Button
-                variant="ghost"
-                className={`${isActive('/about') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                About
-              </Button>
-            </Link>
-            <Link to="/mandate">
-              <Button
-                variant="ghost"
-                className={`${isActive('/mandate') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Mandate
-              </Button>
-            </Link>
-            <Link to="/projects">
-              <Button
-                variant="ghost"
-                className={`${isActive('/projects') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Projects
-              </Button>
-            </Link>
-            <Link to="/documents">
-              <Button
-                variant="ghost"
-                className={`${isActive('/documents') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Documents
-              </Button>
-            </Link>
-            <Link to="/media">
-              <Button
-                variant="ghost"
-                className={`${isActive('/media') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Media
-              </Button>
-            </Link>
-            <Link to="/contact">
-              <Button
-                variant="ghost"
-                className={`${isActive('/contact') ? 'text-teal-600 bg-teal-50' : 'text-gray-700'} hover:text-teal-600 hover:bg-teal-50`}
-              >
-                Contact
-              </Button>
-            </Link>
-          </div>
-
-          {/* Auth Buttons */}
-          <div className="hidden lg:flex items-center space-x-3">
-            <GlobalSearch />
-            {user && <NotificationCenter />}
-            {user ? (
-              <>
-                <Link to="/dashboard">
-                  <Button variant="outline" className="border-teal-600 text-teal-600 hover:bg-teal-50">
-                    Dashboard
-                  </Button>
-                </Link>
-                <Button onClick={handleLogout} className="bg-teal-600 hover:bg-teal-700 text-white">
-                  Logout
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-1">
+              <Link to="/">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${isActive('/') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                >
+                  Home
                 </Button>
-              </>
-            ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="outline" className="border-teal-600 text-teal-600 hover:bg-teal-50">
-                    Login
+              </Link>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="rounded-xl px-4 text-slate-600 hover:text-teal-600 hover:bg-teal-50">
+                    Services
+                    <ChevronDown className="ml-1 h-4 w-4 opacity-50" />
                   </Button>
-                </Link>
-                <Link to="/login">
-                  <Button className="bg-teal-600 hover:bg-teal-700 text-white">
-                    Register
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64 p-2 rounded-2xl glass-dark md:glass-light border-slate-200 shadow-2xl overflow-hidden relative">
+                  <div className="heritage-overlay basket-pattern text-slate-900 opacity-[0.02]"></div>
+                  <div className="relative">
+                    {services.map((service) => (
+                      <DropdownMenuItem key={service.name} asChild className="rounded-xl p-3 cursor-pointer focus:bg-teal-50 focus:text-teal-600">
+                        <Link to={service.path} className="flex items-center space-x-3 w-full">
+                          <div className="text-slate-400 group-focus:text-teal-500">
+                            {React.createElement(service.icon || Globe, { className: 'h-4 w-4' })}
+                          </div>
+                          <span className="font-medium text-sm">{service.name}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+              <Link to="/about">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${isActive('/about') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                >
+                  About
+                </Button>
+              </Link>
+              <Link to="/documents">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${isActive('/documents') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                >
+                  Resources
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${isActive('/contact') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                >
+                  Contact
+                </Button>
+              </Link>
+            </div>
+
+            {/* Icons & CTA */}
+            <div className="flex items-center space-x-4">
+              <div className="hidden sm:flex items-center space-x-2 mr-2">
+                <button 
+                  onClick={toggleTheme}
+                  className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all"
+                  aria-label="Toggle Theme"
+                >
+                  {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                </button>
+                <button className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all">
+                  <Search className="h-5 w-5" />
+                </button>
+                {user && (
+                  <button className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all relative">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                  </button>
+                )}
+              </div>
+              
+              <div className="hidden sm:flex items-center space-x-3">
+                {user ? (
+                  // Logged In View: Show ONLY their allowed portal to prevent confusing redirects
+                  user.userType === 'admin' ? (
+                    <Link to="/admin">
+                      <Button className="rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white px-8 shadow-lg shadow-teal-500/20 font-extrabold tracking-wide">
+                        Enter Admin Portal
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to="/dashboard">
+                      <Button className="rounded-[1.25rem] border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white px-8 font-extrabold tracking-wide">
+                        Enter Citizen Portal
+                      </Button>
+                    </Link>
+                  )
+                ) : (
+                  // Logged Out View: Completely separate entry point buttons
+                  <>
+                    <Link to="/login?role=admin">
+                      <Button variant="ghost" className="rounded-xl text-teal-600 hover:bg-teal-50 font-bold px-6">
+                        BOCRA Staff
+                      </Button>
+                    </Link>
+                    <Link to="/login">
+                      <Button className="rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white px-8 shadow-lg shadow-teal-500/20 font-extrabold tracking-wide">
+                        Citizen Portal
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              {/* Mobile Toggle */}
+              <button
+                className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-gray-200 bg-white">
-          <div className="px-4 py-4 space-y-2">
-            <Link to="/" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Home
-              </Button>
-            </Link>
-            <Link to="/about" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                About
-              </Button>
-            </Link>
-            <Link to="/mandate" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Mandate
-              </Button>
-            </Link>
-            <Link to="/projects" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Projects
-              </Button>
-            </Link>
-            <Link to="/documents" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Documents
-              </Button>
-            </Link>
-            <Link to="/media" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Media
-              </Button>
-            </Link>
-            <Link to="/type-approval" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Type Approval
-              </Button>
-            </Link>
-            <Link to="/complaints" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Complaints
-              </Button>
-            </Link>
-            <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-teal-600 hover:bg-teal-50">
-                Contact
-              </Button>
-            </Link>
-            <div className="pt-4 border-t border-gray-200 space-y-2">
+        <div className="lg:hidden fixed inset-0 z-50 pt-24 bg-white/80 backdrop-blur-3xl animate-in fade-in zoom-in duration-300 overflow-hidden">
+          <div className="heritage-overlay basket-pattern text-teal-900 opacity-[0.04]"></div>
+          <div className="px-6 space-y-4 relative">
+            {['Home', 'About', 'Documents', 'Contact'].map((item) => (
+              <Link 
+                key={item} 
+                to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-3xl font-bold text-slate-900 hover:text-teal-600 transition-colors"
+              >
+                {item}
+              </Link>
+            ))}
+            <div className="h-px bg-slate-100 my-6"></div>
+            <div className="grid grid-cols-1 gap-4">
+              {services.map((service) => (
+                <Link 
+                  key={service.name} 
+                  to={service.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-3 text-lg font-medium text-slate-600"
+                >
+                  <service.icon className="h-5 w-5 text-teal-600" />
+                  <span>{service.name}</span>
+                </Link>
+              ))}
+            </div>
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
+              <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Theme Preference</span>
+              <button 
+                onClick={toggleTheme}
+                className="flex items-center space-x-2 p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-teal-50 hover:text-teal-600 transition-all"
+                aria-label="Toggle Theme"
+              >
+                {theme === 'light' ? (
+                  <>
+                    <Moon className="h-5 w-5" />
+                    <span className="font-semibold text-sm">Switch to Dark</span>
+                  </>
+                ) : (
+                  <>
+                    <Sun className="h-5 w-5" />
+                    <span className="font-semibold text-sm">Switch to Light</span>
+                  </>
+                )}
+              </button>
+            </div>
+            
+            <div className="pt-4 pb-8 flex flex-col gap-3">
               {user ? (
+                // Logged In Mobile View
                 <>
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Button onClick={handleLogout} variant="outline" className="w-full">
-                    Logout
+                  {user.userType === 'admin' ? (
+                    <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full h-12 rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-500/20 font-bold text-lg">
+                        Enter Admin Portal
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full h-12 rounded-[1.25rem] bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg">
+                        Enter Citizen Portal
+                      </Button>
+                    </Link>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    onClick={handleLogout}
+                    className="w-full h-12 rounded-[1.25rem] border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-lg transition-colors"
+                  >
+                    Sign Out
                   </Button>
                 </>
               ) : (
+                // Logged Out Mobile View
                 <>
-                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">
-                      Login
+                  <Link to="/login?role=admin" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full h-12 rounded-[1.25rem] border-teal-500/30 text-teal-600 hover:bg-teal-50 shadow-sm font-bold text-lg">
+                      BOCRA Staff Login
                     </Button>
                   </Link>
                   <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full">
-                      Register
+                    <Button className="w-full h-12 rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg shadow-lg">
+                      Citizen Portal
                     </Button>
                   </Link>
                 </>
@@ -239,7 +281,9 @@ const Navbar = () => {
         </div>
       )}
     </nav>
+
   );
 };
 
 export default Navbar;
+
