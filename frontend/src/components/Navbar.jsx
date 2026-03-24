@@ -142,11 +142,20 @@ const Navbar = () => {
               </div>
               
               {user ? (
-                <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'}>
-                  <Button className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-6 hidden sm:flex">
-                    {user.userType === 'admin' ? 'Admin Portal' : 'Portal'}
-                  </Button>
-                </Link>
+                <div className="hidden sm:flex items-center space-x-2">
+                  <Link to="/dashboard">
+                    <Button className="rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white px-6">
+                      Portal
+                    </Button>
+                  </Link>
+                  {user.userType === 'admin' && (
+                    <Link to="/admin">
+                      <Button className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-6 shadow-lg shadow-teal-500/20">
+                        Admin Portal
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               ) : (
                 <Link to="/login">
                   <Button className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-6 shadow-lg shadow-teal-500/20">
@@ -220,9 +229,16 @@ const Navbar = () => {
             <div className="pt-4 pb-8 flex flex-col gap-3">
               {user ? (
                 <>
-                  <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} onClick={() => setMobileMenuOpen(false)}>
+                  {user.userType === 'admin' && (
+                    <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full h-12 rounded-xl bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-500/20 font-bold text-lg">
+                        Open Admin Portal
+                      </Button>
+                    </Link>
+                  )}
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                     <Button className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg">
-                      {user.userType === 'admin' ? 'Open Admin Portal' : 'Open Portal'}
+                      Open Portal
                     </Button>
                   </Link>
                   <Button 
