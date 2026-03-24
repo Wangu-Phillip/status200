@@ -1,6 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Send, X, MessageSquare, Globe, ArrowRight, CornerDownRight, Sparkles, ChevronRight } from 'lucide-react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI('AIzaSyCN0eZIKo_pw3504IiZmdaCKIxJYf76_cA');
+const systemPrompt = `You are Ruby, the digital assistant for BOCRA (Botswana Communications Regulatory Authority). 
+Your context: Help users with regulatory matters: Licensing, Spectrum, complaints, domains (.bw), and USF projects. 
+Be helpful, brief, and concise. Speak in the language the user speaks (English or Setswana).
+Do NOT use markdown headers or bolding. Keep to plain text paragraphs under 3 sentences.`;
+
+const getModel = () => genAI.getGenerativeModel({ 
+  model: "gemini-2.5-flash",
+  systemInstruction: systemPrompt 
+});
 
 const CHATBOT_KNOWLEDGE = {
   en: {
@@ -124,7 +136,7 @@ const Ruby = () => {
     }
   };
 
-  const handleSend = (text = inputValue) => {
+  const handleSend = async (text = inputValue) => {
     if (!text.trim() || !language) return;
 
     const userMessage = { role: 'user', content: text };
@@ -132,22 +144,37 @@ const Ruby = () => {
     setInputValue('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const query = text.toLowerCase();
-      let response = CHATBOT_KNOWLEDGE[language].answers.default;
+    try {
+      const historyMsg = messages
+        // Filter out initial tour messages if needed, or pass them
+        .slice(1) // skip language selection request to avoid cluttering history length unnecessarily
+        .map(msg => ({
+          role: msg.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: msg.content }]
+      }));
+      
+      const chat = getModel().startChat({ history: historyMsg });
+      const result = await chat.sendMessage(text);
+      let aiResponse = result.response.text();
+      // Strip markdown asterisks to keep the UI clean
+      aiResponse = aiResponse.replace(/\*\*/g, '').replace(/\*/g, '').trim();
 
-      // Smarter query matching
+      setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+    } catch (error) {
+      console.error("Gemini API Error:", error);
+      // Fallback
+      let fallback = CHATBOT_KNOWLEDGE[language].answers.default;
       Object.entries(CHATBOT_KNOWLEDGE[language].answers).forEach(([key, value]) => {
-        if (query.includes(key.toLowerCase())) response = value;
+        if (text.toLowerCase().includes(key.toLowerCase())) fallback = value;
       });
-
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: fallback }]);
+    } finally {
       setIsTyping(false);
-    }, 800);
+    }
   };
 
   return (
-    <div id="ruby-container" className={`fixed bottom-6 left-6 z-[200] flex flex-col items-start transition-all duration-500 ${isOpen ? 'w-[400px]' : 'w-16'}`}>
+    <div id="ruby-container" className={`fixed bottom-6 right-6 z-[200] flex flex-col items-start transition-all duration-500 ${isOpen ? 'w-[400px]' : 'w-16'}`}>
       {/* Mini Aura for Ruby eye */}
       {!isOpen && (
         <button
