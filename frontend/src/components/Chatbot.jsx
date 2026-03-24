@@ -4,24 +4,31 @@ import { Send, X, MessageSquare, Globe, ArrowRight, CornerDownRight, Sparkles, C
 
 const CHATBOT_KNOWLEDGE = {
   en: {
-    welcome: "Hello! I'm Ruby, your BOCRA digital assistant. How can I help you today?",
+    welcome: "Hello! I'm Ruby, your BOCRA digital assistant. Which language would you prefer to communicate in?",
     placeholder: "Ask Ruby anything...",
-    suggested: ["Cellular License Docs", "Type Approval Time", "Status Meanings", "File Complaint"],
+    suggested: ["Spectrum License", "Domain Registration", "USF Projects", "Consumer Rights"],
     answers: {
+      "spectrum": "Spectrum licensing covers radio frequencies. You need to fill out Form S-1 for terrestrial services or S-2 for satellite. Fees depend on the frequency band and bandwidth requested.",
+      "domain": "BOCRA manages the .bw registry. To register a .bw domain, you should contact an accredited registrar. You can find the list on our main website under 'Public Registry'.",
+      "usf": "The Universal Service Fund (USF) supports communication infrastructure in remote areas. Current projects include the 'Schools Connectivity' and 'Rural Telephony' expansions.",
+      "rights": "As a consumer, you have the right to: 1. Accurate billing, 2. Quality of service, 3. Privacy of communications, and 4. A clear dispute resolution process from your ISP.",
+      "internet": "If your internet is slow, first check with your service provider. If the issue persists and they don't help, you can file a complaint with BOCRA through this portal.",
+      "type approval": "Mobile phones, routers, and any radio equipment must be Type Approved by BOCRA to ensure they meet technical standards and won't interfere with networks.",
+      "fees": "Regulatory fees are due annually for most licenses. You can check your outstanding balance in the 'My Documents' section under 'Invoices'.",
       "cellular license": "For a cellular license, you typically need: 1. Completed application form, 2. Proof of technical competence, 3. Business plan, 4. Company registration docs, and 5. Proof of fee payment.",
       "type approval time": "Type approval usually takes 5-10 business days once all technical documentation and sample equipment (if required) are received.",
       "under review": " 'Under Review' means our case officers are currently evaluating your technical documents or compliance data. This is a standard step before approval.",
-      "licensing": "To apply for a new license, please visit the 'New Application' button on your dashboard. You can also view current license fees in the 'Documents' section.",
-      "complaints": "If you have a dispute with a service provider, you can file a complaint through our 'File Complaint' button. We aim to resolve issues within 14 business days.",
-      "default": "I'm Ruby, and I'm still learning! Try asking about 'cellular licenses', 'type approval timing', or 'what status meanings are'."
+      "default": "I'm Ruby, and I'm still learning! Try asking about 'spectrum', 'domain registry', 'USF', or 'consumer rights'."
     }
   },
   tn: {
-    welcome: "Dumela! Nna ke Ruby, mothusi wa gago wa BOCRA. Nka go thusa ka eng gompieno?",
+    welcome: "Dumela! Nna ke Ruby, mothusi wa gago wa BOCRA. O ka rata gore re bue ka puo efe?",
     placeholder: "Botsa Ruby sengwe le sengwe...",
-    suggested: ["Dilaesense", "Dingongorego", "Domine ya .bw", "Maemo a kopo"],
+    suggested: ["Dilaesense", "Dingongorego", "Domine ya .bw", "Ditshwanelo"],
     answers: {
       "dilaesense": "Go kopa laesense e ntšha, etela 'New Application' mo dashboard ya gago. O ka bona ditlhwatlhwa mo 'Documents'.",
+      "domine": "BOCRA e tlhokometse .bw. O ka ikopanya le barulaganyi ba ba kwadisitsweng go tsenya domine ya gago.",
+      "ditshwanelo": "O na le tshwanelo ya go amogela ditirelo tse di siameng le go sa tshwenngwe ke diphousara tse o sa di bantseng.",
       "dingongorego": "Fa o na le mathata le modiri wa ditirelo, o ka tsenya ngongorego ka 'File Complaint'. Re rarabolola mathata mo malatsing a le 14.",
       "maemo a kopo": "'Under Review' go raya gore re sa ntse re tlhotlhomisa dipampiri tsa gago tsa kopo.",
       "default": "Ke Ruby, ke sa ntse ke ithuta! Botsa ka dilaesense, dingongorego, kgotsa thomo ya BOCRA."
@@ -31,7 +38,7 @@ const CHATBOT_KNOWLEDGE = {
 
 const Ruby = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState(null); // Null until chosen
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -40,7 +47,6 @@ const Ruby = () => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    // Read user data from localStorage
     const userData = localStorage.getItem('bocra_user');
     if (userData) {
       const user = JSON.parse(userData);
@@ -48,7 +54,6 @@ const Ruby = () => {
       setUserName(name);
     }
 
-    // Check for first login tour
     const hasSeenTour = localStorage.getItem('bocra_tour_seen');
     const isDashboard = window.location.pathname.includes('dashboard');
     
@@ -61,16 +66,13 @@ const Ruby = () => {
   }, []);
 
   useEffect(() => {
-    if (messages.length === 0 && !isTyping && tourStep === -1) {
-      const welcomeMsg = language === 'en' 
-        ? `Hello ${userName}! I'm Ruby, your BOCRA digital assistant. How can I help you today?`
-        : `Dumela ${userName}! Nna ke Ruby, mothusi wa gago wa BOCRA. Nka go thusa ka eng gompieno?`;
-      
+    // Initial greeting if no messages
+    if (messages.length === 0 && !isTyping) {
       setMessages([
-        { role: 'assistant', content: welcomeMsg }
+        { role: 'assistant', content: `Hello ${userName}! I'm Ruby, your BOCRA digital assistant. Before we begin, please select your preferred language:` }
       ]);
     }
-  }, [language, tourStep, userName]);
+  }, [userName]);
 
   useEffect(() => {
     scrollToBottom();
@@ -80,10 +82,19 @@ const Ruby = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const handleLanguageSelect = (lang) => {
+    setLanguage(lang);
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', content: lang === 'en' ? 'English' : 'Setswana' },
+      { role: 'assistant', content: CHATBOT_KNOWLEDGE[lang].welcome }
+    ]);
+  };
+
   const startTour = () => {
     setTourStep(0);
     setMessages([
-      { role: 'assistant', content: `Hi ${userName}! 👋🏽 Welcome to your BOCRA portal. I'm Ruby, your digital assistant. Let me show you around real quick!` }
+      { role: 'assistant', content: `Hi ${userName}! 👋🏽 Welcome to your BOCRA portal. I'm Ruby, your digital assistant. Let's start with a quick tour!` }
     ]);
   };
 
@@ -100,7 +111,6 @@ const Ruby = () => {
       setTourStep(next);
       setMessages(prev => [...prev, { role: 'assistant', content: steps[next].content }]);
       
-      // Highlight element if it exists
       const el = document.getElementById(steps[next].target);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -110,12 +120,12 @@ const Ruby = () => {
     } else {
       setTourStep(-1);
       localStorage.setItem('bocra_tour_seen', 'true');
-      setMessages(prev => [...prev, { role: 'assistant', content: "You're all set! Enjoy the portal." }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Great! Now, please select your language so I can help you better." }]);
     }
   };
 
   const handleSend = (text = inputValue) => {
-    if (!text.trim()) return;
+    if (!text.trim() || !language) return;
 
     const userMessage = { role: 'user', content: text };
     setMessages(prev => [...prev, userMessage]);
@@ -126,8 +136,9 @@ const Ruby = () => {
       const query = text.toLowerCase();
       let response = CHATBOT_KNOWLEDGE[language].answers.default;
 
+      // Smarter query matching
       Object.entries(CHATBOT_KNOWLEDGE[language].answers).forEach(([key, value]) => {
-        if (query.includes(key)) response = value;
+        if (query.includes(key.toLowerCase())) response = value;
       });
 
       setMessages(prev => [...prev, { role: 'assistant', content: response }]);
@@ -193,6 +204,22 @@ const Ruby = () => {
                 </div>
               </div>
             ))}
+            {!language && tourStep === -1 && (
+              <div className="flex flex-col space-y-3 pt-2">
+                <Button 
+                  onClick={() => handleLanguageSelect('en')} 
+                  className="w-full bg-slate-800 border border-slate-700 hover:bg-teal-600 hover:border-teal-500 rounded-xl py-6 font-bold text-slate-200 transition-all"
+                >
+                  🇬🇧 English
+                </Button>
+                <Button 
+                  onClick={() => handleLanguageSelect('tn')} 
+                  className="w-full bg-slate-800 border border-slate-700 hover:bg-teal-600 hover:border-teal-500 rounded-xl py-6 font-bold text-slate-200 transition-all"
+                >
+                  🇧🇼 Setswana
+                </Button>
+              </div>
+            )}
             {isTyping && (
               <div className="flex justify-start">
                 <div className="bg-[#1e293b] px-5 py-3 rounded-2xl rounded-tl-none flex space-x-1">
@@ -219,7 +246,7 @@ const Ruby = () => {
           )}
 
           {/* Suggested */}
-          {tourStep === -1 && (
+          {language && tourStep === -1 && (
             <div className="relative px-6 pb-2 flex flex-wrap gap-2">
               {CHATBOT_KNOWLEDGE[language].suggested.map((s) => (
                 <button 
@@ -235,25 +262,27 @@ const Ruby = () => {
           )}
 
           {/* Input */}
-          <div className="relative p-6">
-            <div className="flex items-center space-x-2 bg-[#111827] border border-[#1e293b] rounded-2xl p-2 focus-within:ring-1 focus-within:ring-teal-500 transition-all">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={CHATBOT_KNOWLEDGE[language].placeholder}
-                className="flex-1 bg-transparent border-none focus:ring-0 text-sm px-3 py-2 text-white placeholder:text-slate-600"
-              />
-              <button 
-                onClick={() => handleSend()}
-                disabled={!inputValue.trim()}
-                className="w-11 h-11 bg-teal-600 disabled:opacity-50 rounded-xl flex items-center justify-center text-white"
-              >
-                <Send className="w-5 h-5" />
-              </button>
+          {language && (
+            <div className="relative p-6">
+              <div className="flex items-center space-x-2 bg-[#111827] border border-[#1e293b] rounded-2xl p-2 focus-within:ring-1 focus-within:ring-teal-500 transition-all">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder={CHATBOT_KNOWLEDGE[language].placeholder}
+                  className="flex-1 bg-transparent border-none focus:ring-0 text-sm px-3 py-2 text-white placeholder:text-slate-600"
+                />
+                <button 
+                  onClick={() => handleSend()}
+                  disabled={!inputValue.trim()}
+                  className="w-11 h-11 bg-teal-600 disabled:opacity-50 rounded-xl flex items-center justify-center text-white"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

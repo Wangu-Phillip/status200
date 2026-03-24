@@ -16,9 +16,14 @@ import {
   Clock,
   ArrowRight,
   MoreVertical,
-  Upload
+  Upload,
+  ChevronRight
 } from 'lucide-react';
 import { userApplications, userComplaints } from '../mockData';
+import ApplicationsView from '../components/dashboard/ApplicationsView';
+import ComplaintsView from '../components/dashboard/ComplaintsView';
+import DocumentsView from '../components/dashboard/DocumentsView';
+import SettingsView from '../components/dashboard/SettingsView';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -101,77 +106,14 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  return (
-    <div className="flex h-screen bg-[#020617] text-slate-100 overflow-hidden dark">
-      {/* Sidebar */}
-      <aside id="sidebar-nav" className="w-72 bg-[#0a0f1e] border-r border-[#1e293b] flex flex-col h-full z-50">
-        <div className="p-8">
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">B</div>
-            <span className="text-xl font-bold tracking-tight">BOCRA</span>
-          </Link>
-        </div>
-
-        <nav className="flex-1 px-4 space-y-1">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all ${
-                activeTab === item.id 
-                  ? 'bg-teal-600/10 text-teal-400 border border-teal-600/20' 
-                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="font-medium text-sm">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        {/* User Info Bottom */}
-        <div className="p-6 border-t border-[#1e293b]">
-          <div className="flex items-center space-x-3 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-blue-500 flex items-center justify-center font-bold text-sm shadow-inner">
-              {user.name.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold truncate text-white">{user.name}</p>
-              <p className="text-[10px] text-teal-500 font-bold uppercase tracking-widest">Citizen Portal</p>
-            </div>
-            <LogOut className="w-4 h-4 text-slate-500 hover:text-rose-400 transition-colors" />
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto scrollbar-hide">
-        {/* Top Header */}
-        <header className="sticky top-0 z-40 bg-[#020617]/80 backdrop-blur-xl border-b border-[#1e293b] px-10 py-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Welcome back, {user.name.split(' ')[0]} 👋🏽</h1>
-            <p className="text-slate-500 text-sm mt-1">Citizen Services Console • {formatDate(new Date())}</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="relative group lg:block hidden">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-teal-400" />
-              <input 
-                type="text" 
-                placeholder="Search everything..." 
-                className="bg-[#0a0f1e] border border-[#1e293b] rounded-xl pl-10 pr-4 py-2.5 text-sm w-64 focus:ring-1 focus:ring-teal-500 outline-none transition-all placeholder:text-slate-700"
-              />
-            </div>
-            <button className="p-2.5 bg-[#0a0f1e] border border-[#1e293b] rounded-xl text-slate-400 hover:text-teal-400 relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#020617]"></span>
-            </button>
-            <Button variant="outline" className="rounded-xl border-[#1e293b] bg-[#0a0f1e] hover:bg-slate-800 text-slate-100 h-11 px-6 font-bold shadow-sm">
-              Settings
-            </Button>
-          </div>
-        </header>
-
-        <div className="p-10 space-y-8">
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'applications': return <ApplicationsView />;
+      case 'complaints': return <ComplaintsView />;
+      case 'documents': return <DocumentsView />;
+      case 'settings': return <SettingsView />;
+      default: return (
+        <>
           {/* Stat Cards */}
           <div id="stats-section" className="grid md:grid-cols-4 gap-6">
             {statCards.map((card, i) => (
@@ -204,7 +146,10 @@ const Dashboard = () => {
                 <p className="text-slate-500 text-sm mt-0.5 max-w-md">Mobile Network Infrastructure (APP003) is awaiting your documents for further verification.</p>
               </div>
             </div>
-            <Button className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl px-8 h-12 shadow-xl shadow-amber-500/20 font-bold group-hover:scale-105 transition-transform">
+            <Button 
+                onClick={() => setActiveTab('applications')}
+                className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl px-8 h-12 shadow-xl shadow-amber-500/20 font-bold group-hover:scale-105 transition-transform"
+            >
               Submit Now
             </Button>
           </div>
@@ -214,10 +159,10 @@ const Dashboard = () => {
             {/* Activity Feed & Tracker */}
             <div className="lg:col-span-2 space-y-8">
               <div className="flex items-center justify-between px-2">
-                <h2 className="text-xl font-bold tracking-tight">System Portal Feed</h2>
+                <h2 className="text-xl font-bold tracking-tight text-white/90">System Portal Feed</h2>
                 <div className="flex items-center space-x-4">
                    <button className="text-xs text-slate-500 font-bold uppercase tracking-wider hover:text-white transition-colors">Filters</button>
-                   <button className="text-xs text-teal-400 font-bold uppercase tracking-wider hover:text-teal-300 transition-colors">View All Activities</button>
+                   <button onClick={() => setActiveTab('applications')} className="text-xs text-teal-400 font-bold uppercase tracking-wider hover:text-teal-300 transition-colors">View All Activities</button>
                 </div>
               </div>
               
@@ -257,15 +202,15 @@ const Dashboard = () => {
             {/* Quick Actions Sidebar Area */}
             <div className="space-y-8">
               <div className="px-2">
-                <h2 className="text-xl font-bold tracking-tight">Direct Access</h2>
+                <h2 className="text-xl font-bold tracking-tight text-white/90">Direct Access</h2>
               </div>
               <div className="space-y-5">
                 {[
-                  { to: '/license-application', icon: Plus, color: 'teal', label: 'New Application', desc: 'Start a new regulatory process' },
-                  { to: '/complaints', icon: MessageSquare, color: 'orange', label: 'File Complaint', desc: 'Resolve disputes with providers' },
-                  { to: '#', icon: Upload, color: 'blue', label: 'Upload Document', desc: 'Add evidence to your profile' }
+                  { tab: 'applications', icon: Plus, color: 'teal', label: 'New Application', desc: 'Start a new regulatory process' },
+                  { tab: 'complaints', icon: MessageSquare, color: 'orange', label: 'File Complaint', desc: 'Resolve disputes with providers' },
+                  { tab: 'documents', icon: Upload, color: 'blue', label: 'Upload Document', desc: 'Add evidence to your profile' }
                 ].map((action, i) => (
-                  <Link key={i} to={action.to} className="block group">
+                  <button key={i} onClick={() => setActiveTab(action.tab)} className="block w-full text-left group">
                     <div className={`bg-[#0a0f1e] border border-[#1e293b] p-8 rounded-[2rem] transition-all cursor-pointer relative overflow-hidden active:scale-95 border-b-4 border-b-transparent hover:border-b-teal-500/50 shadow-inner`}>
                       <div className={`w-14 h-14 bg-${action.color}-500/10 rounded-2xl flex items-center justify-center text-${action.color}-400 mb-6 group-hover:scale-110 transition-transform`}>
                         <action.icon className="w-7 h-7" />
@@ -274,7 +219,7 @@ const Dashboard = () => {
                       <p className="text-sm text-slate-500 mt-1 leading-relaxed">{action.desc}</p>
                       <ArrowRight className={`absolute bottom-8 right-8 w-5 h-5 text-slate-700 group-hover:text-white group-hover:translate-x-1 transition-all`} />
                     </div>
-                  </Link>
+                  </button>
                 ))}
               </div>
 
@@ -287,10 +232,95 @@ const Dashboard = () => {
                 <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-teal-500 w-[75%] rounded-full shadow-[0_0_15px_rgba(20,184,166,0.3)]"></div>
                 </div>
-                <p className="text-[10px] text-slate-600 mt-4 leading-relaxed font-bold uppercase tracking-wider">7/10 steps complete</p>
+                <p className="text-[10px] text-slate-600 mt-4 leading-relaxed font-bold uppercase tracking-widest">7/10 steps complete</p>
+                <Button variant="ghost" className="w-full mt-4 text-xs font-bold text-slate-400 hover:text-white" onClick={() => setActiveTab('settings')}>Complete Profile</Button>
               </div>
             </div>
           </div>
+        </>
+      );
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-[#020617] text-slate-100 overflow-hidden dark">
+      {/* Sidebar */}
+      <aside id="sidebar-nav" className="w-72 bg-[#0a0f1e] border-r border-[#1e293b] flex flex-col h-full z-50">
+        <div className="p-8">
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">B</div>
+            <span className="text-xl font-bold tracking-tight">BOCRA</span>
+          </Link>
+        </div>
+
+        <nav className="flex-1 px-4 space-y-1">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all ${
+                activeTab === item.id 
+                  ? 'bg-teal-600/10 text-teal-400 border border-teal-600/20' 
+                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="font-medium text-sm">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* User Info Bottom */}
+        <div className="p-6 border-t border-[#1e293b]">
+          <div 
+             onClick={() => setActiveTab('settings')}
+             className="flex items-center space-x-3 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer"
+          >
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-blue-500 flex items-center justify-center font-bold text-sm shadow-inner text-white">
+              {user.name.charAt(0)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold truncate text-white">{user.name}</p>
+              <p className="text-[10px] text-teal-500 font-bold uppercase tracking-widest">Citizen Portal</p>
+            </div>
+            <LogOut className="w-4 h-4 text-slate-500 hover:text-rose-400 transition-colors" />
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto scrollbar-hide">
+        {/* Top Header */}
+        <header className="sticky top-0 z-40 bg-[#020617]/80 backdrop-blur-xl border-b border-[#1e293b] px-10 py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Welcome back, {user.name.split(' ')[0]} 👋🏽</h1>
+            <p className="text-slate-500 text-sm mt-1">Portal Management Console • {formatDate(new Date())}</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="relative group lg:block hidden">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-teal-400" />
+              <input 
+                type="text" 
+                placeholder="Search resources..." 
+                className="bg-[#0a0f1e] border border-[#1e293b] rounded-xl pl-10 pr-4 py-2.5 text-sm w-64 focus:ring-1 focus:ring-teal-500 outline-none transition-all placeholder:text-slate-700"
+              />
+            </div>
+            <button className="p-2.5 bg-[#0a0f1e] border border-[#1e293b] rounded-xl text-slate-400 hover:text-teal-400 relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#020617]"></span>
+            </button>
+            <Button 
+               onClick={() => setActiveTab('settings')}
+               variant="outline" 
+               className="rounded-xl border-[#1e293b] bg-[#0a0f1e] hover:bg-slate-800 text-slate-100 h-11 px-6 font-bold shadow-sm"
+            >
+              Settings
+            </Button>
+          </div>
+        </header>
+
+        <div className="p-10 space-y-8">
+          {renderContent()}
         </div>
       </main>
     </div>
