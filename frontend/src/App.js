@@ -31,7 +31,7 @@ const Layout = ({ children }) => {
   return (
     <div className="App">
       {!isDashboard && <Navbar />}
-      <div className={isDashboard ? '' : 'pt-0'}>
+      <div className={isDashboard ? '' : 'pt-28'}>
         {children}
       </div>
       {!isDashboard && <Footer />}
