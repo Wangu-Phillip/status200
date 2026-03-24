@@ -141,28 +141,27 @@ const Navbar = () => {
                 )}
               </div>
               
-              {user ? (
-                <div className="hidden sm:flex items-center space-x-2">
-                  <Link to="/dashboard">
-                    <Button className="rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white px-6">
-                      Portal
-                    </Button>
-                  </Link>
-                  {user.userType === 'admin' && (
-                    <Link to="/admin">
-                      <Button className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-6 shadow-lg shadow-teal-500/20">
-                        Admin Portal
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              ) : (
-                <Link to="/login">
-                  <Button className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-6 shadow-lg shadow-teal-500/20">
-                    Login
+              <div className="hidden sm:flex items-center space-x-2">
+                <Link to="/admin">
+                  <Button variant="outline" className="rounded-xl border-teal-500/30 text-teal-600 hover:bg-teal-50 px-5 font-bold shadow-sm">
+                    Admin Portal
                   </Button>
                 </Link>
-              )}
+                
+                {user ? (
+                  <Link to="/dashboard">
+                    <Button className="rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white px-6">
+                      Citizen Portal
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/login">
+                    <Button className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-6 shadow-lg shadow-teal-500/20">
+                      Login
+                    </Button>
+                  </Link>
+                )}
+              </div>
 
               {/* Mobile Toggle */}
               <button
@@ -227,24 +226,23 @@ const Navbar = () => {
             </div>
             
             <div className="pt-4 pb-8 flex flex-col gap-3">
+              <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full h-12 rounded-xl border-teal-500/30 text-teal-600 hover:bg-teal-50 shadow-sm font-bold text-lg">
+                  Admin Portal
+                </Button>
+              </Link>
+              
               {user ? (
                 <>
-                  {user.userType === 'admin' && (
-                    <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full h-12 rounded-xl bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-500/20 font-bold text-lg">
-                        Open Admin Portal
-                      </Button>
-                    </Link>
-                  )}
                   <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                     <Button className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg">
-                      Open Portal
+                      Citizen Portal
                     </Button>
                   </Link>
                   <Button 
                     variant="outline" 
                     onClick={handleLogout}
-                    className="w-full h-12 rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-lg"
+                    className="w-full h-12 rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-lg transition-colors"
                   >
                     Sign Out
                   </Button>
