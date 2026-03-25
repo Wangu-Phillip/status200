@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,6 +5,105 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String
+  userType     String
+  department   String?
+  organization String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  address      String?
+  phone        String?
+  tier         String        @default("Tier 1 Citizen")
+  trustScore   Int           @default(82)
+  activities   ActivityLog[]
+  applications Application[]
+  complaints   Complaint[]
+  documents    Document[]
+
+  @@map("users")
+}
+
+model Application {
+  id              String     @id @default(uuid())
+  userId          String
+  referenceNumber String     @unique
+  applicationType String
+  businessName    String
+  sector          String
+  description     String
+  status          String     @default("Submitted")
+  submissionDate  DateTime   @default(now())
+  lastUpdated     DateTime   @updatedAt
+  createdAt       DateTime   @default(now())
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents       Document[]
+
+  @@map("applications")
+}
+
+model Complaint {
+  id               String     @id @default(uuid())
+  userId           String
+  ticketNumber     String     @unique
+  complaintType    String
+  complainantName  String
+  complainantEmail String
+  complainantPhone String
+  description      String
+  dateOfIncident   DateTime
+  status           String     @default("Registered")
+  againstOperator  String
+  priority         String     @default("normal")
+  registeredDate   DateTime   @default(now())
+  lastUpdated      DateTime   @updatedAt
+  createdAt        DateTime   @default(now())
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents        Document[]
+
+  @@map("complaints")
+}
+
+model Document {
+  id            String       @id @default(uuid())
+  applicationId String?
+  complaintId   String?
+  userId        String
+  filename      String
+  category      String
+  documentType  String
+  status        String       @default("pending_upload")
+  uploadedDate  DateTime?
+  expiryDate    DateTime?
+  filePath      String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  complaint     Complaint?   @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  userId      String
+  action      String
+  actionType  String
+  description String
+  entityId    String?
+  ipAddress   String?
+  device      String?
+  status      String   @default("successful")
+  timestamp   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activity_logs")
 }
 
 model StatusCheck {

@@ -5,8 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import authRoutes from './routes/auth.js';
-import citizenRoutes from './routes/citizen.js';
 // @ts-ignore
 import * as fs from 'fs';
 
@@ -63,12 +61,6 @@ const apiRouter = express.Router({ strict: false });
 apiRouter.get('/', (_req: Request, res: Response) => {
   res.json({ message: 'Hello World' });
 });
-
-// Auth routes
-apiRouter.use('/auth', authRoutes);
-
-// Citizen routes (protected)
-apiRouter.use('/', citizenRoutes);
 
 // Create status check
 apiRouter.post('/status', async (req: Request, res: Response) => {

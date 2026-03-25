@@ -1,22 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
 import { Button } from './ui/button';
 import { useTheme } from '../context/ThemeProvider';
-import {
-  Menu,
-  X,
-  ChevronDown,
-  Globe,
-  BarChart3,
-  Search,
-  Bell,
-  Sun,
-  Moon,
-  ShieldCheck,
-  Zap,
-  MessageSquare
-} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Menu, X, ChevronDown, Globe, BarChart3, Search, Bell, Sun, Moon, ShieldCheck, Zap, MessageSquare } from 'lucide-react';
+import GlobalSearch from './GlobalSearch';
+import NotificationCenter from './NotificationCenter';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,8 +18,8 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const userData = localStorage.getItem('bocra_user');
-  const user = userData ? JSON.parse(userData) : null;
+  const navigate = useNavigate();
+  const { user, logout, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
 
@@ -44,8 +34,8 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const handleLogout = () => {
-    localStorage.removeItem('bocra_user');
-    window.location.href = '/';
+    logout();
+    navigate('/login');
   };
 
   const services = [

@@ -5,10 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import authRoutes from './routes/auth.js';
-import citizenRoutes from './routes/citizen.js';
-// @ts-ignore
-import * as fs from 'fs';
 
 // Setup environment variables
 const __filename = fileURLToPath(import.meta.url);
@@ -30,24 +26,9 @@ app.use(
   })
 );
 
-// Request logging middleware (Audit Logging for Cybersecurity Act)
-const auditLogStream = fs.createWriteStream(path.join(__dirname, '../audit.log'), { flags: 'a' });
+// Request logging middleware
 app.use((req: Request, _res: Response, next: NextFunction) => {
-  const logEntry = `[${new Date().toISOString()}] IP:${req.ip} - ${req.method} ${req.path} - Headers: ${JSON.stringify(req.headers)}\n`;
-  
-  // Console log for stdout
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  
-  // Write to permanent audit log file unconditionally
-  auditLogStream.write(logEntry);
-  next();
-});
-
-// Enforce HTTPS behind proxy (Cybersecurity Act)
-app.use((req: Request, res: Response, next: NextFunction) => {
-  if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] === 'http') {
-    return res.redirect(`https://${req.headers.host}${req.url}`);
-  }
   next();
 });
 
@@ -63,12 +44,6 @@ const apiRouter = express.Router({ strict: false });
 apiRouter.get('/', (_req: Request, res: Response) => {
   res.json({ message: 'Hello World' });
 });
-
-// Auth routes
-apiRouter.use('/auth', authRoutes);
-
-// Citizen routes (protected)
-apiRouter.use('/', citizenRoutes);
 
 // Create status check
 apiRouter.post('/status', async (req: Request, res: Response) => {

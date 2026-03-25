@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ThemeProvider } from './context/ThemeProvider';
+import { AuthProvider } from './context/AuthContext';
 import { seedDemoData } from './utils/persistence';
 import Home from './pages/Home';
 import About from './pages/About';
@@ -58,33 +59,35 @@ const Layout = ({ children }) => {
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/mandate" element={<Mandate />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/media" element={<Media />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/type-approval" element={<TypeApproval />} />
-          <Route path="/license-application" element={<LicenseApplication />} />
-          <Route path="/complaints" element={<Complaints />} />
-          <Route path="/qos-reporting" element={<QoSReporting />} />
-          <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/domain-registry" element={<DomainRegistry />} />
-          <Route path="/live-qos" element={<LiveQoSMonitoring />} />
-          <Route path="/tenders" element={<Tenders />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <AuthProvider>
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/mandate" element={<Mandate />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/media" element={<Media />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/type-approval" element={<TypeApproval />} />
+            <Route path="/license-application" element={<LicenseApplication />} />
+            <Route path="/complaints" element={<Complaints />} />
+            <Route path="/qos-reporting" element={<QoSReporting />} />
+            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/domain-registry" element={<DomainRegistry />} />
+            <Route path="/live-qos" element={<LiveQoSMonitoring />} />
+            <Route path="/tenders" element={<Tenders />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/cyber-incident" element={<CyberIncidentReport />} />
           <Route path="/tender-submission" element={<ProtectedRoute><TenderSubmission /></ProtectedRoute>} />
         </Routes>
-      </Layout>
-    </BrowserRouter>
+        </Layout>
+      </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -1,0 +1,2 @@
+release: npm run prisma:migrate:deploy && npm run prisma:seed
+web: npm start

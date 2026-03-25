@@ -5,10 +5,13 @@ import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import authRoutes from './routes/auth.js';
-import citizenRoutes from './routes/citizen.js';
+<<<<<<< HEAD
 // @ts-ignore
 import * as fs from 'fs';
+=======
+import authRoutes from './routes/auth.js';
+import citizenRoutes from './routes/citizen.js';
+>>>>>>> 3b68943aae494272077ea797ad2f579719468e38
 
 // Setup environment variables
 const __filename = fileURLToPath(import.meta.url);
