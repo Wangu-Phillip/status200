@@ -204,15 +204,16 @@ const Dashboard = () => {
                 {[
                   { tab: 'applications', icon: Plus, color: 'teal', label: 'Start Application', desc: 'Secure new sector licenses' },
                   { tab: 'complaints', icon: MessageSquare, color: 'orange', label: 'Consumer Rights', desc: 'Report service violations' },
+                  { path: '/tender-submission', icon: Files, color: 'blue', label: 'Submit Tender', desc: 'Upload a proposal for open tenders' },
                 ].map((action, i) => (
-                  <button key={i} onClick={() => setActiveTab(action.tab)} className="block w-full text-left group">
-                    <div className={`bg-[#0a0f1e] border border-white/5 p-8 rounded-[2.5rem] transition-all cursor-pointer relative overflow-hidden active:scale-95 hover:border-teal-500/30 group-hover:shadow-[0_20px_40px_-15px_rgba(20,184,166,0.2)]`}>
-                      <div className={`w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-slate-300 mb-6 group-hover:bg-teal-600 group-hover:text-white transition-all duration-500`}>
+                  <button key={i} onClick={() => action.path ? navigate(action.path) : setActiveTab(action.tab)} className="block w-full text-left group">
+                    <div className={`bg-[#0a0f1e] border border-white/5 p-8 rounded-[2.5rem] transition-all cursor-pointer relative overflow-hidden active:scale-95 hover:border-${action.color}-500/30 group-hover:shadow-[0_20px_40px_-15px_rgba(20,184,166,0.2)]`}>
+                      <div className={`w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-slate-300 mb-6 group-hover:bg-${action.color}-600 group-hover:text-white transition-all duration-500`}>
                         <action.icon className="w-7 h-7" />
                       </div>
                       <h3 className="font-black text-xl text-slate-100 tracking-tight group-hover:text-white">{action.label}</h3>
                       <p className="text-sm text-slate-500 mt-2 font-medium leading-relaxed">{action.desc}</p>
-                      <div className="absolute top-8 right-8 w-1.5 h-1.5 bg-teal-500 rounded-full opacity-50 group-hover:opacity-100 group-hover:scale-150 transition-all"></div>
+                      <div className={`absolute top-8 right-8 w-1.5 h-1.5 bg-${action.color}-500 rounded-full opacity-50 group-hover:opacity-100 group-hover:scale-150 transition-all`}></div>
                     </div>
                   </button>
                 ))}

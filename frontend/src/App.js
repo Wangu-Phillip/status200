@@ -24,8 +24,14 @@ import AdminDashboard from './pages/AdminDashboard';
 import DomainRegistry from './pages/DomainRegistry';
 import LiveQoSMonitoring from './pages/LiveQoSMonitoring';
 import Tenders from './pages/Tenders';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import CyberIncidentReport from './pages/CyberIncidentReport';
+import TenderSubmission from './pages/TenderSubmission';
 
 import Ruby from './components/Chatbot';
+import CookieConsent from './components/CookieConsent';
+import SessionTimeout from './components/SessionTimeout';
 
 // Seed demo data on first load
 seedDemoData();
@@ -42,6 +48,8 @@ const Layout = ({ children }) => {
       </div>
       {!isDashboard && <Footer />}
       <Ruby />
+      <CookieConsent />
+      <SessionTimeout />
       <Toaster />
     </div>
   );
@@ -70,6 +78,10 @@ function App() {
           <Route path="/domain-registry" element={<DomainRegistry />} />
           <Route path="/live-qos" element={<LiveQoSMonitoring />} />
           <Route path="/tenders" element={<Tenders />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/cyber-incident" element={<CyberIncidentReport />} />
+          <Route path="/tender-submission" element={<ProtectedRoute><TenderSubmission /></ProtectedRoute>} />
         </Routes>
       </Layout>
     </BrowserRouter>

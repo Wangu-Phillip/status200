@@ -320,12 +320,24 @@ const Complaints = () => {
                 )}
               </div>
 
-              {/* Terms */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-700">
+              {/* Terms and Consent */}
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
+                <p className="text-sm text-slate-700">
                   By submitting this complaint, you confirm that the information provided is accurate to the best of
                   your knowledge. BOCRA may contact you for additional information during the investigation.
                 </p>
+                <div className="flex items-start gap-2 pt-2 border-t border-slate-200">
+                  <input 
+                    type="checkbox" 
+                    id="complaintConsent" 
+                    name="complaintConsent" 
+                    className="mt-1 w-4 h-4 text-teal-600 rounded" 
+                    required 
+                  />
+                  <Label htmlFor="complaintConsent" className="text-sm font-normal text-slate-700">
+                    I consent to the collection and processing of my personal details for the sole purpose of resolving this complaint, in accordance with the Data Protection Act and the <a href="/privacy-policy" className="text-teal-600 underline">Privacy Policy</a>. Data subject rights apply.
+                  </Label>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-4 pt-6 border-t">

@@ -170,6 +170,20 @@ const Login = () => {
                   />
                 </div>
               </div>
+              {!isLogin && (
+                <div className="flex items-start gap-2 mt-4 text-left">
+                  <input 
+                    type="checkbox" 
+                    id="registrationConsent" 
+                    name="registrationConsent" 
+                    className="mt-1 w-4 h-4 text-teal-600 rounded" 
+                    required 
+                  />
+                  <Label htmlFor="registrationConsent" className="text-xs font-normal text-slate-600 leading-relaxed">
+                    I consent to the collection and processing of my personal data for registration purposes. I understand my rights to access, correct, or delete my data as outlined in the <Link to="/privacy-policy" className="text-teal-600 underline">Privacy Policy</Link>.
+                  </Label>
+                </div>
+              )}
               {isLogin && (
                 <div className="flex items-center justify-end">
                   <Button variant="link" className="text-sm text-teal-600 hover:text-teal-700 px-0">

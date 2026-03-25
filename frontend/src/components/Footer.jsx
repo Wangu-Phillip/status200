@@ -124,16 +124,19 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center text-sm">
             <p>&copy; 2025 Botswana Communications Regulatory Authority. All rights reserved. | Built by STATUS 200</p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="hover:text-teal-400 transition-colors">
+            <div className="flex flex-wrap justify-center gap-6 mt-4 md:mt-0">
+              <Link to="/cyber-incident" className="text-red-400 hover:text-red-300 transition-colors font-semibold">
+                Report Cyber Incident
+              </Link>
+              <Link to="/privacy-policy" className="hover:text-teal-400 transition-colors">
                 Privacy Policy
-              </a>
-              <a href="#" className="hover:text-teal-400 transition-colors">
+              </Link>
+              <Link to="/terms-of-service" className="hover:text-teal-400 transition-colors">
                 Terms of Service
-              </a>
-              <a href="#" className="hover:text-teal-400 transition-colors">
+              </Link>
+              <Link to="/privacy-policy" className="hover:text-teal-400 transition-colors">
                 Cookie Policy
-              </a>
+              </Link>
             </div>
           </div>
         </div>
