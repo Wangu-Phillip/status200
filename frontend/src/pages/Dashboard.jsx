@@ -74,7 +74,7 @@ const Dashboard = () => {
   if (!user) return null;
 
   const statCards = [
-    { label: 'Total Applications', value: '42', trend: '+12%', color: 'text-teal-500' },
+    { label: 'Total Applications', value: '42', trend: '+12%', color: 'text-[#003366]' },
     { label: 'Active Complaints', value: '08', trend: '-2%', color: 'text-amber-500' },
     { label: 'Node Trust Score', value: '82%', trend: '+5%', color: 'text-blue-500' },
     { label: 'Verified Devices', value: '154', trend: '+18%', color: 'text-emerald-500' },
@@ -109,8 +109,8 @@ const Dashboard = () => {
           {/* Stat Cards */}
           <div id="stats-section" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {statCards.map((card, i) => (
-              <div key={i} className="bg-[#0a0f1e] border border-[#1e293b] p-6 rounded-[1.5rem] hover:border-teal-500/30 transition-all group overflow-hidden relative shadow-lg shadow-black/20">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-teal-500/10 transition-colors"></div>
+              <div key={i} className="bg-[#0a0f1e] border border-[#1e293b] p-6 rounded-[1.5rem] hover:border-[#003366]/30 transition-all group overflow-hidden relative shadow-lg shadow-black/20">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#003366]/5 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-[#003366]/10 transition-colors"></div>
                 <div className="flex justify-between items-start mb-4 relative">
                   <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">{card.label}</span>
                   <div className="w-8 h-8 rounded-lg bg-slate-900/50 flex items-center justify-center border border-white/5">
@@ -140,7 +140,7 @@ const Dashboard = () => {
             </div>
             <Button 
                 onClick={() => setActiveTab('applications')}
-                className="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-white rounded-2xl px-10 h-14 shadow-xl shadow-amber-500/20 font-black uppercase tracking-widest text-xs group-hover:scale-105 transition-all"
+                className="w-full md:w-auto bg-[#F47920] hover:bg-[#C25E00] text-white rounded-2xl px-10 h-14 shadow-xl shadow-[#F47920]/20 font-black uppercase tracking-widest text-xs group-hover:scale-105 transition-all"
             >
               Resolve Now
             </Button>
@@ -155,7 +155,7 @@ const Dashboard = () => {
                 </h2>
                 <div className="flex items-center space-x-6">
                    <button className="text-[10px] text-slate-500 font-bold uppercase tracking-widest hover:text-white transition-colors">Archive</button>
-                   <button onClick={() => setActiveTab('applications')} className="text-[10px] text-teal-400 font-bold uppercase tracking-widest hover:text-teal-300 transition-colors">Comprehensive Feed →</button>
+                   <button onClick={() => setActiveTab('applications')} className="text-[10px] text-[#E8F0F9] font-bold uppercase tracking-widest hover:text-[#E8F0F9] transition-colors">Comprehensive Feed →</button>
                 </div>
               </div>
               
@@ -165,9 +165,9 @@ const Dashboard = () => {
                     <div key={item.id} className="p-8 hover:bg-white/[0.02] transition-all flex items-center justify-between group cursor-pointer">
                       <div className="flex items-center space-x-6">
                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-lg ${
-                          item.type === 'app' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 
+                          item.type === 'app' ? 'bg-[#003366]/10 text-[#E8F0F9] border border-[#003366]/20' : 
                           item.type === 'complaint' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 
-                          'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                          'bg-[#003366]/10 text-blue-400 border border-blue-500/20'
                         }`}>
                           {item.type === 'app' ? <FileText className="w-6 h-6" /> : 
                            item.type === 'complaint' ? <MessageSquare className="w-6 h-6" /> : 
@@ -175,7 +175,7 @@ const Dashboard = () => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
-                            <p className="font-black text-lg text-slate-100 group-hover:text-teal-400 transition-colors tracking-tight">
+                            <p className="font-black text-lg text-slate-100 group-hover:text-[#E8F0F9] transition-colors tracking-tight">
                               {item.title}
                             </p>
                             {item.id === 1 && <Badge className="bg-amber-500/10 text-amber-500 border-none text-[8px] font-black uppercase tracking-widest">Urgent</Badge>}
@@ -207,27 +207,27 @@ const Dashboard = () => {
                   { path: '/tender-submission', icon: Files, color: 'blue', label: 'Submit Tender', desc: 'Upload a proposal for open tenders' },
                 ].map((action, i) => (
                   <button key={i} onClick={() => action.path ? navigate(action.path) : setActiveTab(action.tab)} className="block w-full text-left group">
-                    <div className={`bg-[#0a0f1e] border border-white/5 p-8 rounded-[2.5rem] transition-all cursor-pointer relative overflow-hidden active:scale-95 hover:border-${action.color}-500/30 group-hover:shadow-[0_20px_40px_-15px_rgba(20,184,166,0.2)]`}>
-                      <div className={`w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-slate-300 mb-6 group-hover:bg-${action.color}-600 group-hover:text-white transition-all duration-500`}>
+                    <div className={`bg-[#0a0f1e] border border-white/5 p-8 rounded-[2.5rem] transition-all cursor-pointer relative overflow-hidden active:scale-95 hover:border-[#003366]/30 group-hover:shadow-[0_20px_40px_-15px_rgba(0,51,102,0.2)]`}>
+                      <div className={`w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-slate-300 mb-6 group-hover:bg-[#003366] group-hover:text-white transition-all duration-500`}>
                         <action.icon className="w-7 h-7" />
                       </div>
                       <h3 className="font-black text-xl text-slate-100 tracking-tight group-hover:text-white">{action.label}</h3>
                       <p className="text-sm text-slate-500 mt-2 font-medium leading-relaxed">{action.desc}</p>
-                      <div className={`absolute top-8 right-8 w-1.5 h-1.5 bg-${action.color}-500 rounded-full opacity-50 group-hover:opacity-100 group-hover:scale-150 transition-all`}></div>
+                      <div className="absolute top-8 right-8 w-1.5 h-1.5 bg-[#003366] rounded-full opacity-50 group-hover:opacity-100 group-hover:scale-150 transition-all"></div>
                     </div>
                   </button>
                 ))}
               </div>
 
               <div className="bg-gradient-to-br from-[#0a0f1e] to-slate-900 border border-white/5 p-8 rounded-[3rem] relative overflow-hidden group shadow-2xl">
-                 <div className="absolute inset-0 bg-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                 <div className="absolute inset-0 bg-[#003366]/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                  <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">Node Trust Score</h3>
-                      <span className="text-teal-400 font-black text-sm">82%</span>
+                      <span className="text-[#E8F0F9] font-black text-sm">82%</span>
                     </div>
                     <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-white/5">
-                      <div className="h-full bg-gradient-to-r from-teal-600 to-teal-400 w-[82%] rounded-full shadow-[0_0_15px_rgba(20,184,166,0.4)]"></div>
+                      <div className="h-full bg-gradient-to-r from-[#003366] to-[#0A4D8C] w-[82%] rounded-full shadow-[0_0_15px_rgba(0,51,102,0.4)]"></div>
                     </div>
                     <Button variant="ghost" className="w-full mt-6 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/5" onClick={() => setActiveTab('settings')}>Audit Credentials</Button>
                  </div>
@@ -244,7 +244,7 @@ const Dashboard = () => {
       {/* Mobile Sidebar Toggle */}
       <button
         onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-[60] p-3 bg-slate-800 text-teal-400 rounded-xl shadow-lg border border-white/10"
+        className="lg:hidden fixed top-4 left-4 z-[60] p-3 bg-slate-800 text-[#E8F0F9] rounded-xl shadow-lg border border-white/10"
       >
         {mobileSidebarOpen ? <XIcon className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -269,7 +269,7 @@ const Dashboard = () => {
         {/* Toggle Button */}
         <button 
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="hidden lg:flex absolute -right-4 top-10 w-8 h-8 bg-teal-600 rounded-full items-center justify-center text-white border-4 border-[#020617] hover:bg-teal-500 transition-all z-[60] shadow-xl group/toggle hover:scale-110 active:scale-90"
+          className="hidden lg:flex absolute -right-4 top-10 w-8 h-8 bg-[#003366] rounded-full items-center justify-center text-white border-4 border-[#020617] hover:bg-[#003366] transition-all z-[60] shadow-xl group/toggle hover:scale-110 active:scale-90"
         >
           {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
@@ -293,8 +293,8 @@ const Dashboard = () => {
                 isSidebarCollapsed ? 'justify-center p-4' : 'px-6 py-4 space-x-4'
               } ${
                 activeTab === item.id 
-                  ? 'bg-teal-600/10 text-teal-400 border border-teal-600/20 shadow-lg shadow-teal-500/5' 
-                  : 'text-slate-500 hover:bg-white/[0.03] hover:text-slate-100'
+                  ? 'bg-[#003366]/10 text-[#E8F0F9] border border-[#003366]/20 shadow-lg shadow-teal-500/5' 
+                  : 'text-slate-500 hover:bg-white/[0.03] hover:text-white'
               }`}
             >
               <item.icon className={`transition-transform duration-300 ${isSidebarCollapsed ? 'w-6 h-6 group-hover:scale-110' : 'w-5 h-5'}`} />
@@ -302,7 +302,7 @@ const Dashboard = () => {
                 <span className="font-bold text-sm tracking-tight animate-in fade-in slide-in-from-left-2 duration-500">{item.label}</span>
               )}
               {activeTab === item.id && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-teal-500 rounded-r-full shadow-[0_0_10px_rgba(20,184,166,0.8)]"></div>
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#003366] rounded-r-full shadow-[0_0_10px_rgba(20,184,166,0.8)]"></div>
               )}
               {isSidebarCollapsed && (
                 <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-[10px] font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-[100] shadow-2xl border border-white/5">
@@ -324,13 +324,13 @@ const Dashboard = () => {
               onClick={() => setActiveTab('settings')}
               className="flex items-center space-x-4 cursor-pointer flex-1 min-w-0"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500/20 to-blue-500/20 border border-white/5 flex items-center justify-center font-black text-sm shadow-xl text-teal-400 shrink-0 hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F5F5F3]0/20 to-blue-500/20 border border-white/5 flex items-center justify-center font-black text-sm shadow-xl text-[#E8F0F9] shrink-0 hover:scale-105 transition-transform">
                 {user.name.charAt(0)}
               </div>
               {!isSidebarCollapsed && (
                 <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-left-2 duration-500">
                   <p className="text-sm font-black truncate text-slate-100">{user.name}</p>
-                  <p className="text-[9px] text-teal-500 font-extrabold uppercase tracking-widest leading-none mt-1">Tier 1 Citizen</p>
+                  <p className="text-[9px] text-[#003366] font-extrabold uppercase tracking-widest leading-none mt-1">Tier 1 Citizen</p>
                 </div>
               )}
             </div>
@@ -354,7 +354,7 @@ const Dashboard = () => {
           <div className="animate-in fade-in slide-in-from-top-4 duration-700 pl-12 lg:pl-0">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tighter text-white">
               Hello, {user.name.split(' ')[0]}
-              <span className="text-teal-500 ml-1">.</span>
+              <span className="text-[#003366] ml-1">.</span>
             </h1>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
               <Clock className="w-3 h-3" />
@@ -363,11 +363,11 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center space-x-3 sm:space-x-6">
             <div className="relative group lg:block hidden animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-teal-400 transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-[#E8F0F9] transition-colors" />
               <input 
                 type="text" 
                 placeholder="Global Search..." 
-                className="bg-white/5 border border-white/5 rounded-[1.25rem] pl-10 pr-4 py-3 text-xs font-bold w-48 lg:w-72 focus:ring-1 focus:ring-teal-500 outline-none transition-all placeholder:text-slate-700 text-slate-100"
+                className="bg-white/5 border border-white/5 rounded-[1.25rem] pl-10 pr-4 py-3 text-xs font-bold w-48 lg:w-72 focus:ring-1 focus:ring-[#003366] outline-none transition-all placeholder:text-slate-700 text-slate-100"
               />
             </div>
             <div className="flex items-center space-x-2 sm:space-x-3 animate-in fade-in slide-in-from-top-4 duration-700 delay-200">
@@ -375,18 +375,18 @@ const Dashboard = () => {
                 <Button 
                    onClick={() => navigate('/admin')}
                    variant="outline"
-                   className="rounded-[1.25rem] border-teal-500/30 text-teal-400 hover:bg-teal-500/10 h-10 sm:h-12 px-4 sm:px-6 font-bold text-xs shadow-xl active:scale-95 transition-all"
+                   className="rounded-[1.25rem] border-[#003366]/30 text-[#E8F0F9] hover:bg-[#003366]/10 h-10 sm:h-12 px-4 sm:px-6 font-bold text-xs shadow-xl active:scale-95 transition-all"
                 >
                   Admin Portal
                 </Button>
               )}
-              <button className="hidden sm:flex p-3 sm:p-3.5 bg-white/5 border border-white/5 rounded-[1.25rem] text-slate-500 hover:text-teal-400 relative group transition-all">
+              <button className="hidden sm:flex p-3 sm:p-3.5 bg-white/5 border border-white/5 rounded-[1.25rem] text-slate-500 hover:text-[#E8F0F9] relative group transition-all">
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform" />
                 <span className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-[#020617] shadow-lg shadow-rose-500/40"></span>
               </button>
               <Button 
                  onClick={() => setActiveTab('settings')}
-                 className="hidden sm:flex rounded-[1.25rem] bg-teal-600 hover:bg-teal-500 text-white h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-teal-500/20 active:scale-95 transition-all"
+                 className="hidden sm:flex rounded-[1.25rem] bg-[#003366] hover:bg-[#003366] text-white h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-teal-500/20 active:scale-95 transition-all"
               >
                 Access Settings
               </Button>

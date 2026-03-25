@@ -65,7 +65,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-teal-600 to-cyan-600 py-20">
+      <section className="bg-[#003366] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h1 className="text-5xl font-bold mb-6">Contact Us</h1>
           <p className="text-xl max-w-3xl mx-auto">
@@ -83,8 +83,8 @@ const Contact = () => {
               return (
                 <Card key={index} className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader>
-                    <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mb-4">
-                      <Icon className="h-6 w-6 text-teal-600" />
+                    <div className="w-12 h-12 bg-[#E8F0F9] rounded-full flex items-center justify-center mb-4">
+                      <Icon className="h-6 w-6 text-[#003366]" />
                     </div>
                     <CardTitle className="text-lg">{info.title}</CardTitle>
                   </CardHeader>
@@ -173,7 +173,7 @@ const Contact = () => {
                         required
                       />
                     </div>
-                    <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white">
+                    <Button type="submit" className="w-full bg-[#003366] hover:bg-[#0A4D8C] text-white">
                       <Send className="h-4 w-4 mr-2" />
                       Send Message
                     </Button>
@@ -209,11 +209,11 @@ const Contact = () => {
                       <h4 className="font-semibold text-gray-900 mb-2">{dept.name}</h4>
                       <div className="flex flex-col gap-1 text-sm text-gray-600">
                         <div className="flex items-center">
-                          <Mail className="h-4 w-4 mr-2 text-teal-600" />
+                          <Mail className="h-4 w-4 mr-2 text-[#003366]" />
                           {dept.email}
                         </div>
                         <div className="flex items-center">
-                          <Phone className="h-4 w-4 mr-2 text-teal-600" />
+                          <Phone className="h-4 w-4 mr-2 text-[#003366]" />
                           {dept.phone}
                         </div>
                       </div>

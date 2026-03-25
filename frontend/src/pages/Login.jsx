@@ -86,7 +86,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F3] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <h2 className="text-4xl font-bold text-gray-900 mb-2">
@@ -186,12 +186,12 @@ const Login = () => {
               )}
               {isLogin && (
                 <div className="flex items-center justify-end">
-                  <Button variant="link" className="text-sm text-teal-600 hover:text-teal-700 px-0">
+                  <Button variant="link" className="text-sm text-[#003366] hover:text-[#0A4D8C] px-0">
                     Forgot password?
                   </Button>
                 </div>
               )}
-              <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white">
+              <Button type="submit" className="w-full bg-[#003366] hover:bg-[#0A4D8C] text-white">
                 {isLogin ? 'Sign In' : 'Create Account'}
               </Button>
             </form>
@@ -224,7 +224,7 @@ const Login = () => {
                 <Button
                   type="button"
                   onClick={() => handleQuickDemoLogin('admin', DEPARTMENTS.LICENSING)}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
+                  className="w-full bg-[#003366] hover:bg-[#003366] text-white shadow-md rounded-xl font-semibold text-xs py-5"
                 >
                   <Shield className="w-3.5 h-3.5 mr-2" />
                   Licensing
@@ -240,7 +240,7 @@ const Login = () => {
                 <Button
                   type="button"
                   onClick={() => handleQuickDemoLogin('admin', DEPARTMENTS.QOS)}
-                  className="w-full bg-teal-500 hover:bg-teal-600 text-white shadow-md rounded-xl font-semibold text-xs py-5"
+                  className="w-full bg-[#003366] hover:bg-[#003366] text-white shadow-md rounded-xl font-semibold text-xs py-5"
                 >
                   <Shield className="w-3.5 h-3.5 mr-2" />
                   Quality of Service
@@ -261,7 +261,7 @@ const Login = () => {
               {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
               <Button
                 variant="link"
-                className="text-teal-600 hover:text-teal-700 px-1"
+                className="text-[#003366] hover:text-[#0A4D8C] px-1"
                 onClick={() => setIsLogin(!isLogin)}
               >
                 {isLogin ? 'Sign up' : 'Sign in'}
