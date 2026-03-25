@@ -52,7 +52,7 @@ function generateToken(department) {
 
 // ── CRUD Operations ─────────────────────────────────────────────────
 
-function getSubmissions() {
+export function getSubmissions() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.SUBMISSIONS);
     return raw ? JSON.parse(raw) : [];
