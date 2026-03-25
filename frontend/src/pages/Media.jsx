@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useToast } from '../hooks/use-toast';
-import { Newspaper, Calendar, Search, ArrowRight, FileText } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from '../components/ui/dialog';
+import { Newspaper, Calendar, Search, ArrowRight, FileText, Share2, Printer } from 'lucide-react';
 
 const Media = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [selectedArticle, setSelectedArticle] = useState(null);
   const { toast } = useToast();
 
   const newsItems = [
@@ -19,6 +27,7 @@ const Media = () => {
       date: '2025-03-20',
       excerpt:
         'BOCRA has officially launched its digital Type Approval portal, streamlining equipment certification processes for manufacturers and importers.',
+      content: 'BOCRA is proud to announce the launch of our new Digital Type Approval portal. This system is designed to provide a seamless, end-to-end digital experience for equipment manufacturers, importers, and distributors seeking certification for electronic communications equipment in Botswana. The portal features automated application tracking, secure document uploads, and integrated fee payment systems. Starting April 2025, all type approval applications must be submitted through this portal to ensure efficiency and transparency.',
       image: 'https://images.unsplash.com/photo-1604869515882-4d10fa4b0492?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTB8MHwxfHNlYXJjaHwxfHxmaWJlciUyMG9wdGljfGVufDB8fHx8MTc3NDI3ODc5NXww&ixlib=rb-4.1.0&q=85',
     },
     {
@@ -28,6 +37,7 @@ const Media = () => {
       date: '2025-03-15',
       excerpt:
         'Botswana has joined forces with five SADC member states to substantially reduce and harmonise international roaming tariffs across the region.',
+      content: 'In a significant milestone for regional integration, BOCRA representing Botswana has signed a multilateral agreement with five SADC member states. This initiative aims to reduce international roaming charges for voice, SMS, and data services. By harmonising tariff structures and implementing wholesale price caps, we are ensuring that citizens can stay connected across borders without facing exorbitant costs. The new pricing structure will be implemented phased starting from the next financial year.',
       image: 'https://images.unsplash.com/photo-1511233744044-194342066754?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAxODF8MHwxfHNlYXJjaHwxfHx0ZWxlY29tbXVuaWNhdGlvbnMlMjB0b3dlcnxlbnwwfHx8fDE3NzQyNzg3Nzl8MA&ixlib=rb-4.1.0&q=85',
     },
     {
@@ -37,6 +47,7 @@ const Media = () => {
       date: '2025-03-10',
       excerpt:
         'In a move to improve affordability, BOCRA has approved reduced data prices for Botswana Telecommunications Corporation customers.',
+      content: 'BOCRA continues to drive its mandate of affordable communication services. We have officially approved a new tariff submission from BTC that significantly reduces data bundle prices across mobile and fixed-line services. These reductions are part of a broader regulatory strategy to lower the cost of doing business and enhance digital inclusion for all Batswana. Customers can expect to see these new prices reflected in their billing cycles immediately.',
       image: 'https://images.pexels.com/photos/4373997/pexels-photo-4373997.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
     },
     {
@@ -46,6 +57,7 @@ const Media = () => {
       date: '2025-03-08',
       excerpt:
         'BOCRA invites talented developers to participate in a website development hackathon aimed at improving digital service delivery.',
+      content: 'Are you a tech innovator? BOCRA is hosting a 48-hour hackathon focused on user-centric digital service delivery. We are looking for solutions that integrate AI, blockchain, and robust accessibility standards to improve how citizens interact with regulatory systems. Winning teams will receive cash prizes and potential collaboration opportunities to implement their solutions within our national infrastructure. Registration closes at the end of the month.',
       image: 'https://images.pexels.com/photos/918283/pexels-photo-918283.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
     },
     {
@@ -55,6 +67,7 @@ const Media = () => {
       date: '2025-03-01',
       excerpt:
         'BOCRA seeks expressions of interest from qualified suppliers for inclusion in the Authority\'s supplier database.',
+      content: 'Notice is hereby given that BOCRA is updating its approved supplier list for the fiscal year 2025/2026. Interested companies are invited to submit their credentials across various categories including IT services, facilities management, consulting, and equipment supply. Compliance with the Citizen Economic Empowerment (CEE) guidelines is a mandatory requirement. Online submission via the procurement portal is preferred.',
       image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBvZmZpY2V8ZW58MHx8fHwxNzc0Mjc4ODEyfDA&ixlib=rb-4.1.0&q=85',
     },
     {
@@ -64,6 +77,7 @@ const Media = () => {
       date: '2025-02-25',
       excerpt:
         'Invitation to Apply for Commercial Broadcasting Radio Station Licence. Applications are now open for qualified broadcasters.',
+      content: 'BOCRA invites applications for the operation of a commercial radio station in the national FM band. This invitation is open to locally registered entities with the technical and financial capacity to provide high-quality broadcasting content. Detailed ITA documents can be downloaded from our website resource center. Bidders are required to attend a mandatory briefing session at the headquarters.',
       image: 'https://images.pexels.com/photos/94844/pexels-photo-94844.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
     },
     {
@@ -73,6 +87,7 @@ const Media = () => {
       date: '2025-02-20',
       excerpt:
         'BOCRA technical staff completed advanced training on spectrum monitoring systems and enforcement procedures.',
+      content: 'To stay ahead of evolving signal interference challenges, BOCRA has concluded a comprehensive spectral analysis workshop. Staff members were trained on new mobile monitoring vehicles and satellite interference detection systems. This upgrade in human capacity ensures a stable and reliable communications environment for all mobile operators and emergency service networks across Botswana.',
       image: 'https://images.pexels.com/photos/4657267/pexels-photo-4657267.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
     },
     {
@@ -82,6 +97,7 @@ const Media = () => {
       date: '2025-02-15',
       excerpt:
         'BOCRA releases comprehensive report on telecommunications sector performance, showing continued growth in data usage and mobile penetration.',
+      content: 'The Q4 2024 results are in. Botswana continues to see a record high in mobile penetration, now standing at 178% per capita. Internet data usage has surged by 22% compared to the previous quarter, largely driven by streaming services and remote working trends. This report serves as a benchmark for investors and policy makers in the ICT sector.',
       image: 'https://images.unsplash.com/photo-1704577190996-9bb78923c0b2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAxODF8MHwxfHNlYXJjaHw0fHx0ZWxlY29tbXVuaWNhdGlvbnMlMjB0b3dlcnxlbnwwfHx8fDE3NzQyNzg3Nzl8MA&ixlib=rb-4.1.0&q=85',
     },
     {
@@ -91,6 +107,7 @@ const Media = () => {
       date: '2025-02-10',
       excerpt:
         'BOCRA hosted stakeholders to celebrate World Telecommunications Day, highlighting the sector\'s contribution to national development.',
+      content: 'Under the theme "Digital Technologies for Older Persons and Healthy Ageing", BOCRA brought together stakeholders from the health and technology sectors. Discussions focused on how telecommunications can bridge the generational gap and provide essential telehealth services to remote elderly populations. The event culminated in a demonstration of easy-to-use digital tools for the senior citizens.',
       image: 'https://images.pexels.com/photos/918283/pexels-photo-918283.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
     },
   ];
@@ -187,7 +204,7 @@ const Media = () => {
                     })}
                   </div>
                   <p className="text-gray-700 mb-6 leading-relaxed">{filteredNews[0].excerpt}</p>
-                  <Button onClick={() => toast({ title: "Opening Media", description: "Loading the full press release." })} className="bg-[#F47920] hover:bg-[#C25E00] text-white w-fit">
+                  <Button onClick={() => setSelectedArticle(filteredNews[0])} className="bg-[#F47920] hover:bg-[#C25E00] text-white w-fit">
                     Read Full Article
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -225,7 +242,7 @@ const Media = () => {
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-base line-clamp-3 mb-4">{item.excerpt}</CardDescription>
-                  <Button onClick={() => toast({ title: "Opening Media", description: `Loading article: ${item.title}` })} variant="link" className="text-[#003366] hover:text-[#0A4D8C] px-0 font-semibold">
+                  <Button onClick={() => setSelectedArticle(item)} variant="link" className="text-[#003366] hover:text-[#0A4D8C] px-0 font-semibold">
                     Read More <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -276,6 +293,73 @@ const Media = () => {
           </div>
         </div>
       </section>
+
+      {/* Article Detail Modal */}
+      <Dialog open={!!selectedArticle} onOpenChange={(open) => !open && setSelectedArticle(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-slate-200">
+          {selectedArticle && (
+            <div className="space-y-6">
+              <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden mb-6">
+                <img 
+                  src={selectedArticle.image} 
+                  alt={selectedArticle.title} 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4">
+                   <Badge className={`${getTypeColor(selectedArticle.type)} shadow-lg`}>
+                    {selectedArticle.type}
+                  </Badge>
+                </div>
+              </div>
+
+              <DialogHeader>
+                <div className="flex items-center text-sm text-slate-500 mb-2 space-x-4">
+                  <span className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {new Date(selectedArticle.date).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </span>
+                  <span className="flex items-center text-slate-400">
+                     <FileText className="h-4 w-4 mr-2" />
+                     Ref: BOCRA-MED-2025-{selectedArticle.id}
+                  </span>
+                </div>
+                <DialogTitle className="text-3xl font-bold text-slate-900 leading-tight">
+                  {selectedArticle.title}
+                </DialogTitle>
+                <DialogDescription className="text-lg text-slate-600 font-medium pt-2">
+                  {selectedArticle.excerpt}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="prose prose-slate max-w-none">
+                <p className="text-slate-700 text-lg leading-relaxed whitespace-pre-wrap">
+                  {selectedArticle.content}
+                </p>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row items-center justify-between border-t pt-6 gap-4">
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm" onClick={() => toast({title: "Sharing Link", description: "Article link copied to clipboard."})}>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => window.print()}>
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print
+                  </Button>
+                </div>
+                <Button onClick={() => setSelectedArticle(null)} className="rounded-xl px-10">
+                  Close Article
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToast } from '../../hooks/use-toast';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { 
@@ -14,6 +15,27 @@ const SettingsView = () => {
     window.location.reload();
   };
 
+  const [preferences, setPreferences] = useState([
+    { id: 'dark_mode', label: 'Dark Mode (Dashdark-X)', desc: 'Optimized for high-contrast visibility and reduced eye strain', active: true },
+    { id: 'compact', label: 'Compact Layout', desc: 'Fits more information into the active dashboard area', active: false },
+    { id: 'high_contrast', label: 'High Contrast Mode', desc: 'Enhanced accessibility for users with visual impairments', active: false }
+  ]);
+  const { toast } = useToast();
+
+  const togglePreference = (id) => {
+    setPreferences(prev => prev.map(p => {
+      if (p.id === id) {
+        const newState = !p.active;
+        toast({
+          title: `${p.label} ${newState ? 'Enabled' : 'Disabled'}`,
+          description: `Interface preference updated successfully.`
+        });
+        return { ...p, active: newState };
+      }
+      return p;
+    }));
+  };
+
   const navItems = [
     { id: 'profile', icon: User, label: 'Profile' },
     { id: 'security', icon: Shield, label: 'Security' },
@@ -23,6 +45,37 @@ const SettingsView = () => {
 
   const renderActiveTab = () => {
     switch (activeSubTab) {
+      case 'preferences':
+        return (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
+            <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
+               <div className="flex items-center justify-between mb-10 relative">
+                <h3 className="text-xl font-bold text-slate-100 flex items-center">
+                  <Palette className="w-5 h-5 mr-3 text-purple-500" />
+                  Visual Identity
+                </h3>
+                <Badge className="bg-purple-500/10 text-purple-500 border-none font-bold uppercase tracking-widest text-[10px]">Portal UI</Badge>
+              </div>
+              <div className="space-y-6 relative">
+                {preferences.map((pref) => (
+                  <div key={pref.id} className="flex items-center justify-between p-6 bg-slate-900/30 rounded-3xl border border-[#1e293b] hover:border-[#334155] transition-all">
+                    <div className="max-w-md">
+                      <p className="font-bold text-slate-200">{pref.label}</p>
+                      <p className="text-slate-500 text-sm mt-1">{pref.desc}</p>
+                    </div>
+                    <div 
+                      onClick={() => togglePreference(pref.id)}
+                      className={`w-12 h-6 rounded-full relative transition-all cursor-pointer ${pref.active ? 'bg-teal-600' : 'bg-slate-800'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-lg ${pref.active ? 'left-7' : 'left-1'}`}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        );
       case 'security':
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
@@ -58,7 +111,7 @@ const SettingsView = () => {
                            <p className="text-[10px] text-slate-600 uppercase font-bold">Current Session</p>
                         </div>
                      </div>
-                     <Button variant="ghost" className="text-xs text-rose-500 hover:text-rose-400 font-bold">Terminate</Button>
+                     <Button variant="ghost" className="text-xs text-rose-500 hover:text-rose-400 font-bold" onClick={() => toast({title: "Termination Delayed", description: "Standard security protocol requires master pin for termination.", variant: "destructive"})}>Terminate</Button>
                   </div>
                 </div>
               </div>
@@ -73,7 +126,7 @@ const SettingsView = () => {
                   <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
                 </div>
                 <p className="text-slate-500 text-sm leading-relaxed mb-8">Protected by SMS-based verification (+267 •••• 124). Switch to Authenticator App for higher security.</p>
-                <Button variant="outline" className="w-full h-14 rounded-2xl border-[#1e293b] bg-transparent hover:bg-blue-500/5 text-slate-300 hover:text-blue-400 font-bold text-sm shadow-inner transition-all">
+                <Button variant="outline" className="w-full h-14 rounded-2xl border-[#1e293b] bg-transparent hover:bg-blue-500/5 text-slate-300 hover:text-blue-400 font-bold text-sm shadow-inner transition-all" onClick={() => toast({title: "Redirecting", description: "Loading secure 2FA management portal."})}>
                   Modify 2FA Settings
                 </Button>
               </div>
@@ -86,11 +139,46 @@ const SettingsView = () => {
                   <AlertTriangle className="w-5 h-5 text-rose-500/20" />
                 </div>
                 <p className="text-slate-500 text-sm leading-relaxed mb-8">Permanently wipe your regulatory record archive from the system portal.</p>
-                <Button variant="outline" className="w-full h-14 rounded-2xl border-rose-500/20 bg-transparent hover:bg-rose-500/10 text-rose-500/50 hover:text-rose-500 font-bold text-sm shadow-inner transition-all">
+                <Button variant="outline" className="w-full h-14 rounded-2xl border-rose-500/20 bg-transparent hover:bg-rose-500/10 text-rose-500/50 hover:text-rose-500 font-bold text-sm shadow-inner transition-all" onClick={() => toast({title: "Access Denied", description: "You must contact the DPO to initiate data wiping.", variant: "destructive"})}>
                   Wipe Records
                 </Button>
               </div>
             </div>
+          </div>
+        );
+      case 'notifications':
+        return (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
+            <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
+              <div className="flex items-center justify-between mb-10 relative">
+                <h3 className="text-xl font-bold text-slate-100 flex items-center">
+                  <Bell className="w-5 h-5 mr-3 text-amber-500" />
+                  Alert Channels
+                </h3>
+                <Badge className="bg-amber-500/10 text-amber-500 border-none font-bold uppercase tracking-widest text-[10px]">Configured</Badge>
+              </div>
+              <div className="space-y-6 relative">
+                {[
+                  { id: 'email', label: 'Email Notifications', desc: 'Detailed regulatory updates and license renewal alerts' },
+                  { id: 'sms', label: 'SMS Alerts', desc: 'Urgent system messages and security codes' },
+                  { id: 'push', label: 'Browser Push', desc: 'Instant desktop alerts for application status changes' }
+                ].map((channel) => (
+                  <div key={channel.id} className="flex items-center justify-between p-6 bg-slate-900/30 rounded-3xl border border-[#1e293b] hover:border-[#334155] transition-all">
+                    <div className="max-w-md">
+                      <p className="font-bold text-slate-200">{channel.label}</p>
+                      <p className="text-slate-500 text-sm mt-1">{channel.desc}</p>
+                    </div>
+                    <div 
+                      onClick={() => toast({ title: "Alert Profile Updated", description: `${channel.label} setting has been synchronized.` })}
+                      className="w-12 h-6 rounded-full relative transition-all cursor-pointer bg-teal-600"
+                    >
+                      <div className="absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-lg left-7"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
         );
       case 'profile':
@@ -115,31 +203,6 @@ const SettingsView = () => {
                  <div className="w-14 h-14 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-400 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-all">
                     <Play className="w-6 h-6 fill-teal-400" />
                  </div>
-              </div>
-            </section>
-            <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl">
-              <div className="flex items-center justify-between mb-10">
-                <h3 className="text-xl font-bold text-slate-100 flex items-center">
-                  <Palette className="w-5 h-5 mr-3 text-purple-500" />
-                  Interface Preferences
-                </h3>
-              </div>
-              <div className="space-y-6">
-                {[
-                  { label: 'Dark Mode (Dashdark-X)', desc: 'Optimized for high-contrast visibility and reduced eye strain', active: true },
-                  { label: 'Compact Layout', desc: 'Fits more information into the active dashboard area', active: false },
-                  { label: 'High Contrast Mode', desc: 'Enhanced accessibility for users with visual impairments', active: false }
-                ].map((pref, i) => (
-                  <div key={i} className="flex items-center justify-between p-6 bg-slate-900/30 rounded-3xl border border-[#1e293b] hover:border-[#334155] transition-all">
-                    <div className="max-w-md">
-                      <p className="font-bold text-slate-200">{pref.label}</p>
-                      <p className="text-slate-500 text-sm mt-1">{pref.desc}</p>
-                    </div>
-                    <div className={`w-12 h-6 rounded-full relative transition-all cursor-pointer ${pref.active ? 'bg-teal-600' : 'bg-slate-800'}`}>
-                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-lg ${pref.active ? 'left-7' : 'left-1'}`}></div>
-                    </div>
-                  </div>
-                ))}
               </div>
             </section>
           </div>
