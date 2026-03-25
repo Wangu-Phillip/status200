@@ -50,6 +50,8 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [submissions, setSubmissions] = useState([]);
+  const [complaints, setComplaints] = useState([]);
+  const [tenders, setTenders] = useState([]);
   const [stats, setStats] = useState({});
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [adminNote, setAdminNote] = useState('');
@@ -100,7 +102,7 @@ const AdminDashboard = () => {
     if (user.adminLevel === 'superadmin') {
       loadUsers();
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const loadUsers = async () => {
     setUserLoading(true);
@@ -230,6 +232,8 @@ const AdminDashboard = () => {
     // For superadmin, only load if a department is selected
     if (user.adminLevel === 'superadmin' && !user.department) {
       setSubmissions([]);
+      setComplaints([]);
+      setTenders([]);
       setStats({});
       return;
     }
@@ -237,22 +241,48 @@ const AdminDashboard = () => {
     setSubmissionsLoading(true);
     try {
       const dept = user.department;
-      // Fetch submissions from backend
-      const submissionsData = await adminApi.getSubmissions({
-        department: dept,
-        page: 1,
-        limit: 100,
-      });
-      setSubmissions(submissionsData.submissions || []);
+
+      // Fetch data based on department
+      if (dept === 'licensing') {
+        const submissionsData = await adminApi.getSubmissions({
+          department: dept,
+          page: 1,
+          limit: 100,
+        });
+        setSubmissions(submissionsData.submissions || []);
+        setComplaints([]);
+        setTenders([]);
+      } else if (dept === 'complaints') {
+        const complaintsData = await adminApi.getAdminComplaints({
+          page: 1,
+          limit: 100,
+        });
+        setComplaints(complaintsData.complaints || []);
+        setSubmissions([]);
+        setTenders([]);
+      } else if (dept === 'tenders') {
+        const tendersData = await adminApi.getAdminTenders({
+          page: 1,
+          limit: 100,
+        });
+        setTenders(tendersData.tenders || []);
+        setSubmissions([]);
+        setComplaints([]);
+      } else if (dept === 'qos') {
+        // QoS doesn't have submissions yet
+        setSubmissions([]);
+        setComplaints([]);
+        setTenders([]);
+      }
 
       // Fetch stats from backend
       const statsData = await adminApi.getAdminStats(dept);
       setStats(statsData);
     } catch (error) {
-      console.error('Failed to load submissions:', error);
+      console.error('Failed to load data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load submissions',
+        description: 'Failed to load department data',
         variant: 'destructive',
       });
     } finally {
@@ -263,12 +293,21 @@ const AdminDashboard = () => {
   const handleStatusChange = async (token, newStatus) => {
     try {
       setSubmissionsLoading(true);
-      await adminApi.updateSubmissionStatus(token, newStatus);
+      const dept = user?.department;
+
+      if (dept === 'complaints') {
+        await adminApi.updateComplaintStatus(token, newStatus);
+      } else if (dept === 'tenders') {
+        await adminApi.updateTenderStatus(token, newStatus);
+      } else {
+        await adminApi.updateSubmissionStatus(token, newStatus);
+      }
+
       await refreshData();
       setSelectedSubmission(null);
       toast({
         title: 'Status Updated',
-        description: `Submission ${token} has been moved to ${newStatus}.`,
+        description: `Item ${token} has been moved to ${newStatus}.`,
       });
     } catch (error) {
       console.error('Failed to update status:', error);
@@ -286,7 +325,16 @@ const AdminDashboard = () => {
     if (!adminNote.trim()) return;
     try {
       setSubmissionsLoading(true);
-      await adminApi.addSubmissionNotes(token, adminNote);
+      const dept = user?.department;
+
+      if (dept === 'complaints') {
+        await adminApi.addComplaintNotes(token, adminNote);
+      } else if (dept === 'tenders') {
+        await adminApi.addTenderNotes(token, adminNote);
+      } else {
+        await adminApi.addSubmissionNotes(token, adminNote);
+      }
+
       setAdminNote('');
       await refreshData();
       setSelectedSubmission(null);
@@ -354,7 +402,17 @@ const AdminDashboard = () => {
     return icons[dept] || Shield;
   };
 
-  const filteredSubmissions = submissions.filter((sub) => {
+  // Get active submissions data based on department
+  const getActiveData = () => {
+    const dept = user?.department;
+    if (dept === 'complaints') return complaints;
+    if (dept === 'tenders') return tenders;
+    return submissions;
+  };
+
+  const activeData = getActiveData();
+
+  const filteredSubmissions = activeData.filter((sub) => {
     const matchesSearch =
       sub.citizenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sub.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -687,7 +745,8 @@ const AdminDashboard = () => {
                     className="flex h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
                   >
                     <option value="all">All Status</option>
-                    <option value="Pending Review">Pending Review</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Registered">Registered</option>
                     <option value="Under Review">Under Review</option>
                     <option value="Approved">Approved</option>
                     <option value="Rejected">Rejected</option>

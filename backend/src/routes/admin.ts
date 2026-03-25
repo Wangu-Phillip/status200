@@ -294,4 +294,348 @@ router.put(
   }
 );
 
+// =====================
+// COMPLAINTS API
+// =====================
+
+/**
+ * Get complaints filtered by department
+ */
+router.get(
+  '/complaints',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      // Department admins see only their department
+      const targetDept =
+        req.user?.adminLevel === 'admin'
+          ? req.user?.department
+          : 'complaints';
+
+      const where = { department: targetDept };
+
+      const complaints = await prisma.complaint.findMany({
+        where,
+        include: { user: { select: { email: true, name: true } }, documents: true },
+        orderBy: { registeredDate: 'desc' },
+        skip,
+        take: limit,
+      });
+
+      const total = await prisma.complaint.count({ where });
+
+      const formatted = complaints.map((comp) => ({
+        id: comp.ticketNumber,
+        token: comp.ticketNumber,
+        citizenName: comp.complainantName,
+        citizenEmail: comp.complainantEmail,
+        subject: comp.complaintType,
+        description: comp.description,
+        status: comp.status,
+        priority: comp.priority,
+        department: comp.department,
+        submittedDate: comp.registeredDate.toLocaleDateString(),
+        reviewedBy: comp.reviewedBy,
+        reviewedAt: comp.reviewedAt
+          ? new Date(comp.reviewedAt).toLocaleDateString()
+          : null,
+        adminNotes: comp.adminNotes,
+        documents: comp.documents,
+      }));
+
+      res.json({
+        complaints: formatted,
+        pagination: { page, limit, total },
+      });
+    } catch (error) {
+      console.error('Get complaints error:', error);
+      res.status(500).json({ error: 'Failed to fetch complaints' });
+    }
+  }
+);
+
+/**
+ * Update complaint status
+ */
+router.put(
+  '/complaints/:ticketNumber/status',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { ticketNumber } = req.params;
+      const { status } = req.body;
+
+      if (!status) {
+        res.status(400).json({ error: 'Status is required' });
+        return;
+      }
+
+      const complaint = await prisma.complaint.findUnique({
+        where: { ticketNumber },
+      });
+
+      if (!complaint) {
+        res.status(404).json({ error: 'Complaint not found' });
+        return;
+      }
+
+      if (
+        req.user?.adminLevel === 'admin' &&
+        complaint.department !== req.user?.department
+      ) {
+        res.status(403).json({
+          error: 'You only have access to your assigned department',
+        });
+        return;
+      }
+
+      const updated = await prisma.complaint.update({
+        where: { ticketNumber },
+        data: {
+          status,
+          reviewedBy: req.user?.name,
+          reviewedAt: new Date(),
+          lastUpdated: new Date(),
+        },
+      });
+
+      res.json({ message: 'Status updated successfully', complaint: updated });
+    } catch (error) {
+      console.error('Update complaint status error:', error);
+      res.status(500).json({ error: 'Failed to update status' });
+    }
+  }
+);
+
+/**
+ * Add notes to complaint
+ */
+router.put(
+  '/complaints/:ticketNumber/notes',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { ticketNumber } = req.params;
+      const { notes } = req.body;
+
+      if (!notes || notes.trim() === '') {
+        res.status(400).json({ error: 'Notes cannot be empty' });
+        return;
+      }
+
+      const complaint = await prisma.complaint.findUnique({
+        where: { ticketNumber },
+      });
+
+      if (!complaint) {
+        res.status(404).json({ error: 'Complaint not found' });
+        return;
+      }
+
+      if (
+        req.user?.adminLevel === 'admin' &&
+        complaint.department !== req.user?.department
+      ) {
+        res.status(403).json({
+          error: 'You only have access to your assigned department',
+        });
+        return;
+      }
+
+      const updated = await prisma.complaint.update({
+        where: { ticketNumber },
+        data: {
+          adminNotes: notes,
+          lastUpdated: new Date(),
+        },
+      });
+
+      res.json({ message: 'Notes added successfully', complaint: updated });
+    } catch (error) {
+      console.error('Add complaint notes error:', error);
+      res.status(500).json({ error: 'Failed to add notes' });
+    }
+  }
+);
+
+// =====================
+// TENDERS API
+// =====================
+
+/**
+ * Get tenders filtered by department
+ */
+router.get(
+  '/tenders',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      // Department admins see only their department
+      const targetDept =
+        req.user?.adminLevel === 'admin'
+          ? req.user?.department
+          : 'tenders';
+
+      const where = { department: targetDept };
+
+      const tenders = await prisma.tender.findMany({
+        where,
+        include: { user: { select: { email: true, name: true } }, documents: true },
+        orderBy: { submissionDate: 'desc' },
+        skip,
+        take: limit,
+      });
+
+      const total = await prisma.tender.count({ where });
+
+      const formatted = tenders.map((tender) => ({
+        id: tender.tenderNumber,
+        token: tender.tenderNumber,
+        citizenName: tender.bidderName,
+        citizenEmail: tender.bidderEmail,
+        subject: tender.title,
+        description: tender.description,
+        status: tender.status,
+        priority: tender.priority,
+        department: tender.department,
+        submittedDate: tender.submissionDate.toLocaleDateString(),
+        reviewedBy: tender.reviewedBy,
+        reviewedAt: tender.reviewedAt
+          ? new Date(tender.reviewedAt).toLocaleDateString()
+          : null,
+        adminNotes: tender.adminNotes,
+        documents: tender.documents,
+        estimatedValue: tender.estimatedValue,
+        submittedAmount: tender.submittedAmount,
+      }));
+
+      res.json({
+        tenders: formatted,
+        pagination: { page, limit, total },
+      });
+    } catch (error) {
+      console.error('Get tenders error:', error);
+      res.status(500).json({ error: 'Failed to fetch tenders' });
+    }
+  }
+);
+
+/**
+ * Update tender status
+ */
+router.put(
+  '/tenders/:tenderNumber/status',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { tenderNumber } = req.params;
+      const { status } = req.body;
+
+      if (!status) {
+        res.status(400).json({ error: 'Status is required' });
+        return;
+      }
+
+      const tender = await prisma.tender.findUnique({
+        where: { tenderNumber },
+      });
+
+      if (!tender) {
+        res.status(404).json({ error: 'Tender not found' });
+        return;
+      }
+
+      if (
+        req.user?.adminLevel === 'admin' &&
+        tender.department !== req.user?.department
+      ) {
+        res.status(403).json({
+          error: 'You only have access to your assigned department',
+        });
+        return;
+      }
+
+      const updated = await prisma.tender.update({
+        where: { tenderNumber },
+        data: {
+          status,
+          reviewedBy: req.user?.name,
+          reviewedAt: new Date(),
+          lastUpdated: new Date(),
+        },
+      });
+
+      res.json({ message: 'Status updated successfully', tender: updated });
+    } catch (error) {
+      console.error('Update tender status error:', error);
+      res.status(500).json({ error: 'Failed to update status' });
+    }
+  }
+);
+
+/**
+ * Add notes to tender
+ */
+router.put(
+  '/tenders/:tenderNumber/notes',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { tenderNumber } = req.params;
+      const { notes } = req.body;
+
+      if (!notes || notes.trim() === '') {
+        res.status(400).json({ error: 'Notes cannot be empty' });
+        return;
+      }
+
+      const tender = await prisma.tender.findUnique({
+        where: { tenderNumber },
+      });
+
+      if (!tender) {
+        res.status(404).json({ error: 'Tender not found' });
+        return;
+      }
+
+      if (
+        req.user?.adminLevel === 'admin' &&
+        tender.department !== req.user?.department
+      ) {
+        res.status(403).json({
+          error: 'You only have access to your assigned department',
+        });
+        return;
+      }
+
+      const updated = await prisma.tender.update({
+        where: { tenderNumber },
+        data: {
+          adminNotes: notes,
+          lastUpdated: new Date(),
+        },
+      });
+
+      res.json({ message: 'Notes added successfully', tender: updated });
+    } catch (error) {
+      console.error('Add tender notes error:', error);
+      res.status(500).json({ error: 'Failed to add notes' });
+    }
+  }
+);
+
 export default router;

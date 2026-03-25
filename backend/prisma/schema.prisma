@@ -25,6 +25,7 @@ model User {
   activities   ActivityLog[]
   applications Application[]
   complaints   Complaint[]
+  tenders      Tender[]
   documents    Document[]
 
   @@map("users")
@@ -66,6 +67,10 @@ model Complaint {
   status           String     @default("Registered")
   againstOperator  String
   priority         String     @default("normal")
+  department       String?    @default("complaints")  // "complaints"
+  adminNotes       String?
+  reviewedBy       String?
+  reviewedAt       DateTime?
   registeredDate   DateTime   @default(now())
   lastUpdated      DateTime   @updatedAt
   createdAt        DateTime   @default(now())
@@ -75,10 +80,37 @@ model Complaint {
   @@map("complaints")
 }
 
+model Tender {
+  id                String     @id @default(uuid())
+  userId            String
+  tenderNumber      String     @unique
+  title             String
+  bidderName        String
+  bidderEmail       String
+  bidderPhone       String
+  description       String
+  estimatedValue    Float
+  submittedAmount   Float
+  status            String     @default("Submitted")
+  department        String?    @default("tenders")  // "tenders"
+  priority          String     @default("normal")
+  adminNotes        String?
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  submissionDate    DateTime   @default(now())
+  lastUpdated       DateTime   @updatedAt
+  createdAt         DateTime   @default(now())
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents         Document[]
+
+  @@map("tenders")
+}
+
 model Document {
   id            String       @id @default(uuid())
   applicationId String?
   complaintId   String?
+  tenderId      String?
   userId        String
   filename      String
   category      String
@@ -91,6 +123,7 @@ model Document {
   updatedAt     DateTime     @updatedAt
   application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   complaint     Complaint?   @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  tender        Tender?      @relation(fields: [tenderId], references: [id], onDelete: Cascade)
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("documents")
