@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useToast } from '../hooks/use-toast';
 import { Button } from './ui/button';
 import { useTheme } from '../context/ThemeProvider';
 import {
@@ -30,6 +31,7 @@ const Navbar = () => {
   const userData = localStorage.getItem('bocra_user');
   const user = userData ? JSON.parse(userData) : null;
   const { theme, toggleTheme } = useTheme();
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -180,12 +182,12 @@ const Navbar = () => {
                   {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                 </button>
 
-                <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all">
+                <button onClick={() => toast({title: "Search functionality", description: "Global search will be integrated soon."})} className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all">
                   <Search className="h-5 w-5" />
                 </button>
 
                 {user && (
-                  <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all relative">
+                  <button onClick={() => toast({title: "Notifications", description: "You have 0 new notifications."})} className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all relative">
                     <Bell className="h-5 w-5" />
                     <span className="absolute top-2 right-2 w-2 h-2 bg-[#F47920] rounded-full border-2 border-[#003366]"></span>
                   </button>
