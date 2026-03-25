@@ -2,7 +2,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 async function listModels() {
     try {
-        const genAI = new GoogleGenerativeAI('AIzaSyCN0eZIKo_pw3504IiZmdaCKIxJYf76_cA');
+        console.log("Checking model availability...");
         // Note: listModels is on the genAI object or a model?
         // According to docs, it's not directly on genAI in the older SDKs, 
         // but let's try a different approach.
@@ -16,7 +16,10 @@ async function listModels() {
 
 async function testModel(modelName) {
     try {
-        const genAI = new GoogleGenerativeAI('AIzaSyCN0eZIKo_pw3504IiZmdaCKIxJYf76_cA');
+        const fs = require('fs');
+        const env = fs.readFileSync('.env', 'utf8');
+        const key = env.match(/REACT_APP_GEMINI_API_KEY=(.*)/)[1].trim();
+        const genAI = new GoogleGenerativeAI(key);
         const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent("test");
         console.log(`Model ${modelName} works!`);
@@ -28,7 +31,7 @@ async function testModel(modelName) {
 }
 
 async function run() {
-    const models = ["gemini-pro", "gemini-1.0-pro", "gemini-1.5-flash"];
+    const models = ["gemini-2.0-flash-exp", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
     for (const m of models) {
         if (await testModel(m)) break;
     }

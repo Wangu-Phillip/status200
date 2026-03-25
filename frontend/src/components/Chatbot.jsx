@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { userApplications, userComplaints } from '../mockData';
 import { getSubmissions } from '../utils/persistence';
 
-const genAI = new GoogleGenerativeAI('AIzaSyCN0eZIKo_pw3504IiZmdaCKIxJYf76_cA');
+const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GEMINI_API_KEY || 'AIzaSyCN0eZIKo_pw3504IiZmdaCKIxJYf76_cA');
 
 const getSystemPrompt = (userName, context) => `You are Ruby, the digital assistant for BOCRA (Botswana Communications Regulatory Authority). 
 Your context: Help users with regulatory matters: Licensing, Spectrum, complaints, domains (.bw), and USF projects. 
