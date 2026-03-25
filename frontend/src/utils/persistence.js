@@ -7,6 +7,7 @@
 const STORAGE_KEYS = {
   SUBMISSIONS: 'bocra_submissions',
   TOKENS: 'bocra_tokens',
+  ADMIN_USERS: 'bocra_admin_users',
 };
 
 // Department categories
@@ -164,6 +165,58 @@ export function getDepartmentStats(department) {
   };
 }
 
+// ── Admin User Management ───────────────────────────────────────────
+/**
+ * Get all admin users.
+ */
+export function getAdminUsers() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.ADMIN_USERS);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Save admin users.
+ */
+function saveAdminUsers(users) {
+  localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(users));
+}
+
+/**
+ * Authenticate an admin user by email and password.
+ * @param {string} email - Admin email
+ * @param {string} password - Admin password
+ * @returns {Object|null} Admin user if found, null otherwise
+ */
+export function authenticateAdmin(email, password) {
+  const admins = getAdminUsers();
+  const admin = admins.find((a) => a.email === email && a.password === password);
+  if (admin) {
+    // Don't return password in response
+    const { password: _, ...adminWithoutPassword } = admin;
+    return adminWithoutPassword;
+  }
+  return null;
+}
+
+/**
+ * Get an admin user by email.
+ * @param {string} email - Admin email
+ * @returns {Object|null} Admin user if found, null otherwise
+ */
+export function getAdminByEmail(email) {
+  const admins = getAdminUsers();
+  const admin = admins.find((a) => a.email === email);
+  if (admin) {
+    const { password: _, ...adminWithoutPassword } = admin;
+    return adminWithoutPassword;
+  }
+  return null;
+}
+
 // ── Seed Data ───────────────────────────────────────────────────────
 // Seeds demo data if the store is empty (first load)
 export function seedDemoData() {
@@ -228,4 +281,73 @@ export function seedDemoData() {
   ];
 
   demoSubmissions.forEach((data) => addSubmission(data));
+  
+  // Seed admin users
+  seedAdminUsers();
+}
+
+/**
+ * Seed demo admin users (called by seedDemoData).
+ * Creates a superadmin and department-specific admins.
+ */
+export function seedAdminUsers() {
+  const existing = getAdminUsers();
+  if (existing.length > 0) return;
+
+  const demoAdmins = [
+    // Superadmin - can switch between all departments
+    {
+      id: 'admin-super-1',
+      email: 'superadmin@bocra.org.bw',
+      password: 'SuperAdmin123!',
+      name: 'Super Admin',
+      userType: 'admin',
+      adminLevel: 'superadmin',
+      department: null, // Superadmin has no default department
+      createdAt: new Date().toISOString(),
+    },
+    // Department-specific admins
+    {
+      id: 'admin-lic-1',
+      email: 'admin.licensing@bocra.org.bw',
+      password: 'LicenseAdmin123!',
+      name: 'Licensing Admin',
+      userType: 'admin',
+      adminLevel: 'admin',
+      department: DEPARTMENTS.LICENSING,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'admin-comp-1',
+      email: 'admin.complaints@bocra.org.bw',
+      password: 'ComplaintsAdmin123!',
+      name: 'Complaints Admin',
+      userType: 'admin',
+      adminLevel: 'admin',
+      department: DEPARTMENTS.COMPLAINTS,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'admin-qos-1',
+      email: 'admin.qos@bocra.org.bw',
+      password: 'QoSAdmin123!',
+      name: 'QoS Admin',
+      userType: 'admin',
+      adminLevel: 'admin',
+      department: DEPARTMENTS.QOS,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'admin-tend-1',
+      email: 'admin.tenders@bocra.org.bw',
+      password: 'TendersAdmin123!',
+      name: 'Tenders Admin',
+      userType: 'admin',
+      adminLevel: 'admin',
+      department: DEPARTMENTS.TENDERS,
+      createdAt: new Date().toISOString(),
+    },
+  ];
+
+  saveAdminUsers(demoAdmins);
 }

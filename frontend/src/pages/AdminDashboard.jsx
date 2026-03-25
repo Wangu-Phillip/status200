@@ -71,12 +71,23 @@ const AdminDashboard = () => {
 
   // Load department-specific data
   useEffect(() => {
-    if (!user?.department) return;
+    if (!user) return;
+    // For non-superadmin, department must be set
+    if (user.adminLevel === 'admin' && !user.department) {
+      navigate('/login');
+      return;
+    }
     refreshData();
   }, [user]);
 
   const refreshData = () => {
-    if (!user?.department) return;
+    if (!user) return;
+    // For superadmin, only load if a department is selected
+    if (user.adminLevel === 'superadmin' && !user.department) {
+      setSubmissions([]);
+      setStats({});
+      return;
+    }
     const dept = user.department;
     setSubmissions(getSubmissionsByDepartment(dept));
     setStats(getDepartmentStats(dept));
@@ -263,34 +274,43 @@ const AdminDashboard = () => {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <select
-              value={user.department || ''}
-              onChange={(e) => {
-                const newDept = e.target.value;
-                const newName = `Admin (${DEPARTMENT_LABELS[newDept].split(' ')[0]})`;
-                const updatedUser = { 
-                  ...user, 
-                  department: newDept,
-                  name: newName,
-                  email: `${newDept}@bocra.org.bw`
-                };
-                localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
-                setUser(updatedUser);
-                toast({
-                  title: 'Department Switched',
-                  description: `You are now viewing the ${DEPARTMENT_LABELS[newDept]} dashboard.`,
-                });
-              }}
-              className={`flex h-9 items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003366] transition-colors cursor-pointer hover:bg-slate-50 font-medium`}
-            >
-              <option value={DEPARTMENTS.LICENSING}>🛡️ Licensing</option>
-              <option value={DEPARTMENTS.COMPLAINTS}>⚖️ Complaints</option>
-              <option value={DEPARTMENTS.QOS}>📊 Quality of Service</option>
-              <option value={DEPARTMENTS.TENDERS}>💼 Tenders</option>
-            </select>
-            <Badge variant="outline" className="text-sm px-3 py-1.5 border-[#003366]/20 text-[#0A4D8C] bg-[#E8F0F9]">
+            {user.adminLevel === 'superadmin' ? (
+              <select
+                value={user.department || ''}
+                onChange={(e) => {
+                  const newDept = e.target.value;
+                  const updatedUser = { 
+                    ...user, 
+                    department: newDept,
+                  };
+                  localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
+                  setUser(updatedUser);
+                  toast({
+                    title: 'Department Switched',
+                    description: `You are now viewing the ${DEPARTMENT_LABELS[newDept]} dashboard.`,
+                  });
+                }}
+                className={`flex h-9 items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003366] transition-colors cursor-pointer hover:bg-slate-50 font-medium`}
+              >
+                <option value="">-- Select Department --</option>
+                <option value={DEPARTMENTS.LICENSING}>🛡️ Licensing</option>
+                <option value={DEPARTMENTS.COMPLAINTS}>⚖️ Complaints</option>
+                <option value={DEPARTMENTS.QOS}>📊 Quality of Service</option>
+                <option value={DEPARTMENTS.TENDERS}>💼 Tenders</option>
+              </select>
+            ) : (
+              <Badge variant="outline" className="text-sm px-3 py-1.5 border-[#003366]/20 text-[#0A4D8C] bg-[#E8F0F9]">
+                <Shield className="h-3.5 w-3.5 mr-1.5" />
+                {DEPARTMENT_LABELS[user.department]?.split(' &')[0] || 'Department'} Admin
+              </Badge>
+            )}
+            <Badge variant="outline" className={`text-sm px-3 py-1.5 ${
+              user.adminLevel === 'superadmin' 
+                ? 'border-purple-200 text-purple-700 bg-purple-50' 
+                : 'border-[#003366]/20 text-[#0A4D8C] bg-[#E8F0F9]'
+            }`}>
               <Shield className="h-3.5 w-3.5 mr-1.5" />
-              Admin Access
+              {user.adminLevel === 'superadmin' ? 'Super Admin' : 'Admin'}
             </Badge>
           </div>
         </div>
