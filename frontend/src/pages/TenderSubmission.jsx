@@ -6,6 +6,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { useToast } from '../hooks/use-toast';
 import { Upload, CheckCircle2 } from 'lucide-react';
+import { addSubmission, DEPARTMENTS } from '../utils/persistence';
 
 const TenderSubmission = ({ setActiveTab }) => {
   const { toast } = useToast();
@@ -16,13 +17,27 @@ const TenderSubmission = ({ setActiveTab }) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
     setTimeout(() => {
+      const companyName = document.getElementById('companyName').value;
+      const tenderRef = document.getElementById('tenderReference').value;
+      const title = document.getElementById('proposalTitle').value;
+      const desc = document.getElementById('description').value;
+      
+      addSubmission({
+        type: 'tender-bid',
+        department: DEPARTMENTS.TENDERS,
+        citizenName: companyName,
+        citizenEmail: 'contact@' + companyName.toLowerCase().replace(/\s/g, '') + '.com',
+        subject: title,
+        description: `Reference: ${tenderRef}\n\n${desc}`,
+        priority: 'Medium',
+      });
+
       setIsSubmitting(false);
       setIsSubmitted(true);
       toast({
         title: "Tender Submitted",
-        description: "Your tender application has been successfully submitted.",
+        description: "Your tender application has been successfully stored for review.",
       });
     }, 1500);
   };

@@ -174,15 +174,15 @@ const Ruby = () => {
   };
 
   return (
-    <div id="ruby-container" className={`fixed bottom-6 right-6 z-[200] flex flex-col items-start transition-all duration-500 ${isOpen ? 'w-[400px]' : 'w-16'}`}>
+    <div id="ruby-container" className={`fixed bottom-6 right-6 z-[200] flex flex-col items-start transition-all duration-500 ${isOpen ? 'w-[400px]' : 'w-12'}`}>
       {/* Mini Aura for Ruby eye */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="w-16 h-16 bg-teal-600 rounded-2xl shadow-2xl shadow-teal-500/30 flex items-center justify-center text-white hover:scale-110 transition-transform group overflow-hidden"
+          className="w-12 h-12 bg-teal-600 rounded-2xl shadow-2xl shadow-teal-500/30 flex items-center justify-center text-white hover:scale-110 transition-transform group overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-teal-400 to-blue-600 opacity-20 animate-pulse"></div>
-          <Sparkles className="w-8 h-8 relative animate-in zoom-in spin-in duration-700" />
+          <Sparkles className="w-6 h-6 relative animate-in zoom-in spin-in duration-700" />
         </button>
       )}
 

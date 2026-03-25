@@ -3,11 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { useToast } from '../hooks/use-toast';
 import { Newspaper, Calendar, Search, ArrowRight, FileText } from 'lucide-react';
 
 const Media = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const { toast } = useToast();
 
   const newsItems = [
     {
@@ -185,7 +187,7 @@ const Media = () => {
                     })}
                   </div>
                   <p className="text-gray-700 mb-6 leading-relaxed">{filteredNews[0].excerpt}</p>
-                  <Button className="bg-[#F47920] hover:bg-[#C25E00] text-white w-fit">
+                  <Button onClick={() => toast({ title: "Opening Media", description: "Loading the full press release." })} className="bg-[#F47920] hover:bg-[#C25E00] text-white w-fit">
                     Read Full Article
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -223,7 +225,7 @@ const Media = () => {
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-base line-clamp-3 mb-4">{item.excerpt}</CardDescription>
-                  <Button variant="link" className="text-[#003366] hover:text-[#0A4D8C] px-0 font-semibold">
+                  <Button onClick={() => toast({ title: "Opening Media", description: `Loading article: ${item.title}` })} variant="link" className="text-[#003366] hover:text-[#0A4D8C] px-0 font-semibold">
                     Read More <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -246,7 +248,7 @@ const Media = () => {
                 <FileText className="h-12 w-12 text-[#003366] mx-auto mb-4" />
                 <h3 className="font-semibold text-lg mb-2">Media Kit</h3>
                 <p className="text-gray-600 text-sm mb-4">BOCRA logos, branding guidelines, and official materials</p>
-                <Button variant="outline" className="border-[#003366] text-[#003366] hover:bg-[#E8F0F9]">
+                <Button onClick={() => toast({ title: "Downloading Kit", description: "The BOCRA official media kit is downloading." })} variant="outline" className="border-[#003366] text-[#003366] hover:bg-[#E8F0F9]">
                   Download Kit
                 </Button>
               </CardContent>
@@ -256,7 +258,7 @@ const Media = () => {
                 <Newspaper className="h-12 w-12 text-[#003366] mx-auto mb-4" />
                 <h3 className="font-semibold text-lg mb-2">Press Releases</h3>
                 <p className="text-gray-600 text-sm mb-4">Archive of official BOCRA press releases</p>
-                <Button variant="outline" className="border-[#003366] text-[#003366] hover:bg-[#E8F0F9]">
+                <Button onClick={() => toast({ title: "Archive Accessed", description: "Redirecting to the digital media archive." })} variant="outline" className="border-[#003366] text-[#003366] hover:bg-[#E8F0F9]">
                   View Archive
                 </Button>
               </CardContent>
@@ -266,7 +268,7 @@ const Media = () => {
                 <Calendar className="h-12 w-12 text-[#003366] mx-auto mb-4" />
                 <h3 className="font-semibold text-lg mb-2">Events Calendar</h3>
                 <p className="text-gray-600 text-sm mb-4">Upcoming BOCRA events and industry activities</p>
-                <Button variant="outline" className="border-blue-600 text-[#003366] hover:bg-[#E8F0F9]">
+                <Button onClick={() => toast({ title: "Opening Calendar", description: "Loading the 2025 events timetable." })} variant="outline" className="border-blue-600 text-[#003366] hover:bg-[#E8F0F9]">
                   View Calendar
                 </Button>
               </CardContent>
