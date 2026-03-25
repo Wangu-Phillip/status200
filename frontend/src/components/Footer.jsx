@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, Mail, Facebook, Twitter, Linkedin, Youtube } from 'lucide-react';
+import { MapPin, Phone, Mail, Facebook, Twitter, Linkedin, Youtube, Camera } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -60,17 +60,20 @@ const Footer = () => {
             </ul>
 
             <div className="flex space-x-3 mt-6">
-              <a href="https://facebook.com/bocra" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F47920] transition-colors">
+              <a href="https://web.facebook.com/BTAbw" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F47920] transition-colors">
                 <Facebook className="h-4 w-4" />
               </a>
-              <a href="https://twitter.com/bocra" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F47920] transition-colors">
+              <a href="https://x.com/bocrabw" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F47920] transition-colors">
                 <Twitter className="h-4 w-4" />
               </a>
-              <a href="https://linkedin.com/company/bocra" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F47920] transition-colors">
+              <a href="https://www.linkedin.com/company/bta_3/about/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F47920] transition-colors">
                 <Linkedin className="h-4 w-4" />
               </a>
-              <a href="https://youtube.com/bocra" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F47920] transition-colors">
+              <a href="http://www.youtube.com/@bocra7629" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F47920] transition-colors">
                 <Youtube className="h-4 w-4" />
+              </a>
+              <a href="https://www.flickr.com/photos/bocra_bw/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F47920] transition-colors" title="Flickr">
+                <Camera className="h-4 w-4" />
               </a>
             </div>
           </div>
