@@ -27,6 +27,7 @@ import ApplicationsView from '../components/dashboard/ApplicationsView';
 import ComplaintsView from '../components/dashboard/ComplaintsView';
 import DocumentsView from '../components/dashboard/DocumentsView';
 import SettingsView from '../components/dashboard/SettingsView';
+import TenderSubmission from './TenderSubmission';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -104,6 +105,7 @@ const Dashboard = () => {
       case 'complaints': return <ComplaintsView />;
       case 'documents': return <DocumentsView />;
       case 'settings': return <SettingsView />;
+      case 'tender-submission': return <TenderSubmission setActiveTab={setActiveTab} />;
       default: return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Stat Cards */}
@@ -204,7 +206,7 @@ const Dashboard = () => {
                 {[
                   { tab: 'applications', icon: Plus, color: 'teal', label: 'Start Application', desc: 'Secure new sector licenses' },
                   { tab: 'complaints', icon: MessageSquare, color: 'orange', label: 'Consumer Rights', desc: 'Report service violations' },
-                  { path: '/tender-submission', icon: Files, color: 'blue', label: 'Submit Tender', desc: 'Upload a proposal for open tenders' },
+                  { tab: 'tender-submission', icon: Files, color: 'blue', label: 'Submit Tender', desc: 'Upload a proposal for open tenders' },
                 ].map((action, i) => (
                   <button key={i} onClick={() => action.path ? navigate(action.path) : setActiveTab(action.tab)} className="block w-full text-left group">
                     <div className={`bg-[#0a0f1e] border border-white/5 p-8 rounded-[2.5rem] transition-all cursor-pointer relative overflow-hidden active:scale-95 hover:border-[#003366]/30 group-hover:shadow-[0_20px_40px_-15px_rgba(0,51,102,0.2)]`}>

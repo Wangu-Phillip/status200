@@ -7,7 +7,7 @@ import { Textarea } from '../components/ui/textarea';
 import { useToast } from '../hooks/use-toast';
 import { Upload, CheckCircle2 } from 'lucide-react';
 
-const TenderSubmission = () => {
+const TenderSubmission = ({ setActiveTab }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -37,7 +37,7 @@ const TenderSubmission = () => {
             <p className="text-gray-600 mb-6">
               Thank you for your tender submission. You will receive an email confirmation shortly.
             </p>
-            <Button onClick={() => window.location.href = '/dashboard'}>Return to Dashboard</Button>
+            <Button onClick={() => setActiveTab ? setActiveTab('dashboard') : window.location.href = '/dashboard'}>Return to Dashboard</Button>
           </CardContent>
         </Card>
       </div>

@@ -238,7 +238,10 @@ const Home = () => {
                       <mandate.icon className="w-7 h-7" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900 mb-3">{mandate.title}</h3>
-                    <p className="text-slate-600 leading-relaxed text-sm">{mandate.description}</p>
+                    <p className="text-slate-600 leading-relaxed text-sm mb-4">{mandate.description}</p>
+                    <Link to="/mandate" className="inline-flex items-center text-sm font-semibold text-[#003366] hover:text-[#F47920] transition-colors">
+                      Learn More <ArrowRight className="ml-1 w-4 h-4" />
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -386,7 +389,10 @@ const Home = () => {
                       {news.title}
                     </h3>
 
-                    <p className="text-slate-600 line-clamp-2">{news.excerpt}</p>
+                    <p className="text-slate-600 line-clamp-2 mb-4">{news.excerpt}</p>
+                    <Link to="/media" className="inline-flex items-center text-sm font-semibold text-[#003366] hover:text-[#F47920] transition-colors">
+                      Learn More <ArrowRight className="ml-1 w-4 h-4" />
+                    </Link>
                   </div>
                 </div>
               );

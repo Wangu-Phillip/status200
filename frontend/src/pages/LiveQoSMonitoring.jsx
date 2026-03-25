@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { useToast } from '../hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import {
   Activity,
   TrendingUp,
@@ -27,6 +29,8 @@ import {
 const LiveQoSMonitoring = () => {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [activeView, setActiveView] = useState('Real-time');
 
@@ -223,7 +227,7 @@ const LiveQoSMonitoring = () => {
                    <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
                       <div className="h-full bg-[#003366] rounded-full" style={{ width: `${op.coverage.overall}%` }}></div>
                    </div>
-                   <button className="w-full mt-6 py-3 rounded-xl bg-slate-900 border border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:border-[#003366] hover:text-[#E8F0F9] transition-all flex items-center justify-center space-x-2">
+                   <button onClick={() => navigate('/qos-reporting')} className="w-full mt-6 py-3 rounded-xl bg-slate-900 border border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:border-[#003366] hover:text-[#E8F0F9] transition-all flex items-center justify-center space-x-2">
                        <span>Detailed Spectrum Analysis</span>
                        <ArrowUpRight className="w-3 h-3" />
                    </button>
@@ -269,12 +273,12 @@ const LiveQoSMonitoring = () => {
             <div className="relative">
                <div className="absolute inset-0 bg-[#003366]/10 blur-[120px] rounded-full"></div>
                <div className="relative bg-[#0f172a] border border-white/10 p-10 rounded-[3rem] shadow-2xl">
-                  <div className="flex items-center justify-between mb-8">
+                   <div className="flex items-center justify-between mb-8">
                      <div className="flex items-center space-x-3">
                         <Gauge className="w-5 h-5 text-[#E8F0F9]" />
                         <h3 className="text-lg font-bold text-white">Spectral Efficiency</h3>
                      </div>
-                     <Download className="w-4 h-4 text-slate-500 hover:text-white cursor-pointer" />
+                     <Download className="w-4 h-4 text-slate-500 hover:text-white cursor-pointer" onClick={() => toast({ title: "Exporting Data", description: "Downloading efficiency CSV dump..." })} />
                   </div>
                   
                   {/* Decorative Chart Placeholder with Modern Aesthetic */}
@@ -309,7 +313,7 @@ const LiveQoSMonitoring = () => {
            <p className="text-slate-500 leading-relaxed mb-10">
              BOCRA's QoS framework is aligned with ITU standards and SADC regional guidelines. We provide this data to foster competition, ensure market transparency, and safeguard the interests of every citizen in Botswana.
            </p>
-           <Button variant="outline" className="h-14 px-10 rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white font-bold text-sm tracking-wide">
+           <Button onClick={() => toast({ title: "Downloading publication", description: "The 2025 regulatory standards PDF is being downloaded." })} variant="outline" className="h-14 px-10 rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white font-bold text-sm tracking-wide">
               Official Regulatory Publication (2025)
            </Button>
         </div>

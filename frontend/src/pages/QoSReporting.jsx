@@ -3,11 +3,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { useToast } from '../hooks/use-toast';
 import { qosMetrics } from '../mockData';
 import { BarChart, TrendingUp, TrendingDown, Activity, Download, CheckCircle, XCircle } from 'lucide-react';
 
 const QoSReporting = () => {
   const [selectedMonth, setSelectedMonth] = useState('February 2025');
+  const { toast } = useToast();
+
+  const handleExport = () => {
+    toast({
+      title: "Generating Report",
+      description: "QoS Report for " + selectedMonth + " is downloading...",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -89,7 +98,7 @@ const QoSReporting = () => {
                     <CardTitle>Operator Performance Summary</CardTitle>
                     <CardDescription>Quality of Service metrics for {selectedMonth}</CardDescription>
                   </div>
-                  <Button variant="outline" className="bg-[#F47920] hover:bg-[#C25E00] text-white border-0">
+                  <Button variant="outline" className="bg-[#F47920] hover:bg-[#C25E00] text-white border-0" onClick={handleExport}>
                     <Download className="h-4 w-4 mr-2" />
                     Export Report
                   </Button>
@@ -258,7 +267,7 @@ const QoSReporting = () => {
                           : 'Some parameters below regulatory thresholds. Corrective action plan required.'}
                       </p>
                       {!metric.compliant && (
-                        <Button size="sm" variant="outline" className="border-[#F47920] text-[#C25E00] hover:bg-[#FFF0E6] mt-2">
+                        <Button size="sm" variant="outline" className="border-[#F47920] text-[#C25E00] hover:bg-[#FFF0E6] mt-2" onClick={() => toast({ title: "Action Plan Requested", description: "Loading regulatory compliance action plan for " + metric.operator + "..." })}>
                           View Action Plan
                         </Button>
                       )}
