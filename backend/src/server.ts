@@ -7,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import citizenRoutes from './routes/citizen.js';
+import usersRoutes from './routes/users.js';
 // @ts-ignore
 import * as fs from 'fs';
 
@@ -66,6 +67,9 @@ apiRouter.get('/', (_req: Request, res: Response) => {
 
 // Auth routes
 apiRouter.use('/auth', authRoutes);
+
+// User management routes (superadmin only)
+apiRouter.use('/users', usersRoutes);
 
 // Citizen routes (protected)
 apiRouter.use('/', citizenRoutes);
