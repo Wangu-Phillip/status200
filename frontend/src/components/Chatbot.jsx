@@ -16,7 +16,7 @@ Be helpful, brief, and concise. Speak in the language the user speaks (English o
 Do NOT use markdown headers or bolding. Keep to plain text paragraphs under 3 sentences.`;
 
 const getModel = (userName, context) => genAI.getGenerativeModel({ 
-  model: "gemini-2.0-flash",
+  model: "gemini-1.5-flash",
   systemInstruction: getSystemPrompt(userName, context)
 });
 
@@ -75,18 +75,24 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
   useEffect(() => {
     const userData = localStorage.getItem('bocra_user');
     if (userData) {
-      const user = JSON.parse(userData);
-      const name = user.name ? user.name.split(' ')[0] : 'Citizen';
-      setUserName(name);
+      try {
+        const user = JSON.parse(userData);
+        if (user && user.name) {
+          setUserName(user.name.split(' ')[0]);
+        } else {
+          setUserName('Citizen');
+        }
+      } catch (e) {
+        setUserName('Citizen');
+      }
+    } else {
+      setUserName('Citizen');
     }
-
-    const hasSeenTour = localStorage.getItem('bocra_tour_seen');
-    const isDashboard = window.location.pathname.includes('dashboard');
   }, []);
 
   useEffect(() => {
-    // Initial greeting if no messages
-    if (messages.length === 0 && !isTyping) {
+    // Initial greeting if no messages and userName is set
+    if (userName && messages.length === 0 && !isTyping) {
       const realSubmissions = getSubmissions();
       const pendingMock = userApplications.filter(app => app.status === 'Pending Documents' || app.status === 'Flagged').length;
       const pendingReal = realSubmissions.filter(s => s.status === 'Pending Documents' || s.status === 'Flagged').length;
@@ -104,7 +110,7 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
         { role: 'assistant', content: greeting }
       ]);
     }
-  }, [userName]);
+  }, [userName, messages.length, isTyping]);
 
   useEffect(() => {
     scrollToBottom();
