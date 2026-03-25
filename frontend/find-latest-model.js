@@ -30,8 +30,27 @@ async function testModel(modelName) {
     }
 }
 
+async function listModels() {
+    try {
+        const fs = require('fs');
+        const env = fs.readFileSync('.env', 'utf8');
+        const key = env.match(/REACT_APP_GEMINI_API_KEY=(.*)/)[1].trim();
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+        const data = await response.json();
+        if (data.models) {
+            console.log("Available models:");
+            data.models.filter(m => m.name.includes('gemini')).forEach(m => console.log(` - ${m.name.replace('models/', '')}`));
+        } else {
+            console.log("No models found or error:", data);
+        }
+    } catch (error) {
+        console.error("Error listing models:", error.message);
+    }
+}
+
 async function run() {
-    const models = ["gemini-2.0-flash-exp", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
+    await listModels();
+    const models = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
     for (const m of models) {
         if (await testModel(m)) break;
     }

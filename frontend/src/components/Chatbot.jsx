@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { userApplications, userComplaints } from '../mockData';
 import { getSubmissions } from '../utils/persistence';
 
-const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GEMINI_API_KEY || 'AIzaSyCN0eZIKo_pw3504IiZmdaCKIxJYf76_cA');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyCN0eZIKo_pw3504IiZmdaCKIxJYf76_cA');
 
 const getSystemPrompt = (userName, context) => `You are Ruby, the digital assistant for BOCRA (Botswana Communications Regulatory Authority). 
 Your context: Help users with regulatory matters: Licensing, Spectrum, complaints, domains (.bw), and USF projects. 
@@ -15,8 +15,8 @@ Crucial objective: If any application is 'Pending Documents' or 'Flagged', proac
 Be helpful, brief, and concise. Speak in the language the user speaks (English or Setswana).
 Do NOT use markdown headers or bolding. Keep to plain text paragraphs under 3 sentences.`;
 
-const getModel = (userName, context) => genAI.getGenerativeModel({ 
-  model: "gemini-1.5-flash",
+const getModel = (userName, context) => genAI.getGenerativeModel({
+  model: "gemini-2.5-flash",
   systemInstruction: getSystemPrompt(userName, context)
 });
 
@@ -56,7 +56,7 @@ const CHATBOT_KNOWLEDGE = {
 
 const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   useEffect(() => {
     if (externalOpen) {
       setIsOpen(true);
@@ -99,7 +99,7 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
       const totalPending = pendingMock + pendingReal;
 
       let greeting = `Hello ${userName}! I'm Ruby, your BOCRA digital assistant.`;
-      
+
       if (totalPending > 0) {
         greeting += ` I noticed you have ${totalPending} item${totalPending > 1 ? 's' : ''} requiring attention in your portal. Before we begin, please select your preferred language:`;
       } else {
@@ -144,10 +144,10 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
         .map(msg => ({
           role: msg.role === 'assistant' ? 'model' : 'user',
           parts: [{ text: msg.content }]
-      }));
-      
-      const chat = getModel(userName, { 
-        applications: userApplications, 
+        }));
+
+      const chat = getModel(userName, {
+        applications: userApplications,
         complaints: userComplaints,
         recentSubmissions: getSubmissions()
       }).startChat({ history: historyMsg });
@@ -188,7 +188,7 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
       {isOpen && (
         <div className="w-full h-[600px] bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] shadow-2xl shadow-black flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-500">
           <div className="heritage-overlay basket-pattern text-slate-100 opacity-[0.05]"></div>
-          
+
           {/* Header */}
           <div className="relative bg-[#111827] border-b border-[#1e293b] p-6 flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -204,7 +204,7 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <button 
+              <button
                 onClick={() => setLanguage(l => l === 'en' ? 'tn' : 'en')}
                 className="px-3 py-1 bg-slate-800 border border-slate-700 rounded-full text-[10px] font-bold text-slate-400 hover:text-white"
               >
@@ -220,25 +220,24 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
           <div className="relative flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 fade-in duration-300`}>
-                <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed ${
-                  m.role === 'user' 
-                    ? 'bg-teal-600 text-white shadow-lg rounded-tr-none' 
+                <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed ${m.role === 'user'
+                    ? 'bg-teal-600 text-white shadow-lg rounded-tr-none'
                     : 'bg-[#1e293b] border border-[#334155] text-slate-200 rounded-tl-none'
-                }`}>
+                  }`}>
                   {m.content}
                 </div>
               </div>
             ))}
             {!language && (
               <div className="flex flex-col space-y-3 pt-2">
-                <Button 
-                  onClick={() => handleLanguageSelect('en')} 
+                <Button
+                  onClick={() => handleLanguageSelect('en')}
                   className="w-full bg-slate-800 border border-slate-700 hover:bg-teal-600 hover:border-teal-500 rounded-xl py-6 font-bold text-slate-200 transition-all"
                 >
                   🇬🇧 English
                 </Button>
-                <Button 
-                  onClick={() => handleLanguageSelect('tn')} 
+                <Button
+                  onClick={() => handleLanguageSelect('tn')}
                   className="w-full bg-slate-800 border border-slate-700 hover:bg-teal-600 hover:border-teal-500 rounded-xl py-6 font-bold text-slate-200 transition-all"
                 >
                   🇧🇼 Setswana
@@ -261,7 +260,7 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
           {language && (
             <div className="relative px-6 pb-2 flex flex-wrap gap-2">
               {CHATBOT_KNOWLEDGE[language].suggested.map((s) => (
-                <button 
+                <button
                   key={s}
                   onClick={() => handleSend(s)}
                   className="px-3 py-1.5 bg-[#111827] border border-[#1e293b] rounded-xl text-[10px] font-bold text-slate-400 hover:text-teal-400 hover:border-teal-400 transition-all flex items-center"
@@ -285,7 +284,7 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
                   placeholder={CHATBOT_KNOWLEDGE[language].placeholder}
                   className="flex-1 bg-transparent border-none focus:ring-0 text-sm px-3 py-2 text-white placeholder:text-slate-600"
                 />
-                <button 
+                <button
                   onClick={() => handleSend()}
                   disabled={!inputValue.trim()}
                   className="w-11 h-11 bg-teal-600 disabled:opacity-50 rounded-xl flex items-center justify-center text-white"
