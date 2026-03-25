@@ -231,19 +231,46 @@ const AdminDashboard = () => {
   const loadAllApplications = async () => {
     setSubmissionsLoading(true);
     try {
-      // Load applications from all departments
-      const departments = ['licensing', 'complaints', 'tenders'];
       let allApps = [];
 
-      for (const dept of departments) {
-        const data = await adminApi.getSubmissions({
-          department: dept,
+      // Load licensing applications
+      try {
+        const licensingData = await adminApi.getSubmissions({
+          department: 'licensing',
           page: 1,
           limit: 100,
         });
-        if (data.submissions) {
-          allApps = [...allApps, ...data.submissions];
+        if (licensingData.submissions) {
+          allApps = [...allApps, ...licensingData.submissions];
         }
+      } catch (error) {
+        console.error('Failed to load licensing applications:', error);
+      }
+
+      // Load complaints
+      try {
+        const complaintsData = await adminApi.getAdminComplaints({
+          page: 1,
+          limit: 100,
+        });
+        if (complaintsData.complaints) {
+          allApps = [...allApps, ...complaintsData.complaints];
+        }
+      } catch (error) {
+        console.error('Failed to load complaints:', error);
+      }
+
+      // Load tenders
+      try {
+        const tendersData = await adminApi.getAdminTenders({
+          page: 1,
+          limit: 100,
+        });
+        if (tendersData.tenders) {
+          allApps = [...allApps, ...tendersData.tenders];
+        }
+      } catch (error) {
+        console.error('Failed to load tenders:', error);
       }
 
       setAllApplications(allApps);
