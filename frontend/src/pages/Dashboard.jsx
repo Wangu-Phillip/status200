@@ -29,6 +29,8 @@ import DocumentsView from '../components/dashboard/DocumentsView';
 import SettingsView from '../components/dashboard/SettingsView';
 import * as api from '../services/api';
 import TenderSubmission from './TenderSubmission';
+import PortalTour from '../components/PortalTour';
+import Chatbot from '../components/Chatbot';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -37,6 +39,9 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showTour, setShowTour] = useState(false);
+  const [openChat, setOpenChat] = useState(false);
+  const [chatGreeting, setChatGreeting] = useState('');
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -50,6 +55,11 @@ const Dashboard = () => {
       setUser(JSON.parse(userData));
     }
 
+    const hasSeenTour = localStorage.getItem('bocra_tour_seen');
+    if (!hasSeenTour) {
+      setTimeout(() => setShowTour(true), 1500);
+    }
+
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -57,7 +67,6 @@ const Dashboard = () => {
     return () => clearInterval(timer);
   }, [navigate]);
 
-  // Fetch dashboard stats
   useEffect(() => {
     if (!user) return;
 
@@ -69,7 +78,6 @@ const Dashboard = () => {
         setRecentActivity(data.recentActivity || []);
       } catch (error) {
         console.error('Failed to fetch dashboard stats:', error);
-        // Use fallback data if API fails
         setStats({
           totalApplications: 0,
           activeComplaints: 0,
@@ -84,6 +92,13 @@ const Dashboard = () => {
     fetchStats();
   }, [user]);
 
+  const onTourComplete = () => {
+    setShowTour(false);
+    localStorage.setItem('bocra_tour_seen', 'true');
+    setChatGreeting("You’re all set! What would you like to do first?");
+    setOpenChat(true);
+  };
+
   const handleLogout = (e) => {
     e.stopPropagation();
     localStorage.removeItem('bocra_user');
@@ -91,17 +106,17 @@ const Dashboard = () => {
     navigate('/login');
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString = new Date()) => {
     const options = { day: 'numeric', month: 'long', year: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-GB', options);
   };
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
-    { id: 'applications', label: 'My Applications', icon: FileText, path: '/dashboard' },
-    { id: 'complaints', label: 'My Complaints', icon: MessageSquare, path: '/dashboard' },
-    { id: 'documents', label: 'My Documents', icon: Files, path: '/dashboard' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard' },
+    { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'applications', label: 'My Applications', icon: FileText },
+    { id: 'complaints', label: 'My Complaints', icon: MessageSquare },
+    { id: 'documents', label: 'My Documents', icon: Files },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   if (!user) return null;
@@ -150,7 +165,6 @@ const Dashboard = () => {
       case 'tender-submission': return <TenderSubmission setActiveTab={setActiveTab} />;
       default: return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Stat Cards */}
           <div id="stats-section" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {statCards.map((card, i) => (
               <div key={i} className="bg-[#0a0f1e] border border-[#1e293b] p-6 rounded-[1.5rem] hover:border-[#003366]/30 transition-all group overflow-hidden relative shadow-lg shadow-black/20">
@@ -171,7 +185,6 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Alert Banner */}
           <div id="alert-banner" className="bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 p-8 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6 group hover:border-amber-500/40 transition-all shadow-xl shadow-black/20 backdrop-blur-sm">
             <div className="flex items-center space-x-6 text-center md:text-left">
               <div className="w-14 h-14 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/30 shrink-0">
@@ -252,11 +265,11 @@ const Dashboard = () => {
               </div>
               <div className="space-y-5">
                 {[
-                  { tab: 'applications', icon: Plus, color: 'teal', label: 'Start Application', desc: 'Secure new sector licenses' },
+                  { tab: 'applications', icon: Plus, color: 'teal', label: 'Start Application', desc: 'Secure new sector licenses', id: 'new-app-button' },
                   { tab: 'complaints', icon: MessageSquare, color: 'orange', label: 'Consumer Rights', desc: 'Report service violations' },
                   { tab: 'tender-submission', icon: Files, color: 'blue', label: 'Submit Tender', desc: 'Upload a proposal for open tenders' },
                 ].map((action, i) => (
-                  <button key={i} onClick={() => action.path ? navigate(action.path) : setActiveTab(action.tab)} className="block w-full text-left group">
+                  <button key={i} id={action.id} onClick={() => setActiveTab(action.tab)} className="block w-full text-left group">
                     <div className={`bg-[#0a0f1e] border border-white/5 p-8 rounded-[2.5rem] transition-all cursor-pointer relative overflow-hidden active:scale-95 hover:border-[#003366]/30 group-hover:shadow-[0_20px_40px_-15px_rgba(0,51,102,0.2)]`}>
                       <div className={`w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-slate-300 mb-6 group-hover:bg-[#003366] group-hover:text-white transition-all duration-500`}>
                         <action.icon className="w-7 h-7" />
@@ -291,7 +304,6 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen bg-[#020617] text-slate-100 overflow-hidden dark font-sans">
-      {/* Mobile Sidebar Toggle */}
       <button
         onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
         className="lg:hidden fixed top-4 left-4 z-[60] p-3 bg-slate-800 text-[#E8F0F9] rounded-xl shadow-lg border border-white/10"
@@ -299,7 +311,6 @@ const Dashboard = () => {
         {mobileSidebarOpen ? <XIcon className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Mobile Overlay */}
       {mobileSidebarOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
@@ -307,7 +318,6 @@ const Dashboard = () => {
         />
       )}
 
-      {/* Retractable Sidebar */}
       <aside 
         id="sidebar-nav" 
         className={`bg-[#0a0f1e] border-r border-[#1e293b] flex flex-col h-full z-50 transition-all duration-500 ease-in-out 
@@ -316,7 +326,6 @@ const Dashboard = () => {
           ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        {/* Toggle Button */}
         <button 
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           className="hidden lg:flex absolute -right-4 top-10 w-8 h-8 bg-[#003366] rounded-full items-center justify-center text-white border-4 border-[#020617] hover:bg-[#003366] transition-all z-[60] shadow-xl group/toggle hover:scale-110 active:scale-90"
@@ -334,7 +343,7 @@ const Dashboard = () => {
           </Link>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto no-scrollbar">
+        <nav className="flex-1 px-4 space-y-2 overflow-y-auto no-scrollbar font-bold">
           {menuItems.map((item) => (
             <button
               key={item.id}
@@ -343,53 +352,33 @@ const Dashboard = () => {
                 isSidebarCollapsed ? 'justify-center p-4' : 'px-6 py-4 space-x-4'
               } ${
                 activeTab === item.id 
-                  ? 'bg-[#003366]/10 text-[#E8F0F9] border border-[#003366]/20 shadow-lg shadow-teal-500/5' 
+                  ? 'bg-[#003366]/10 text-[#E8F0F9] border border-[#003366]/20 shadow-lg' 
                   : 'text-slate-500 hover:bg-white/[0.03] hover:text-white'
               }`}
             >
-              <item.icon className={`transition-transform duration-300 ${isSidebarCollapsed ? 'w-6 h-6 group-hover:scale-110' : 'w-5 h-5'}`} />
-              {!isSidebarCollapsed && (
-                <span className="font-bold text-sm tracking-tight animate-in fade-in slide-in-from-left-2 duration-500">{item.label}</span>
-              )}
+              <item.icon className="w-5 h-5" />
+              {!isSidebarCollapsed && <span className="text-sm tracking-tight">{item.label}</span>}
               {activeTab === item.id && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#003366] rounded-r-full shadow-[0_0_10px_rgba(20,184,166,0.8)]"></div>
-              )}
-              {isSidebarCollapsed && (
-                <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-[10px] font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-[100] shadow-2xl border border-white/5">
-                   {item.label}
-                </div>
               )}
             </button>
           ))}
         </nav>
 
-        {/* User Info Bottom */}
-        <div className={`p-6 border-t border-white/5 transition-all duration-500 ${isSidebarCollapsed ? 'px-4' : ''}`}>
-          <div 
-             className={`flex items-center justify-between rounded-[1.5rem] bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all shadow-sm ${
-               isSidebarCollapsed ? 'p-3 flex-col gap-2' : 'p-4'
-             }`}
-          >
-            <div 
-              onClick={() => setActiveTab('settings')}
-              className="flex items-center space-x-4 cursor-pointer flex-1 min-w-0"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F5F5F3]0/20 to-blue-500/20 border border-white/5 flex items-center justify-center font-black text-sm shadow-xl text-[#E8F0F9] shrink-0 hover:scale-105 transition-transform">
+        <div className={`p-6 border-t border-white/5 ${isSidebarCollapsed ? 'px-4' : ''}`}>
+          <div className={`flex items-center justify-between rounded-[1.5rem] bg-white/[0.02] border border-white/5 ${isSidebarCollapsed ? 'p-3 flex-col gap-2' : 'p-4'}`}>
+            <div onClick={() => setActiveTab('settings')} className="flex items-center space-x-4 cursor-pointer min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-[#003366] flex items-center justify-center font-black text-sm text-white shrink-0 capitalize">
                 {user.name.charAt(0)}
               </div>
               {!isSidebarCollapsed && (
-                <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-left-2 duration-500">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-black truncate text-slate-100">{user.name}</p>
-                  <p className="text-[9px] text-[#003366] font-extrabold uppercase tracking-widest leading-none mt-1">Tier 1 Citizen</p>
                 </div>
               )}
             </div>
             {!isSidebarCollapsed && (
-              <button 
-                onClick={handleLogout}
-                className="p-2 ml-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
-                title="Sign Out"
-              >
+              <button onClick={handleLogout} className="p-2 ml-2 text-slate-500 hover:text-rose-500 transition-all">
                 <LogOut className="w-5 h-5" />
               </button>
             )}
@@ -397,50 +386,21 @@ const Dashboard = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
-        {/* Modern Glass Header */}
-        <header className="sticky top-0 z-40 bg-[#020617]/70 backdrop-blur-2xl border-b border-white/5 px-4 sm:px-8 lg:px-12 py-4 sm:py-6 lg:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="animate-in fade-in slide-in-from-top-4 duration-700 pl-12 lg:pl-0">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tighter text-white">
+      <main className="flex-1 overflow-y-auto no-scrollbar scroll-smooth relative">
+        <header className="sticky top-0 z-40 bg-[#020617]/70 backdrop-blur-2xl border-b border-white/5 px-4 sm:px-8 lg:px-12 py-4 sm:py-6 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-white">
               Hello, {user.name.split(' ')[0]}
-              <span className="text-[#003366] ml-1">.</span>
             </h1>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
+            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-1 flex items-center gap-2">
               <Clock className="w-3 h-3" />
-              Portal • {formatDate(currentTime)}
+              {formatDate()}
             </p>
           </div>
-          <div className="flex items-center space-x-3 sm:space-x-6">
-            <div className="relative group lg:block hidden animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-[#E8F0F9] transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Global Search..." 
-                className="bg-white/5 border border-white/5 rounded-[1.25rem] pl-10 pr-4 py-3 text-xs font-bold w-48 lg:w-72 focus:ring-1 focus:ring-[#003366] outline-none transition-all placeholder:text-slate-700 text-slate-100"
-              />
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-3 animate-in fade-in slide-in-from-top-4 duration-700 delay-200">
-              {user.userType === 'admin' && (
-                <Button 
-                   onClick={() => navigate('/admin')}
-                   variant="outline"
-                   className="rounded-[1.25rem] border-[#003366]/30 text-[#E8F0F9] hover:bg-[#003366]/10 h-10 sm:h-12 px-4 sm:px-6 font-bold text-xs shadow-xl active:scale-95 transition-all"
-                >
-                  Admin Portal
-                </Button>
-              )}
-              <button className="hidden sm:flex p-3 sm:p-3.5 bg-white/5 border border-white/5 rounded-[1.25rem] text-slate-500 hover:text-[#E8F0F9] relative group transition-all">
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform" />
-                <span className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-[#020617] shadow-lg shadow-rose-500/40"></span>
-              </button>
-              <Button 
-                 onClick={() => setActiveTab('settings')}
-                 className="hidden sm:flex rounded-[1.25rem] bg-[#003366] hover:bg-[#003366] text-white h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-teal-500/20 active:scale-95 transition-all"
-              >
-                Access Settings
+          <div className="flex items-center space-x-4">
+             <Button onClick={() => setActiveTab('settings')} className="rounded-xl bg-[#003366] hover:bg-[#004488] text-white h-10 px-6 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-blue-500/10 transition-all">
+                Settings
               </Button>
-            </div>
           </div>
         </header>
 
@@ -448,9 +408,11 @@ const Dashboard = () => {
           {renderContent()}
         </div>
       </main>
+      
+      <Chatbot isOpen={openChat} initialMessage={chatGreeting} />
+      {showTour && <PortalTour onComplete={onTourComplete} />}
     </div>
   );
 };
 
 export default Dashboard;
-

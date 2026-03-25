@@ -2,16 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Send, X, MessageSquare, Globe, ArrowRight, CornerDownRight, Sparkles, ChevronRight } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { userApplications, userComplaints } from '../mockData';
+import { getSubmissions } from '../utils/persistence';
 
 const genAI = new GoogleGenerativeAI('AIzaSyCN0eZIKo_pw3504IiZmdaCKIxJYf76_cA');
-const systemPrompt = `You are Ruby, the digital assistant for BOCRA (Botswana Communications Regulatory Authority). 
+
+const getSystemPrompt = (userName, context) => `You are Ruby, the digital assistant for BOCRA (Botswana Communications Regulatory Authority). 
 Your context: Help users with regulatory matters: Licensing, Spectrum, complaints, domains (.bw), and USF projects. 
+Current User: ${userName}
+Portal Context: ${JSON.stringify(context)}
+Crucial objective: If any application is 'Pending Documents' or 'Flagged', proactively mention it to the user.
 Be helpful, brief, and concise. Speak in the language the user speaks (English or Setswana).
 Do NOT use markdown headers or bolding. Keep to plain text paragraphs under 3 sentences.`;
 
-const getModel = () => genAI.getGenerativeModel({ 
-  model: "gemini-2.5-flash",
-  systemInstruction: systemPrompt 
+const getModel = (userName, context) => genAI.getGenerativeModel({ 
+  model: "gemini-2.0-flash",
+  systemInstruction: getSystemPrompt(userName, context)
 });
 
 const CHATBOT_KNOWLEDGE = {
@@ -48,13 +54,21 @@ const CHATBOT_KNOWLEDGE = {
   }
 };
 
-const Ruby = () => {
+const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
   const [isOpen, setIsOpen] = useState(false);
+  
+  useEffect(() => {
+    if (externalOpen) {
+      setIsOpen(true);
+      if (initialMessage) {
+        setMessages([{ role: 'assistant', content: initialMessage }]);
+      }
+    }
+  }, [externalOpen, initialMessage]);
   const [language, setLanguage] = useState(null); // Null until chosen
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [tourStep, setTourStep] = useState(-1);
   const [userName, setUserName] = useState('');
   const messagesEndRef = useRef(null);
 
@@ -68,20 +82,26 @@ const Ruby = () => {
 
     const hasSeenTour = localStorage.getItem('bocra_tour_seen');
     const isDashboard = window.location.pathname.includes('dashboard');
-    
-    if (!hasSeenTour && isDashboard) {
-      setTimeout(() => {
-        setIsOpen(true);
-        startTour();
-      }, 1500);
-    }
   }, []);
 
   useEffect(() => {
     // Initial greeting if no messages
     if (messages.length === 0 && !isTyping) {
+      const realSubmissions = getSubmissions();
+      const pendingMock = userApplications.filter(app => app.status === 'Pending Documents' || app.status === 'Flagged').length;
+      const pendingReal = realSubmissions.filter(s => s.status === 'Pending Documents' || s.status === 'Flagged').length;
+      const totalPending = pendingMock + pendingReal;
+
+      let greeting = `Hello ${userName}! I'm Ruby, your BOCRA digital assistant.`;
+      
+      if (totalPending > 0) {
+        greeting += ` I noticed you have ${totalPending} item${totalPending > 1 ? 's' : ''} requiring attention in your portal. Before we begin, please select your preferred language:`;
+      } else {
+        greeting += ` Please select your preferred language to get started:`;
+      }
+
       setMessages([
-        { role: 'assistant', content: `Hello ${userName}! I'm Ruby, your BOCRA digital assistant. Before we begin, please select your preferred language:` }
+        { role: 'assistant', content: greeting }
       ]);
     }
   }, [userName]);
@@ -103,39 +123,6 @@ const Ruby = () => {
     ]);
   };
 
-  const startTour = () => {
-    setTourStep(0);
-    setMessages([
-      { role: 'assistant', content: `Hi ${userName}! 👋🏽 Welcome to your BOCRA portal. I'm Ruby, your digital assistant. Let's start with a quick tour!` }
-    ]);
-  };
-
-  const nextTourStep = () => {
-    const steps = [
-      { content: "These 4 cards at the top show your application summary at a glance", target: 'stats-section' },
-      { content: "This alert banner tells you when something needs your attention", target: 'alert-banner' },
-      { content: "Use the sidebar to navigate between your applications, complaints, and documents", target: 'sidebar-nav' },
-      { content: "And I'm always here bottom right if you have any questions!", target: 'ruby-container' }
-    ];
-
-    if (tourStep < steps.length - 1) {
-      const next = tourStep + 1;
-      setTourStep(next);
-      setMessages(prev => [...prev, { role: 'assistant', content: steps[next].content }]);
-      
-      const el = document.getElementById(steps[next].target);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.add('ring-4', 'ring-teal-500', 'ring-offset-4', 'ring-offset-[#020617]', 'transition-all', 'duration-500');
-        setTimeout(() => el.classList.remove('ring-4', 'ring-teal-500', 'ring-offset-4'), 3000);
-      }
-    } else {
-      setTourStep(-1);
-      localStorage.setItem('bocra_tour_seen', 'true');
-      setMessages(prev => [...prev, { role: 'assistant', content: "Great! Now, please select your language so I can help you better." }]);
-    }
-  };
-
   const handleSend = async (text = inputValue) => {
     if (!text.trim() || !language) return;
 
@@ -153,7 +140,11 @@ const Ruby = () => {
           parts: [{ text: msg.content }]
       }));
       
-      const chat = getModel().startChat({ history: historyMsg });
+      const chat = getModel(userName, { 
+        applications: userApplications, 
+        complaints: userComplaints,
+        recentSubmissions: getSubmissions()
+      }).startChat({ history: historyMsg });
       const result = await chat.sendMessage(text);
       let aiResponse = result.response.text();
       // Strip markdown asterisks to keep the UI clean
@@ -178,6 +169,7 @@ const Ruby = () => {
       {/* Mini Aura for Ruby eye */}
       {!isOpen && (
         <button
+          id="chatbot-trigger"
           onClick={() => setIsOpen(true)}
           className="w-12 h-12 bg-teal-600 rounded-2xl shadow-2xl shadow-teal-500/30 flex items-center justify-center text-white hover:scale-110 transition-transform group overflow-hidden"
         >
@@ -231,7 +223,7 @@ const Ruby = () => {
                 </div>
               </div>
             ))}
-            {!language && tourStep === -1 && (
+            {!language && (
               <div className="flex flex-col space-y-3 pt-2">
                 <Button 
                   onClick={() => handleLanguageSelect('en')} 
@@ -259,21 +251,8 @@ const Ruby = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Tour Controls */}
-          {tourStep !== -1 && (
-            <div className="px-6 pb-2">
-              <Button 
-                onClick={nextTourStep} 
-                className="w-full bg-teal-600 hover:bg-teal-700 h-12 rounded-xl text-sm font-bold shadow-lg shadow-teal-500/20"
-              >
-                {tourStep === 3 ? "Finish Tour" : "Next Tip"}
-                <ChevronRight className="ml-2 w-4 h-4" />
-              </Button>
-            </div>
-          )}
-
           {/* Suggested */}
-          {language && tourStep === -1 && (
+          {language && (
             <div className="relative px-6 pb-2 flex flex-wrap gap-2">
               {CHATBOT_KNOWLEDGE[language].suggested.map((s) => (
                 <button 
