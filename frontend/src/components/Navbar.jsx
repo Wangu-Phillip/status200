@@ -2,9 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import { useTheme } from '../context/ThemeProvider';
-import { Menu, X, ChevronDown, Globe, BarChart3, Search, Bell, Sun, Moon, ShieldCheck, Zap, MessageSquare } from 'lucide-react';
-import GlobalSearch from './GlobalSearch';
-import NotificationCenter from './NotificationCenter';
+import {
+  Menu,
+  X,
+  ChevronDown,
+  Globe,
+  BarChart3,
+  Search,
+  Bell,
+  Sun,
+  Moon,
+  ShieldCheck,
+  Zap,
+  MessageSquare
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,49 +55,74 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
-      scrolled ? 'py-3' : 'py-5'
-    }`}>
-      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-300 ${
-        scrolled ? 'max-w-6xl' : 'max-w-7xl'
-      }`}>
-        <div className={`glass border-slate-200/50 rounded-[2rem] px-6 py-2 transition-all duration-300 shadow-sm ${
-          scrolled ? 'shadow-xl bg-white/90 backdrop-blur-xl border-slate-200' : ''
-        }`}>
+    <nav
+      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
+        scrolled ? 'py-3' : 'py-5'
+      }`}
+    >
+      <div
+        className={`mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-300 ${
+          scrolled ? 'max-w-6xl' : 'max-w-7xl'
+        }`}
+      >
+        <div
+          className={`rounded-[2rem] px-6 py-2 transition-all duration-300 border border-white/10 ${
+            scrolled
+              ? 'bg-[#001F40]/95 backdrop-blur-xl shadow-2xl'
+              : 'bg-[#003366]/95 backdrop-blur-md shadow-lg'
+          }`}
+        >
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
             <Link to="/" className="flex items-center group">
-              <img src="/logo.png" alt="BOCRA Logo" className="h-20 w-auto object-contain group-hover:scale-105 transition-all duration-300" />
+              <img
+                src="/logo.png"
+                alt="BOCRA Logo"
+                className="h-20 w-auto object-contain group-hover:scale-105 transition-all duration-300"
+              />
             </Link>
 
-            {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-1">
               <Link to="/">
                 <Button
                   variant="ghost"
-                  className={`rounded-xl px-4 ${isActive('/') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                  className={`rounded-xl px-4 ${
+                    isActive('/')
+                      ? 'bg-white/15 text-white'
+                      : 'text-white/80'
+                  } hover:bg-white/10 hover:text-white`}
                 >
                   Home
                 </Button>
               </Link>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="rounded-xl px-4 text-slate-600 hover:text-teal-600 hover:bg-teal-50">
+                  <Button
+                    variant="ghost"
+                    className="rounded-xl px-4 text-white/80 hover:bg-white/10 hover:text-white"
+                  >
                     Services
-                    <ChevronDown className="ml-1 h-4 w-4 opacity-50" />
+                    <ChevronDown className="ml-1 h-4 w-4 opacity-70" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-64 p-2 rounded-2xl glass-dark md:glass-light border-slate-200 shadow-2xl overflow-hidden relative">
-                  <div className="heritage-overlay basket-pattern text-slate-900 opacity-[0.02]"></div>
+
+                <DropdownMenuContent
+                  align="start"
+                  className="w-64 p-2 rounded-2xl border border-[#d9e6f4] bg-white shadow-2xl overflow-hidden relative"
+                >
+                  <div className="heritage-overlay basket-pattern text-[#003366] opacity-[0.03]"></div>
                   <div className="relative">
                     {services.map((service) => (
-                      <DropdownMenuItem key={service.name} asChild className="rounded-xl p-3 cursor-pointer focus:bg-teal-50 focus:text-teal-600">
+                      <DropdownMenuItem
+                        key={service.name}
+                        asChild
+                        className="rounded-xl p-3 cursor-pointer focus:bg-[#E8F0F9] focus:text-[#003366]"
+                      >
                         <Link to={service.path} className="flex items-center space-x-3 w-full">
-                          <div className="text-slate-400 group-focus:text-teal-500">
+                          <div className="text-[#003366]">
                             {React.createElement(service.icon || Globe, { className: 'h-4 w-4' })}
                           </div>
-                          <span className="font-medium text-sm">{service.name}</span>
+                          <span className="font-medium text-sm text-slate-700">{service.name}</span>
                         </Link>
                       </DropdownMenuItem>
                     ))}
@@ -97,76 +133,100 @@ const Navbar = () => {
               <Link to="/about">
                 <Button
                   variant="ghost"
-                  className={`rounded-xl px-4 ${isActive('/about') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                  className={`rounded-xl px-4 ${
+                    isActive('/about')
+                      ? 'bg-white/15 text-white'
+                      : 'text-white/80'
+                  } hover:bg-white/10 hover:text-white`}
                 >
                   About
                 </Button>
               </Link>
+
               <Link to="/documents">
                 <Button
                   variant="ghost"
-                  className={`rounded-xl px-4 ${isActive('/documents') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                  className={`rounded-xl px-4 ${
+                    isActive('/documents')
+                      ? 'bg-white/15 text-white'
+                      : 'text-white/80'
+                  } hover:bg-white/10 hover:text-white`}
                 >
                   Resources
                 </Button>
               </Link>
+
               <Link to="/contact">
                 <Button
                   variant="ghost"
-                  className={`rounded-xl px-4 ${isActive('/contact') ? 'text-teal-600 bg-teal-50' : 'text-slate-600'} hover:text-teal-600 hover:bg-teal-50`}
+                  className={`rounded-xl px-4 ${
+                    isActive('/contact')
+                      ? 'bg-white/15 text-white'
+                      : 'text-white/80'
+                  } hover:bg-white/10 hover:text-white`}
                 >
                   Contact
                 </Button>
               </Link>
             </div>
 
-            {/* Icons & CTA */}
             <div className="flex items-center space-x-4">
               <div className="hidden sm:flex items-center space-x-2 mr-2">
-                <button 
+                <button
                   onClick={toggleTheme}
-                  className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all"
+                  className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"
                   aria-label="Toggle Theme"
                 >
                   {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                 </button>
-                <button className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all">
+
+                <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all">
                   <Search className="h-5 w-5" />
                 </button>
+
                 {user && (
-                  <button className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all relative">
+                  <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all relative">
                     <Bell className="h-5 w-5" />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#F47920] rounded-full border-2 border-[#003366]"></span>
                   </button>
                 )}
               </div>
-              
+
               <div className="hidden sm:flex items-center space-x-3">
                 {user ? (
-                  // Logged In View: Show ONLY their allowed portal to prevent confusing redirects
                   user.userType === 'admin' ? (
                     <Link to="/admin">
-                      <Button className="rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white px-8 shadow-lg shadow-teal-500/20 font-extrabold tracking-wide">
+                      <Button
+                        variant="cta"
+                        className="rounded-[1.25rem] px-8 font-extrabold tracking-wide shadow-lg shadow-[#F47920]/20"
+                      >
                         Enter Admin Portal
                       </Button>
                     </Link>
                   ) : (
                     <Link to="/dashboard">
-                      <Button className="rounded-[1.25rem] border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white px-8 font-extrabold tracking-wide">
+                      <Button
+                        className="rounded-[1.25rem] px-8 font-extrabold tracking-wide"
+                      >
                         Enter Citizen Portal
                       </Button>
                     </Link>
                   )
                 ) : (
-                  // Logged Out View: Completely separate entry point buttons
                   <>
                     <Link to="/login?role=admin">
-                      <Button variant="ghost" className="rounded-xl text-teal-600 hover:bg-teal-50 font-bold px-6">
+                      <Button
+                        variant="ghost"
+                        className="rounded-xl text-white/85 hover:bg-white/10 hover:text-white font-bold px-6"
+                      >
                         BOCRA Staff
                       </Button>
                     </Link>
                     <Link to="/login">
-                      <Button className="rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white px-8 shadow-lg shadow-teal-500/20 font-extrabold tracking-wide">
+                      <Button
+                        variant="cta"
+                        className="rounded-[1.25rem] px-8 shadow-lg shadow-[#F47920]/20 font-extrabold tracking-wide"
+                      >
                         Citizen Portal
                       </Button>
                     </Link>
@@ -174,10 +234,10 @@ const Navbar = () => {
                 )}
               </div>
 
-              {/* Mobile Toggle */}
               <button
-                className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="lg:hidden p-2 text-white hover:bg-white/10 rounded-xl"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle navigation"
               >
                 {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -186,40 +246,45 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 pt-24 bg-white/80 backdrop-blur-3xl animate-in fade-in zoom-in duration-300 overflow-hidden">
-          <div className="heritage-overlay basket-pattern text-teal-900 opacity-[0.04]"></div>
+        <div className="lg:hidden fixed inset-0 z-50 pt-24 bg-[#001F40]/95 backdrop-blur-2xl animate-in fade-in duration-300 overflow-hidden">
+          <div className="heritage-overlay basket-pattern text-white opacity-[0.04]"></div>
+
           <div className="px-6 space-y-4 relative">
             {['Home', 'About', 'Documents', 'Contact'].map((item) => (
-              <Link 
-                key={item} 
+              <Link
+                key={item}
                 to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-3xl font-bold text-slate-900 hover:text-teal-600 transition-colors"
+                className="block text-3xl font-bold text-white hover:text-[#F47920] transition-colors"
               >
                 {item}
               </Link>
             ))}
-            <div className="h-px bg-slate-100 my-6"></div>
+
+            <div className="h-px bg-white/10 my-6"></div>
+
             <div className="grid grid-cols-1 gap-4">
               {services.map((service) => (
-                <Link 
-                  key={service.name} 
+                <Link
+                  key={service.name}
                   to={service.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center space-x-3 text-lg font-medium text-slate-600"
+                  className="flex items-center space-x-3 text-lg font-medium text-white/85 hover:text-white"
                 >
-                  <service.icon className="h-5 w-5 text-teal-600" />
+                  <service.icon className="h-5 w-5 text-[#F47920]" />
                   <span>{service.name}</span>
                 </Link>
               ))}
             </div>
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
-              <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Theme Preference</span>
-              <button 
+
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/10">
+              <span className="text-sm font-bold text-white/60 uppercase tracking-widest">
+                Theme Preference
+              </span>
+              <button
                 onClick={toggleTheme}
-                className="flex items-center space-x-2 p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-teal-50 hover:text-teal-600 transition-all"
+                className="flex items-center space-x-2 p-3 bg-white/10 text-white rounded-xl hover:bg-white/15 transition-all"
                 aria-label="Toggle Theme"
               >
                 {theme === 'light' ? (
@@ -235,42 +300,52 @@ const Navbar = () => {
                 )}
               </button>
             </div>
-            
+
             <div className="pt-4 pb-8 flex flex-col gap-3">
               {user ? (
-                // Logged In Mobile View
                 <>
                   {user.userType === 'admin' ? (
                     <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full h-12 rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-500/20 font-bold text-lg">
+                      <Button
+                        variant="cta"
+                        className="w-full h-12 rounded-[1.25rem] font-bold text-lg"
+                      >
                         Enter Admin Portal
                       </Button>
                     </Link>
                   ) : (
                     <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full h-12 rounded-[1.25rem] bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg">
+                      <Button
+                        className="w-full h-12 rounded-[1.25rem] font-bold text-lg"
+                      >
                         Enter Citizen Portal
                       </Button>
                     </Link>
                   )}
-                  <Button 
-                    variant="outline" 
+
+                  <Button
+                    variant="outline"
                     onClick={handleLogout}
-                    className="w-full h-12 rounded-[1.25rem] border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-lg transition-colors"
+                    className="w-full h-12 rounded-[1.25rem] border-white/20 bg-transparent text-white hover:bg-white/10 font-bold text-lg"
                   >
                     Sign Out
                   </Button>
                 </>
               ) : (
-                // Logged Out Mobile View
                 <>
                   <Link to="/login?role=admin" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full h-12 rounded-[1.25rem] border-teal-500/30 text-teal-600 hover:bg-teal-50 shadow-sm font-bold text-lg">
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 rounded-[1.25rem] border-white/20 bg-transparent text-white hover:bg-white/10 font-bold text-lg"
+                    >
                       BOCRA Staff Login
                     </Button>
                   </Link>
                   <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full h-12 rounded-[1.25rem] bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg shadow-lg">
+                    <Button
+                      variant="cta"
+                      className="w-full h-12 rounded-[1.25rem] font-bold text-lg"
+                    >
                       Citizen Portal
                     </Button>
                   </Link>
@@ -281,9 +356,7 @@ const Navbar = () => {
         </div>
       )}
     </nav>
-
   );
 };
 
 export default Navbar;
-
