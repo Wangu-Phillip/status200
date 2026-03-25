@@ -12,9 +12,18 @@ const TenderSubmission = ({ setActiveTab }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!selectedFile) {
+      toast({
+        variant: "destructive",
+        title: "Required Files Missing",
+        description: "Please attach your tender documents before submitting.",
+      });
+      return;
+    }
     setIsSubmitting(true);
     
     setTimeout(() => {
@@ -116,10 +125,17 @@ const TenderSubmission = ({ setActiveTab }) => {
               <Label htmlFor="documents">Upload Tender Documents (.pdf, .zip)</Label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors">
                 <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600 mb-1">Drag and drop your files here, or click to browse</p>
-                <Input id="documents" type="file" required className="hidden" />
+                <p className="text-sm text-gray-600 mb-1">
+                  {selectedFile ? selectedFile.name : 'Drag and drop your files here, or click to browse'}
+                </p>
+                <Input 
+                  id="documents" 
+                  type="file" 
+                  className="hidden" 
+                  onChange={(e) => setSelectedFile(e.target.files[0])}
+                />
                 <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('documents').click()}>
-                  Select Files
+                  {selectedFile ? 'Change File' : 'Select Files'}
                 </Button>
               </div>
             </div>

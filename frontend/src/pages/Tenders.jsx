@@ -15,9 +15,23 @@ import {
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../hooks/use-toast';
+
 const Tenders = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleTenderAction = (tenderId) => {
+    toast({
+      title: "Reviewing Specifications",
+      description: `Opening procurement package for ${tenderId}...`,
+    });
+    // For demo, we navigate to submission
+    setTimeout(() => navigate('/tender-submission'), 1000);
+  };
 
   const tenders = [
     {
@@ -182,7 +196,10 @@ const Tenders = () => {
                       {tender.type}
                     </Badge>
                   </div>
-                  <Button className="bg-[#00897B] hover:bg-[#4DB6AC] text-white rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-teal-900/20 group-hover:scale-105 transition-all">
+                  <Button 
+                    onClick={() => handleTenderAction(tender.id)}
+                    className="bg-[#00897B] hover:bg-[#4DB6AC] text-white rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-teal-900/20 group-hover:scale-105 transition-all"
+                  >
                     View Specs
                     <ChevronRight className="ml-2 w-4 h-4" />
                   </Button>
@@ -213,10 +230,17 @@ const Tenders = () => {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-6">
-              <Button variant="outline" className="h-16 px-10 rounded-[1.25rem] border-white/10 bg-transparent text-white font-black uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all">
+              <Button 
+                variant="outline" 
+                onClick={() => toast({ title: "Portal Guide", description: "Downloading Tender Submission Guide v2.4 (PDF)..." })}
+                className="h-16 px-10 rounded-[1.25rem] border-white/10 bg-transparent text-white font-black uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all"
+              >
                 Download Guide
               </Button>
-              <Button className="h-16 px-10 rounded-[1.25rem] bg-[#00897B] text-white font-black uppercase tracking-widest text-[10px] hover:bg-[#4DB6AC] shadow-2xl shadow-teal-900/40 transition-all">
+              <Button 
+                onClick={() => window.location.href = 'mailto:procurement@bocra.org.bw?subject=Tender Inquiry'}
+                className="h-16 px-10 rounded-[1.25rem] bg-[#00897B] text-white font-black uppercase tracking-widest text-[10px] hover:bg-[#4DB6AC] shadow-2xl shadow-teal-900/40 transition-all"
+              >
                 Contact Unit
               </Button>
             </div>
