@@ -52,11 +52,12 @@ const AdminDashboard = () => {
   const [submissions, setSubmissions] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [tenders, setTenders] = useState([]);
+  const [allApplications, setAllApplications] = useState([]);
   const [stats, setStats] = useState({});
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [adminNote, setAdminNote] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'submissions', 'users', or 'settings'
+  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'submissions', 'users', 'applications', or 'settings'
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   
   // User management state (for superadmin)
@@ -224,6 +225,37 @@ const AdminDashboard = () => {
       });
     } finally {
       setUserLoading(false);
+    }
+  };
+
+  const loadAllApplications = async () => {
+    setSubmissionsLoading(true);
+    try {
+      // Load applications from all departments
+      const departments = ['licensing', 'complaints', 'tenders'];
+      let allApps = [];
+
+      for (const dept of departments) {
+        const data = await adminApi.getSubmissions({
+          department: dept,
+          page: 1,
+          limit: 100,
+        });
+        if (data.submissions) {
+          allApps = [...allApps, ...data.submissions];
+        }
+      }
+
+      setAllApplications(allApps);
+    } catch (error) {
+      console.error('Failed to load applications:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load applications',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmissionsLoading(false);
     }
   };
 
@@ -473,7 +505,9 @@ const AdminDashboard = () => {
           <p className="px-3 text-xs text-slate-500 uppercase tracking-wider font-semibold mb-3">Overview</p>
           <button 
             onClick={() => { 
-              setActiveView('dashboard'); 
+              setActiveView('dashboard');
+              setSearchTerm('');
+              setFilterStatus('all');
               toast({ title: 'Dashboard', description: 'Viewing main dashboard.' }); 
             }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
@@ -488,20 +522,42 @@ const AdminDashboard = () => {
 
           {/* User Management - Only for superadmins */}
           {user?.adminLevel === 'superadmin' && (
-            <button 
-              onClick={() => { 
-                setActiveView('users'); 
-                toast({ title: 'User Management', description: 'Manage all system users.' }); 
-              }} 
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                activeView === 'users' 
-                  ? 'bg-slate-800 text-white' 
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <Users className="h-4 w-4" />
-              User Management
-            </button>
+            <>
+              <button 
+                onClick={() => { 
+                  setActiveView('users');
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                  toast({ title: 'User Management', description: 'Manage all system users.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'users' 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                User Management
+              </button>
+
+              <button 
+                onClick={() => { 
+                  setActiveView('applications');
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                  loadAllApplications();
+                  toast({ title: 'Applications', description: 'Viewing applications from all departments.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'applications' 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                Applications
+              </button>
+            </>
           )}
 
           {/* Departments - Only for superadmins */}
@@ -517,7 +573,7 @@ const AdminDashboard = () => {
                   toast({ title: 'Licensing', description: 'Switched to Licensing Department.' }); 
                 }} 
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  user?.department === DEPARTMENTS.LICENSING 
+                  activeView === 'submissions' && user?.department === DEPARTMENTS.LICENSING 
                     ? 'bg-slate-800 text-white' 
                     : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
@@ -534,7 +590,7 @@ const AdminDashboard = () => {
                   toast({ title: 'Complaints', description: 'Switched to Complaints Department.' }); 
                 }} 
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  user?.department === DEPARTMENTS.COMPLAINTS 
+                  activeView === 'submissions' && user?.department === DEPARTMENTS.COMPLAINTS 
                     ? 'bg-slate-800 text-white' 
                     : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
@@ -551,7 +607,7 @@ const AdminDashboard = () => {
                   toast({ title: 'Quality of Service', description: 'Switched to QoS Department.' }); 
                 }} 
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  user?.department === DEPARTMENTS.QOS 
+                  activeView === 'submissions' && user?.department === DEPARTMENTS.QOS 
                     ? 'bg-slate-800 text-white' 
                     : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
@@ -568,7 +624,7 @@ const AdminDashboard = () => {
                   toast({ title: 'Tenders', description: 'Switched to Tenders Department.' }); 
                 }} 
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  user?.department === DEPARTMENTS.TENDERS 
+                  activeView === 'submissions' && user?.department === DEPARTMENTS.TENDERS 
                     ? 'bg-slate-800 text-white' 
                     : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
@@ -580,7 +636,9 @@ const AdminDashboard = () => {
               <p className="px-3 text-xs text-slate-500 uppercase tracking-wider font-semibold mt-6 mb-3">System</p>
               <button 
                 onClick={() => { 
-                  setActiveView('settings'); 
+                  setActiveView('settings');
+                  setSearchTerm('');
+                  setFilterStatus('all');
                   toast({ title: 'Settings', description: 'Manage system settings.' }); 
                 }} 
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
@@ -619,10 +677,26 @@ const AdminDashboard = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
-              {DEPARTMENT_LABELS[user.department] || 'Admin'} Dashboard
+              {activeView === 'dashboard' 
+                ? 'Dashboard' 
+                : activeView === 'users' 
+                ? 'User Management' 
+                : activeView === 'applications' 
+                ? 'All Applications' 
+                : activeView === 'settings'
+                ? 'Settings'
+                : `${DEPARTMENT_LABELS[user.department] || 'Admin'} - Submissions`}
             </h1>
             <p className="text-slate-500 mt-1">
-              Welcome back, {user.name}. Here's what's happening in your department.
+              {activeView === 'dashboard'
+                ? `Welcome back, ${user.name}. Here's what's happening in your department.`
+                : activeView === 'users'
+                ? 'Manage all system users and permissions.'
+                : activeView === 'applications'
+                ? 'Manage license applications from all departments'
+                : activeView === 'settings'
+                ? 'Configure system-wide settings and preferences'
+                : `Managing ${DEPARTMENT_LABELS[user.department] || 'submissions'} submissions.`}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -1004,6 +1078,270 @@ const AdminDashboard = () => {
                 />
               </>
             )}
+          </>
+        )}
+
+        {/* Applications View - Only for Superadmins */}
+        {activeView === 'applications' && user?.adminLevel === 'superadmin' && (
+          <>
+            {/* Search & Filter */}
+            <Card className="border-0 shadow-md mb-6">
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Input
+                      placeholder="Search by name, subject, or reference..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 border-slate-200"
+                    />
+                  </div>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="flex h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Registered">Registered</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Total Applications</p>
+                      <p className="text-3xl font-bold text-slate-900 mt-1">{allApplications.length}</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-[#E8F0F9] flex items-center justify-center">
+                      <FileText className="h-6 w-6 text-[#003366]" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Pending</p>
+                      <p className="text-3xl font-bold text-amber-600 mt-1">
+                        {allApplications.filter(a => a.status === 'Submitted' || a.status === 'Under Review').length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                      <Clock className="h-6 w-6 text-amber-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Approved</p>
+                      <p className="text-3xl font-bold text-emerald-600 mt-1">
+                        {allApplications.filter(a => a.status === 'Approved').length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-emerald-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Rejected</p>
+                      <p className="text-3xl font-bold text-red-600 mt-1">
+                        {allApplications.filter(a => a.status === 'Rejected').length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center">
+                      <XCircle className="h-6 w-6 text-red-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Applications List */}
+            <div className="space-y-4">
+              {submissionsLoading ? (
+                <Card className="border-0 shadow-md">
+                  <CardContent className="py-16 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#003366] mx-auto" />
+                    <p className="text-slate-500 mt-4">Loading applications...</p>
+                  </CardContent>
+                </Card>
+              ) : allApplications.filter((app) => {
+                const matchesSearch =
+                  app.citizenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  app.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  app.id?.toLowerCase().includes(searchTerm.toLowerCase());
+                const matchesFilter = filterStatus === 'all' || app.status === filterStatus;
+                return matchesSearch && matchesFilter;
+              }).length === 0 ? (
+                <Card className="border-0 shadow-md">
+                  <CardContent className="py-16 text-center">
+                    <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-700 mb-2">No Applications Found</h3>
+                    <p className="text-slate-500">
+                      {searchTerm || filterStatus !== 'all'
+                        ? 'Try adjusting your search or filter criteria.'
+                        : 'No applications have been received yet.'}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                allApplications.filter((app) => {
+                  const matchesSearch =
+                    app.citizenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    app.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    app.id?.toLowerCase().includes(searchTerm.toLowerCase());
+                  const matchesFilter = filterStatus === 'all' || app.status === filterStatus;
+                  return matchesSearch && matchesFilter;
+                }).map((app) => (
+                  <Card key={app.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-bold text-slate-900">{app.subject}</h3>
+                            {getPriorityBadge(app.priority)}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
+                            <span className="flex items-center gap-1.5">
+                              <Hash className="h-3.5 w-3.5" />
+                              <span className="font-mono font-semibold text-[#003366]">{app.id}</span>
+                            </span>
+                            <span>•</span>
+                            <span>{app.citizenName} ({app.citizenEmail})</span>
+                            <span>•</span>
+                            <span>{app.submittedDate}</span>
+                          </div>
+                          <div className="text-xs text-slate-400 font-medium">
+                            Department: <span className="text-slate-600">{app.department ? app.department.toUpperCase() : 'N/A'}</span>
+                          </div>
+                        </div>
+                        {getStatusBadge(app.status)}
+                      </div>
+
+                      <p className="text-slate-600 mb-4 line-clamp-2">{app.description}</p>
+
+                      {/* Admin Notes */}
+                      {app.adminNotes && (
+                        <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100">
+                          <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Admin Notes</p>
+                          <p className="text-sm text-slate-700">{app.adminNotes}</p>
+                        </div>
+                      )}
+
+                      {/* Review Info */}
+                      {app.reviewedBy && (
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
+                          <CheckCheck className="h-3.5 w-3.5" />
+                          Reviewed by <span className="font-semibold">{app.reviewedBy}</span> on {new Date(app.reviewedAt).toLocaleDateString()}
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                        {selectedSubmission === app.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <Input
+                              placeholder="Add a note..."
+                              value={adminNote}
+                              onChange={(e) => setAdminNote(e.target.value)}
+                              disabled={submissionsLoading}
+                              className="flex-1 text-sm h-9"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={submissionsLoading || !adminNote.trim()}
+                              onClick={() => handleAddNote(app.id)}
+                              className="text-[#003366]"
+                            >
+                              {submissionsLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={submissionsLoading}
+                              onClick={() => setSelectedSubmission(null)}
+                              className="text-slate-400"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={submissionsLoading}
+                              className="text-slate-600 border-slate-200"
+                              onClick={() => setSelectedSubmission(app.id)}
+                            >
+                              <Eye className="h-4 w-4 mr-1.5" />
+                              Add Note
+                            </Button>
+                            {app.status === 'Submitted' && (
+                              <Button
+                                size="sm"
+                                disabled={submissionsLoading}
+                                className="bg-[#003366] hover:bg-[#003366] text-white"
+                                onClick={() => handleStatusChange(app.id, 'Under Review')}
+                              >
+                                <Clock className="h-4 w-4 mr-1.5" />
+                                Start Review
+                              </Button>
+                            )}
+                            {(app.status === 'Submitted' || app.status === 'Under Review') && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  disabled={submissionsLoading}
+                                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                                  onClick={() => handleStatusChange(app.id, 'Approved')}
+                                >
+                                  <CheckCheck className="h-4 w-4 mr-1.5" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  disabled={submissionsLoading}
+                                  variant="destructive"
+                                  onClick={() => handleStatusChange(app.id, 'Rejected')}
+                                >
+                                  <XCircle className="h-4 w-4 mr-1.5" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           </>
         )}
 
