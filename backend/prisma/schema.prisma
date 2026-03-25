@@ -39,6 +39,11 @@ model Application {
   sector          String
   description     String
   status          String     @default("Submitted")
+  department      String?    // "licensing", "complaints", "qos", "tenders"
+  priority        String     @default("Medium")
+  adminNotes      String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
   submissionDate  DateTime   @default(now())
   lastUpdated     DateTime   @updatedAt
   createdAt       DateTime   @default(now())

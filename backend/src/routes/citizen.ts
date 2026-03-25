@@ -77,7 +77,7 @@ router.get('/applications/:id', authenticateToken, async (req: AuthRequest, res:
 router.post('/applications', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-    const { applicationType, businessName, sector, description } = req.body;
+    const { applicationType, businessName, sector, description, department, priority } = req.body;
 
     if (!applicationType || !businessName || !sector) {
       res.status(400).json({ error: 'Missing required fields' });
@@ -95,6 +95,8 @@ router.post('/applications', authenticateToken, async (req: AuthRequest, res: Re
         businessName,
         sector,
         description: description || '',
+        department: department || null,
+        priority: priority || 'Medium',
         status: 'Submitted',
       },
       include: { documents: true },

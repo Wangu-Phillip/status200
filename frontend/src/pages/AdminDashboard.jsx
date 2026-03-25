@@ -10,16 +10,13 @@ import UserForm from '../components/admin/UserForm';
 import UserList from '../components/admin/UserList';
 import UserModal from '../components/admin/UserModal';
 import {
-  getSubmissionsByDepartment,
-  getDepartmentStats,
-  updateSubmissionStatus,
-  addAdminNote,
   DEPARTMENTS,
   DEPARTMENT_LABELS,
   DEPARTMENT_COLORS,
 } from '../utils/persistence';
 import { qosMetrics } from '../mockData';
 import Analytics from '../components/Analytics';
+import * as adminApi from '../services/api';
 import {
   FileText,
   AlertCircle,
@@ -42,6 +39,7 @@ import {
   Users,
   Plus,
   Settings,
+  Loader2,
 } from 'lucide-react';
 
 import { Menu, X as XIcon } from 'lucide-react';
@@ -57,6 +55,7 @@ const AdminDashboard = () => {
   const [adminNote, setAdminNote] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'submissions', 'users', or 'settings'
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
   
   // User management state (for superadmin)
   const [users, setUsers] = useState([]);
@@ -226,7 +225,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const refreshData = () => {
+  const refreshData = async () => {
     if (!user) return;
     // For superadmin, only load if a department is selected
     if (user.adminLevel === 'superadmin' && !user.department) {
@@ -234,30 +233,77 @@ const AdminDashboard = () => {
       setStats({});
       return;
     }
-    const dept = user.department;
-    setSubmissions(getSubmissionsByDepartment(dept));
-    setStats(getDepartmentStats(dept));
+    
+    setSubmissionsLoading(true);
+    try {
+      const dept = user.department;
+      // Fetch submissions from backend
+      const submissionsData = await adminApi.getSubmissions({
+        department: dept,
+        page: 1,
+        limit: 100,
+      });
+      setSubmissions(submissionsData.submissions || []);
+
+      // Fetch stats from backend
+      const statsData = await adminApi.getAdminStats(dept);
+      setStats(statsData);
+    } catch (error) {
+      console.error('Failed to load submissions:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load submissions',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmissionsLoading(false);
+    }
   };
 
-  const handleStatusChange = (token, newStatus) => {
-    updateSubmissionStatus(token, newStatus, user.name);
-    refreshData();
-    setSelectedSubmission(null);
-    toast({
-      title: 'Status Updated',
-      description: `Submission ${token} has been moved to ${newStatus}.`,
-    });
+  const handleStatusChange = async (token, newStatus) => {
+    try {
+      setSubmissionsLoading(true);
+      await adminApi.updateSubmissionStatus(token, newStatus);
+      await refreshData();
+      setSelectedSubmission(null);
+      toast({
+        title: 'Status Updated',
+        description: `Submission ${token} has been moved to ${newStatus}.`,
+      });
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update status',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmissionsLoading(false);
+    }
   };
 
-  const handleAddNote = (token) => {
+  const handleAddNote = async (token) => {
     if (!adminNote.trim()) return;
-    addAdminNote(token, adminNote);
-    setAdminNote('');
-    refreshData();
-    toast({
-      title: 'Note Added',
-      description: `Internal admin note saved for ${token}.`,
-    });
+    try {
+      setSubmissionsLoading(true);
+      await adminApi.addSubmissionNotes(token, adminNote);
+      setAdminNote('');
+      await refreshData();
+      setSelectedSubmission(null);
+      toast({
+        title: 'Note Added',
+        description: `Internal admin note saved for ${token}.`,
+      });
+    } catch (error) {
+      console.error('Failed to add note:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add note',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmissionsLoading(false);
+    }
   };
 
   const handleDisabledMock = (feature) => {
@@ -714,21 +760,28 @@ const AdminDashboard = () => {
                               placeholder="Add a note before changing status..."
                               value={adminNote}
                               onChange={(e) => setAdminNote(e.target.value)}
+                              disabled={submissionsLoading}
                               className="flex-1 text-sm h-9"
                             />
                             <Button
                               size="sm"
                               variant="ghost"
+                              disabled={submissionsLoading || !adminNote.trim()}
                               onClick={() => {
                                 handleAddNote(sub.id);
                               }}
                               className="text-[#003366]"
                             >
-                              <Send className="h-4 w-4" />
+                              {submissionsLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
+                              disabled={submissionsLoading}
                               onClick={() => setSelectedSubmission(null)}
                               className="text-slate-400"
                             >
@@ -740,16 +793,18 @@ const AdminDashboard = () => {
                             <Button
                               variant="outline"
                               size="sm"
+                              disabled={submissionsLoading}
                               className="text-slate-600 border-slate-200"
                               onClick={() => setSelectedSubmission(sub.id)}
                             >
                               <Eye className="h-4 w-4 mr-1.5" />
                               Add Note
                             </Button>
-                            {sub.status === 'Pending Review' && (
+                            {sub.status === 'Submitted' && (
                               <>
                                 <Button
                                   size="sm"
+                                  disabled={submissionsLoading}
                                   className="bg-[#003366] hover:bg-[#003366] text-white"
                                   onClick={() => handleStatusChange(sub.id, 'Under Review')}
                                 >
@@ -758,10 +813,11 @@ const AdminDashboard = () => {
                                 </Button>
                               </>
                             )}
-                            {(sub.status === 'Pending Review' || sub.status === 'Under Review') && (
+                            {(sub.status === 'Submitted' || sub.status === 'Under Review') && (
                               <>
                                 <Button
                                   size="sm"
+                                  disabled={submissionsLoading}
                                   className="bg-emerald-500 hover:bg-emerald-600 text-white"
                                   onClick={() => handleStatusChange(sub.id, 'Approved')}
                                 >
@@ -770,6 +826,7 @@ const AdminDashboard = () => {
                                 </Button>
                                 <Button
                                   size="sm"
+                                  disabled={submissionsLoading}
                                   variant="destructive"
                                   onClick={() => handleStatusChange(sub.id, 'Rejected')}
                                 >

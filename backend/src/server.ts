@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import citizenRoutes from './routes/citizen.js';
 import usersRoutes from './routes/users.js';
+import adminRoutes from './routes/admin.js';
 // @ts-ignore
 import * as fs from 'fs';
 
@@ -70,6 +71,9 @@ apiRouter.use('/auth', authRoutes);
 
 // User management routes (superadmin only)
 apiRouter.use('/users', usersRoutes);
+
+// Admin routes (admin level users)
+apiRouter.use('/admin', adminRoutes);
 
 // Citizen routes (protected)
 apiRouter.use('/', citizenRoutes);
