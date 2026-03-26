@@ -6,6 +6,7 @@ import {
   CheckCircle, Globe, Palette, Sliders, AlertTriangle, Loader2, Save, X 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../../hooks/use-toast';
 import * as api from '../../services/api';
 
 const SettingsView = () => {
