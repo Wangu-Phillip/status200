@@ -21,12 +21,14 @@ import {
   ChevronLeft,
   Menu,
   X as XIcon,
-  Loader2
+  Loader2,
+  Briefcase
 } from 'lucide-react';
 import ApplicationsView from '../components/dashboard/ApplicationsView';
 import ComplaintsView from '../components/dashboard/ComplaintsView';
 import DocumentsView from '../components/dashboard/DocumentsView';
 import SettingsView from '../components/dashboard/SettingsView';
+import TendersView from '../components/dashboard/TendersView';
 import * as api from '../services/api';
 import TenderSubmission from './TenderSubmission';
 import PortalTour from '../components/PortalTour';
@@ -115,6 +117,7 @@ const Dashboard = () => {
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'applications', label: 'My Applications', icon: FileText },
     { id: 'complaints', label: 'My Complaints', icon: MessageSquare },
+    { id: 'tenders', label: 'Tenders', icon: Briefcase },
     { id: 'documents', label: 'My Documents', icon: Files },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -161,6 +164,7 @@ const Dashboard = () => {
       case 'applications': return <ApplicationsView />;
       case 'complaints': return <ComplaintsView />;
       case 'documents': return <DocumentsView />;
+      case 'tenders': return <TendersView />;
       case 'settings': return <SettingsView />;
       case 'tender-submission': return <TenderSubmission setActiveTab={setActiveTab} />;
       default: return (
@@ -267,7 +271,7 @@ const Dashboard = () => {
                 {[
                   { tab: 'applications', icon: Plus, color: 'teal', label: 'Start Application', desc: 'Secure new sector licenses', id: 'new-app-button' },
                   { tab: 'complaints', icon: MessageSquare, color: 'orange', label: 'Consumer Rights', desc: 'Report service violations' },
-                  { tab: 'tender-submission', icon: Files, color: 'blue', label: 'Submit Tender', desc: 'Upload a proposal for open tenders' },
+                  { tab: 'tenders', icon: Briefcase, color: 'blue', label: 'Browse & Submit Tenders', desc: 'View open tenders and submit proposals' },
                 ].map((action, i) => (
                   <button key={i} id={action.id} onClick={() => setActiveTab(action.tab)} className="block w-full text-left group">
                     <div className={`bg-[#0a0f1e] border border-white/5 p-8 rounded-[2.5rem] transition-all cursor-pointer relative overflow-hidden active:scale-95 hover:border-[#003366]/30 group-hover:shadow-[0_20px_40px_-15px_rgba(0,51,102,0.2)]`}>

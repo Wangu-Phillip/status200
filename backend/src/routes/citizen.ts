@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest, authenticateToken } from '../middleware/auth.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -1335,5 +1335,72 @@ router.post(
     }
   }
 );
+
+// =====================
+// AVAILABLE TENDER POSTINGS API (For citizens to view open tenders)
+// =====================
+
+// Get available tender postings that citizens can apply to
+router.get('/tender-postings/available', async (req: Request, res: Response) => {
+  try {
+    const { page = 1, limit = 10, status = 'Open', category } = req.query;
+    const skip = ((Number(page) - 1) * Number(limit)) || 0;
+
+    const where: any = {
+      status: status || 'Open',
+    };
+    
+    if (category) {
+      where.category = category;
+    }
+
+    const postings = await prisma.tenderPosting.findMany({
+      where,
+      include: {
+        documents: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: Number(limit),
+    });
+
+    const total = await prisma.tenderPosting.count({ where });
+
+    res.json({
+      postings,
+      total,
+      page: Number(page),
+      pageSize: Number(limit),
+      pages: Math.ceil(total / Number(limit)),
+    });
+  } catch (error) {
+    console.error('Get available tender postings error:', error);
+    res.status(500).json({ error: 'Failed to fetch tender postings' });
+  }
+});
+
+// Get single tender posting for citizen
+router.get('/tender-postings/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const posting = await prisma.tenderPosting.findUnique({
+      where: { id },
+      include: {
+        documents: true,
+      },
+    });
+
+    if (!posting) {
+      res.status(404).json({ error: 'Tender posting not found' });
+      return;
+    }
+
+    res.json(posting);
+  } catch (error) {
+    console.error('Get tender posting error:', error);
+    res.status(500).json({ error: 'Failed to fetch tender posting' });
+  }
+});
 
 export default router;

@@ -146,6 +146,20 @@ export const uploadTenderDocument = (tenderId, documentData) =>
     body: JSON.stringify(documentData),
   });
 
+// Get available tender postings for citizens to browse and apply to
+export const getAvailableTenderPostings = ({ page = 1, limit = 10, status = 'Open', category = null } = {}) => {
+  const query = new URLSearchParams();
+  query.append('page', page);
+  query.append('limit', limit);
+  query.append('status', status);
+  if (category) query.append('category', category);
+  return apiCall(`/tender-postings/available?${query.toString()}`);
+};
+
+// Get a specific tender posting
+export const getTenderPosting = (id) => 
+  apiCall(`/tender-postings/${id}`);
+
 // =====================
 // DOCUMENTS API
 // =====================
