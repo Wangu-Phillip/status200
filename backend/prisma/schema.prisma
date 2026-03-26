@@ -189,3 +189,29 @@ model StatusCheck {
 
   @@map("status_checks")
 }
+
+model SystemSettings {
+  id                          String   @id @default(uuid())
+  systemName                  String   @default("BOCRA Portal")
+  systemDescription           String   @default("Botswana Communications Regulatory Authority Portal")
+  maintenanceMode             Boolean  @default(false)
+  passwordMinLength           Int      @default(8)
+  passwordRequireSpecial      Boolean  @default(true)
+  passwordExpireDays          Int      @default(90)
+  sessionTimeoutMinutes       Int      @default(30)
+  enableTwoFactor             Boolean  @default(false)
+  emailNotificationsEnabled   Boolean  @default(true)
+  emailOnNewSubmission        Boolean  @default(true)
+  emailOnStatusChange         Boolean  @default(true)
+  emailOnUserCreation         Boolean  @default(true)
+  darkMode                    Boolean  @default(false)
+  displayDensity              String   @default("normal")
+  itemsPerPage                Int      @default(10)
+  notificationsEnabled        Boolean  @default(true)
+  enableBrowserNotifications  Boolean  @default(false)
+  notificationSound           Boolean  @default(true)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  @@map("system_settings")
+}

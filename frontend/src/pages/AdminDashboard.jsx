@@ -7,6 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Switch } from '../components/ui/switch';
+import { Label } from '../components/ui/label';
 import UserForm from '../components/admin/UserForm';
 import UserList from '../components/admin/UserList';
 import UserModal from '../components/admin/UserModal';
@@ -43,6 +46,17 @@ import {
   Loader2,
   Upload,
   Check,
+  Bell,
+  Lock,
+  Eye as EyeIcon,
+  EyeOff,
+  Database,
+  Activity,
+  Sliders,
+  Palette,
+  Mail,
+  Info,
+  Save,
 } from 'lucide-react';
 
 import { Menu, X as XIcon } from 'lucide-react';
@@ -99,6 +113,40 @@ const AdminDashboard = () => {
     qos: { total: 0, pending: 0, approved: 0, rejected: 0 },
   });
   const [systemStatsLoading, setSystemStatsLoading] = useState(false);
+
+  // Settings state (for superadmin)
+  const [settings, setSettings] = useState({
+    // General Settings
+    systemName: 'BOCRA Portal',
+    systemDescription: 'Botswana Communications Regulatory Authority Portal',
+    maintenanceMode: false,
+    // Security Settings
+    passwordMinLength: 8,
+    passwordRequireSpecial: true,
+    passwordExpireDays: 90,
+    sessionTimeoutMinutes: 30,
+    enableTwoFactor: false,
+    // Email Settings
+    emailNotificationsEnabled: true,
+    emailOnNewSubmission: true,
+    emailOnStatusChange: true,
+    emailOnUserCreation: true,
+    // Display Settings
+    darkMode: false,
+    displayDensity: 'normal', // 'compact', 'normal', 'spacious'
+    itemsPerPage: 10,
+    // Notification Settings
+    notificationsEnabled: true,
+    enableBrowserNotifications: false,
+    notificationSound: true,
+  });
+  const [settingsSaved, setSettingsSaved] = useState(true);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [recentActivities, setRecentActivities] = useState([
+    { id: 1, action: 'User created', user: 'admin.new@bocra.org.bw', timestamp: new Date(), type: 'create' },
+    { id: 2, action: 'Application status updated', reference: 'APP-2026-001', timestamp: new Date(Date.now() - 3600000), type: 'update' },
+    { id: 3, action: 'Tender posted', tender: 'TENDER-2026-005', timestamp: new Date(Date.now() - 7200000), type: 'create' },
+  ]);
   
   const { toast } = useToast();
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -132,6 +180,98 @@ const AdminDashboard = () => {
       loadSystemStats();
     }
   }, [user, navigate]);
+
+  // Load settings and activities when settings view is opened
+  useEffect(() => {
+    if (activeView === 'settings' && user?.adminLevel === 'superadmin') {
+      loadSettings();
+      loadActivities();
+    }
+  }, [activeView, user?.adminLevel]);
+
+  // Session timeout functionality
+  useEffect(() => {
+    if (!user || !settings.sessionTimeoutMinutes) return;
+
+    let sessionTimeoutMinutes = settings.sessionTimeoutMinutes || 30;
+    let timeoutId = null;
+    let warningTimeoutId = null;
+
+    const resetTimeout = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (warningTimeoutId) clearTimeout(warningTimeoutId);
+
+      // Show warning 2 minutes before timeout
+      warningTimeoutId = setTimeout(() => {
+        if (sessionTimeoutMinutes > 2) {
+          toast({
+            title: 'Session Expiring Soon',
+            description: `Your session will expire in 2 minutes due to inactivity.`,
+          });
+        }
+      }, (sessionTimeoutMinutes - 2) * 60 * 1000);
+
+      // Logout on timeout
+      timeoutId = setTimeout(() => {
+        localStorage.removeItem('bocra_user');
+        localStorage.removeItem('bocra_token');
+        navigate('/login');
+        toast({
+          title: 'Session Expired',
+          description: 'Your session has expired due to inactivity. Please login again.',
+        });
+      }, sessionTimeoutMinutes * 60 * 1000);
+    };
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const handleActivity = () => resetTimeout();
+
+    events.forEach(event => document.addEventListener(event, handleActivity));
+    resetTimeout();
+
+    return () => {
+      events.forEach(event => document.removeEventListener(event, handleActivity));
+      if (timeoutId) clearTimeout(timeoutId);
+      if (warningTimeoutId) clearTimeout(warningTimeoutId);
+    };
+  }, [user, settings.sessionTimeoutMinutes, navigate, toast]);
+
+  const loadSettings = async () => {
+    try {
+      const data = await adminApi.getSystemSettings();
+      setSettings(data);
+      setSettingsSaved(true);
+      // Also cache in localStorage
+      localStorage.setItem('bocra_settings', JSON.stringify(data));
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load system settings',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const loadActivities = async () => {
+    try {
+      const data = await adminApi.getActivityLogs({ limit: 25, offset: 0 });
+      const formattedActivities = data.activities.map((activity) => ({
+        id: activity.id,
+        action: activity.action,
+        actionType: activity.actionType,
+        user: activity.user,
+        userName: activity.userName,
+        timestamp: new Date(activity.timestamp),
+        type: activity.actionType.includes('CREATE') ? 'create'
+          : activity.actionType.includes('DELETE') ? 'delete'
+          : 'update',
+      }));
+      setRecentActivities(formattedActivities);
+    } catch (error) {
+      console.error('Failed to load activities:', error);
+    }
+  };
 
   const loadUsers = async () => {
     setUserLoading(true);
@@ -641,6 +781,55 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('bocra_user');
     navigate('/login');
+  };
+
+  // Settings handlers
+  const handleSettingsChange = (key, value) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettingsSaved(false);
+  };
+
+  const handleSaveSettings = async () => {
+    setSettingsLoading(true);
+    try {
+      await adminApi.updateSystemSettings(settings);
+      localStorage.setItem('bocra_settings', JSON.stringify(settings));
+      setSettingsSaved(true);
+      toast({
+        title: 'Settings Saved',
+        description: 'System settings have been saved successfully.',
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const handleResetSettings = async () => {
+    setSettingsLoading(true);
+    try {
+      await loadSettings();
+      setSettingsSaved(true);
+      toast({
+        title: 'Settings Reset',
+        description: 'Settings have been reset to last saved values.',
+      });
+    } catch (error) {
+      console.error('Error resetting settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reset settings.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSettingsLoading(false);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -2259,19 +2448,475 @@ const AdminDashboard = () => {
 
         {/* Settings View - Only for Superadmins */}
         {activeView === 'settings' && user?.adminLevel === 'superadmin' && (
-          <Card className="border-0 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl">Settings Management</CardTitle>
-              <CardDescription>Configure system-wide settings and preferences</CardDescription>
-            </CardHeader>
-            <CardContent className="py-12 text-center">
-              <Settings className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-700 mb-2">Settings Coming Soon</h3>
-              <p className="text-slate-500">
-                System settings and configuration options will be available here.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            {/* Settings Header */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 mb-1">
+                  System Configuration
+                </h2>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleResetSettings}
+                  disabled={settingsSaved || settingsLoading}
+                  className="gap-2"
+                >
+                  {settingsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Reset Changes
+                </Button>
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={settingsSaved || settingsLoading}
+                  className="gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  {settingsLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  {settingsLoading ? 'Saving...' : 'Save Settings'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Settings Tabs */}
+            <Tabs defaultValue="general" className="w-full">
+              <TabsList className="bg-slate-100 border-b">
+                <TabsTrigger value="general" className="gap-2">
+                  <Info className="h-4 w-4" />
+                  General
+                </TabsTrigger>
+                <TabsTrigger value="security" className="gap-2">
+                  <Lock className="h-4 w-4" />
+                  Security
+                </TabsTrigger>
+                <TabsTrigger value="email" className="gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email
+                </TabsTrigger>
+                <TabsTrigger value="display" className="gap-2">
+                  <Palette className="h-4 w-4" />
+                  Display
+                </TabsTrigger>
+                <TabsTrigger value="notifications" className="gap-2">
+                  <Bell className="h-4 w-4" />
+                  Notifications
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="gap-2">
+                  <Activity className="h-4 w-4" />
+                  Activity
+                </TabsTrigger>
+              </TabsList>
+
+              {/* General Settings Tab */}
+              <TabsContent value="general">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>General Settings</CardTitle>
+                    <CardDescription>Configure basic system information and maintenance settings</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="system-name" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          System Name
+                        </Label>
+                        <Input
+                          id="system-name"
+                          value={settings.systemName}
+                          onChange={(e) => handleSettingsChange('systemName', e.target.value)}
+                          placeholder="Enter system name"
+                          className="border-slate-200"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="system-desc" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          System Description
+                        </Label>
+                        <Input
+                          id="system-desc"
+                          value={settings.systemDescription}
+                          onChange={(e) => handleSettingsChange('systemDescription', e.target.value)}
+                          placeholder="Brief system description"
+                          className="border-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">Maintenance Mode</p>
+                        <p className="text-sm text-slate-500">Enable to prevent users from accessing the system</p>
+                      </div>
+                      <Switch
+                        checked={settings.maintenanceMode}
+                        onCheckedChange={(checked) => handleSettingsChange('maintenanceMode', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    {/* System Information Display */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                        <Info className="h-4 w-4" />
+                        System Information
+                      </h4>
+                      <div className="space-y-2 text-sm text-blue-800">
+                        <p><strong>Current Version:</strong> 1.0.0</p>
+                        <p><strong>Last Updated:</strong> {new Date().toLocaleDateString()}</p>
+                        <p><strong>Database Status:</strong> <span className="text-green-600 font-semibold">✓ Connected</span></p>
+                        <p><strong>API Status:</strong> <span className="text-green-600 font-semibold">✓ Online</span></p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Security Settings Tab */}
+              <TabsContent value="security">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>Security Settings</CardTitle>
+                    <CardDescription>Configure password policies and session management</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="pwd-min-length" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          Minimum Password Length (characters)
+                        </Label>
+                        <Input
+                          id="pwd-min-length"
+                          type="number"
+                          min="6"
+                          max="20"
+                          value={settings.passwordMinLength}
+                          onChange={(e) => handleSettingsChange('passwordMinLength', parseInt(e.target.value))}
+                          className="border-slate-200"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="pwd-expire" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          Password Expiry (days)
+                        </Label>
+                        <Input
+                          id="pwd-expire"
+                          type="number"
+                          min="30"
+                          max="365"
+                          value={settings.passwordExpireDays}
+                          onChange={(e) => handleSettingsChange('passwordExpireDays', parseInt(e.target.value))}
+                          className="border-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="session-timeout" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          Session Timeout (minutes)
+                        </Label>
+                        <Input
+                          id="session-timeout"
+                          type="number"
+                          min="10"
+                          max="120"
+                          value={settings.sessionTimeoutMinutes}
+                          onChange={(e) => handleSettingsChange('sessionTimeoutMinutes', parseInt(e.target.value))}
+                          className="border-slate-200"
+                        />
+                      </div>
+                      <div className="flex items-end pb-2">
+                        <div className="flex-1">
+                          <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                            Password Requirements
+                          </Label>
+                          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <span className="text-sm text-slate-600">Require special characters</span>
+                            <Switch
+                              checked={settings.passwordRequireSpecial}
+                              onCheckedChange={(checked) => handleSettingsChange('passwordRequireSpecial', checked)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900 flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-amber-600" />
+                          Two-Factor Authentication
+                        </p>
+                        <p className="text-sm text-slate-500">Require 2FA for all admin accounts</p>
+                      </div>
+                      <Switch
+                        checked={settings.enableTwoFactor}
+                        onCheckedChange={(checked) => handleSettingsChange('enableTwoFactor', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        Security Recommendations
+                      </h4>
+                      <ul className="text-sm text-amber-800 space-y-1">
+                        <li>✓ Use passwords with minimum 12 characters for better security</li>
+                        <li>✓ Enable 2FA for all administrative users</li>
+                        <li>✓ Set session timeout to 15-30 minutes</li>
+                        <li>✓ Review and update security settings monthly</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Email Settings Tab */}
+              <TabsContent value="email">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>Email & Notification Settings</CardTitle>
+                    <CardDescription>Configure email notifications and SMTP settings</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">Enable Email Notifications</p>
+                        <p className="text-sm text-slate-500">Send notifications via email</p>
+                      </div>
+                      <Switch
+                        checked={settings.emailNotificationsEnabled}
+                        onCheckedChange={(checked) => handleSettingsChange('emailNotificationsEnabled', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    {settings.emailNotificationsEnabled && (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-900">New Submission Notifications</p>
+                            <p className="text-sm text-slate-500">Notify admins of new submissions</p>
+                          </div>
+                          <Switch
+                            checked={settings.emailOnNewSubmission}
+                            onCheckedChange={(checked) => handleSettingsChange('emailOnNewSubmission', checked)}
+                            className="ml-4"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-900">Status Change Notifications</p>
+                            <p className="text-sm text-slate-500">Notify citizens of submission status changes</p>
+                          </div>
+                          <Switch
+                            checked={settings.emailOnStatusChange}
+                            onCheckedChange={(checked) => handleSettingsChange('emailOnStatusChange', checked)}
+                            className="ml-4"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-900">User Account Notifications</p>
+                            <p className="text-sm text-slate-500">Send credentials when creating new user accounts</p>
+                          </div>
+                          <Switch
+                            checked={settings.emailOnUserCreation}
+                            onCheckedChange={(checked) => handleSettingsChange('emailOnUserCreation', checked)}
+                            className="ml-4"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Email Configuration
+                      </h4>
+                      <div className="space-y-2 text-sm text-green-800">
+                        <p><strong>SMTP Server:</strong> smtp.bocra.org.bw</p>
+                        <p><strong>Port:</strong> 587</p>
+                        <p><strong>From Email:</strong> noreply@bocra.org.bw</p>
+                        <p><strong>Status:</strong> <span className="text-green-600 font-semibold">✓ Configured</span></p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Display Settings Tab */}
+              <TabsContent value="display">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>Display & Interface Settings</CardTitle>
+                    <CardDescription>Customize the appearance and layout of the system</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">Dark Mode</p>
+                        <p className="text-sm text-slate-500">Use dark theme for the interface</p>
+                      </div>
+                      <Switch
+                        checked={settings.darkMode}
+                        onCheckedChange={(checked) => handleSettingsChange('darkMode', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="display-density" className="text-sm font-semibold text-slate-700 mb-3 block">
+                        Display Density
+                      </Label>
+                      <div className="space-y-2">
+                        {['compact', 'normal', 'spacious'].map((density) => (
+                          <button
+                            key={density}
+                            onClick={() => handleSettingsChange('displayDensity', density)}
+                            className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                              settings.displayDensity === density
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-slate-200 bg-white hover:bg-slate-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              checked={settings.displayDensity === density}
+                              readOnly
+                              className="accent-blue-600"
+                            />
+                            <span className="font-medium text-slate-900 capitalize">{density} Spacing</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="items-per-page" className="text-sm font-semibold text-slate-700 mb-2 block">
+                        Items Per Page
+                      </Label>
+                      <Input
+                        id="items-per-page"
+                        type="number"
+                        min="5"
+                        max="50"
+                        step="5"
+                        value={settings.itemsPerPage}
+                        onChange={(e) => handleSettingsChange('itemsPerPage', parseInt(e.target.value))}
+                        className="border-slate-200"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Number of rows displayed per page in lists</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Notifications Settings Tab */}
+              <TabsContent value="notifications">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>Notification Preferences</CardTitle>
+                    <CardDescription>Configure in-app and browser notifications</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">In-App Notifications</p>
+                        <p className="text-sm text-slate-500">Show notifications in the application</p>
+                      </div>
+                      <Switch
+                        checked={settings.notificationsEnabled}
+                        onCheckedChange={(checked) => handleSettingsChange('notificationsEnabled', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">Browser Notifications</p>
+                        <p className="text-sm text-slate-500">Show desktop notifications (requires permission)</p>
+                      </div>
+                      <Switch
+                        checked={settings.enableBrowserNotifications}
+                        onCheckedChange={(checked) => handleSettingsChange('enableBrowserNotifications', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">Notification Sound</p>
+                        <p className="text-sm text-slate-500">Play sound for notifications</p>
+                      </div>
+                      <Switch
+                        checked={settings.notificationSound}
+                        onCheckedChange={(checked) => handleSettingsChange('notificationSound', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                        <Bell className="h-4 w-4" />
+                        Notification Types
+                      </h4>
+                      <ul className="text-sm text-blue-800 space-y-2">
+                        <li>✓ New submissions and applications</li>
+                        <li>✓ Status updates and approvals</li>
+                        <li>✓ System maintenance alerts</li>
+                        <li>✓ User management changes</li>
+                        <li>✓ Document uploads and updates</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Activity Log Tab */}
+              <TabsContent value="activity">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>Recent System Activity</CardTitle>
+                    <CardDescription>View recent administrative actions and system events</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      {recentActivities.map((activity) => {
+                        const Icon = activity.type === 'create' ? Plus : activity.type === 'update' ? CheckCheck : Activity;
+                        return (
+                          <div key={activity.id} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors">
+                            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                              activity.type === 'create' ? 'bg-green-100' : activity.type === 'update' ? 'bg-blue-100' : 'bg-slate-100'
+                            }`}>
+                              <Icon className={`h-5 w-5 ${
+                                activity.type === 'create' ? 'text-green-600' : activity.type === 'update' ? 'text-blue-600' : 'text-slate-600'
+                              }`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-slate-900">{activity.action}</p>
+                              <p className="text-sm text-slate-500">{activity.user || activity.reference || activity.tender}</p>
+                              <p className="text-xs text-slate-400 mt-1">{activity.timestamp.toLocaleString()}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <Button variant="outline" className="w-full">
+                      View Full Activity Log
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         )}
       </div>
 

@@ -317,3 +317,40 @@ export const deleteTenderDocument = (documentId) =>
   apiCall(`/admin/tender-documents/${documentId}`, {
     method: 'DELETE',
   });
+
+// =====================
+// SYSTEM SETTINGS API (Superadmin only)
+// =====================
+
+export const getSystemSettings = () =>
+  apiCall('/settings', {
+    method: 'GET',
+  });
+
+export const updateSystemSettings = (settings) =>
+  apiCall('/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  });
+
+// =====================
+// ACTIVITY LOG API (Superadmin only)
+// =====================
+
+export const getActivityLogs = ({ limit = 20, offset = 0 } = {}) => {
+  const query = new URLSearchParams();
+  query.append('limit', limit);
+  query.append('offset', offset);
+  return apiCall(`/activities?${query.toString()}`);
+};
+
+export const getActivityLogsByType = (actionType, { limit = 20 } = {}) => {
+  const query = new URLSearchParams();
+  query.append('limit', limit);
+  return apiCall(`/activities/type/${actionType}?${query.toString()}`);
+};
+
+export const getActivityStats = () =>
+  apiCall('/activities/stats', {
+    method: 'GET',
+  });

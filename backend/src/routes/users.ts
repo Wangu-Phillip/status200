@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthRequest, authenticateToken, authorizeSuperAdmin } from '../middleware/auth.js';
+import { validatePassword } from '../utils/passwordValidator.js';
+import { logUserAction, ACTIVITY_TYPES } from '../utils/activityLogger.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -106,6 +108,16 @@ router.post('/', authenticateToken, authorizeSuperAdmin, async (req: AuthRequest
       return;
     }
 
+    // Validate password against security policy
+    const passwordValidation = await validatePassword(password);
+    if (!passwordValidation.valid) {
+      res.status(400).json({
+        error: 'Password does not meet security requirements',
+        details: passwordValidation.errors,
+      });
+      return;
+    }
+
     // Check if user already exists
     const existing = await prisma.user.findUnique({
       where: { email },
@@ -166,6 +178,17 @@ router.post('/', authenticateToken, authorizeSuperAdmin, async (req: AuthRequest
       },
     });
 
+    // Log user creation
+    await logUserAction(
+      (req as any).user.id,
+      `Created new user: ${name} (${email})`,
+      ACTIVITY_TYPES.USER_CREATED,
+      req.ip,
+      req.headers['user-agent'],
+      `New ${userType} user created: ${name}`,
+      user.id
+    );
+
     res.status(201).json({
       message: 'User created successfully',
       user,
@@ -197,20 +220,58 @@ router.put('/:id', authenticateToken, authorizeSuperAdmin, async (req: AuthReque
 
     // Prepare update data
     const updateData: any = {};
+    const changes: string[] = [];
 
-    if (name) updateData.name = name;
-    if (userType) updateData.userType = userType;
-    if (adminLevel !== undefined) updateData.adminLevel = adminLevel;
-    if (department !== undefined) updateData.department = department;
-    if (organization) updateData.organization = organization;
-    if (phone) updateData.phone = phone;
-    if (address) updateData.address = address;
-    if (tier) updateData.tier = tier;
-    if (trustScore !== undefined) updateData.trustScore = trustScore;
+    if (name && name !== user.name) {
+      updateData.name = name;
+      changes.push(`name: ${user.name} → ${name}`);
+    }
+    if (userType && userType !== user.userType) {
+      updateData.userType = userType;
+      changes.push(`userType: ${user.userType} → ${userType}`);
+    }
+    if (adminLevel !== undefined && adminLevel !== user.adminLevel) {
+      updateData.adminLevel = adminLevel;
+      changes.push(`adminLevel: ${user.adminLevel} → ${adminLevel}`);
+    }
+    if (department !== undefined && department !== user.department) {
+      updateData.department = department;
+      changes.push(`department: ${user.department} → ${department}`);
+    }
+    if (organization && organization !== user.organization) {
+      updateData.organization = organization;
+      changes.push(`organization: ${user.organization} → ${organization}`);
+    }
+    if (phone && phone !== user.phone) {
+      updateData.phone = phone;
+      changes.push(`phone updated`);
+    }
+    if (address && address !== user.address) {
+      updateData.address = address;
+      changes.push(`address updated`);
+    }
+    if (tier && tier !== user.tier) {
+      updateData.tier = tier;
+      changes.push(`tier: ${user.tier} → ${tier}`);
+    }
+    if (trustScore !== undefined && trustScore !== user.trustScore) {
+      updateData.trustScore = trustScore;
+      changes.push(`trustScore: ${user.trustScore} → ${trustScore}`);
+    }
 
     // Hash password if provided
     if (password) {
+      // Validate password
+      const passwordValidation = await validatePassword(password);
+      if (!passwordValidation.valid) {
+        res.status(400).json({
+          error: 'Password does not meet security requirements',
+          details: passwordValidation.errors,
+        });
+        return;
+      }
       updateData.password = await bcrypt.hash(password, 10);
+      changes.push('password changed');
     }
 
     // Check email uniqueness if changing email
@@ -223,6 +284,7 @@ router.put('/:id', authenticateToken, authorizeSuperAdmin, async (req: AuthReque
         return;
       }
       updateData.email = email;
+      changes.push(`email: ${user.email} → ${email}`);
     }
 
     // Update user
@@ -245,6 +307,19 @@ router.put('/:id', authenticateToken, authorizeSuperAdmin, async (req: AuthReque
         updatedAt: true,
       },
     });
+
+    // Log user update
+    if (changes.length > 0) {
+      await logUserAction(
+        (req as any).user.id,
+        `Updated user: ${updatedUser.name} (${updatedUser.email})`,
+        ACTIVITY_TYPES.USER_UPDATED,
+        req.ip,
+        req.headers['user-agent'],
+        `Changes: ${changes.join('; ')}`,
+        id
+      );
+    }
 
     res.json({
       message: 'User updated successfully',
@@ -311,6 +386,17 @@ router.delete('/:id', authenticateToken, authorizeSuperAdmin, async (req: AuthRe
     await prisma.user.delete({
       where: { id },
     });
+
+    // Log user deletion
+    await logUserAction(
+      (req as any).user.id,
+      `Deleted user: ${user.name} (${user.email})`,
+      ACTIVITY_TYPES.USER_DELETED,
+      req.ip,
+      req.headers['user-agent'],
+      `User account ${user.email} deleted`,
+      id
+    );
 
     res.json({
       message: 'User deleted successfully',

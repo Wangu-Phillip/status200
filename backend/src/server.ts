@@ -9,6 +9,8 @@ import authRoutes from './routes/auth.js';
 import citizenRoutes from './routes/citizen.js';
 import usersRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
+import settingsRoutes from './routes/settings.js';
+import activitiesRoutes from './routes/activities.js';
 // @ts-ignore
 import * as fs from 'fs';
 
@@ -81,6 +83,12 @@ apiRouter.use('/auth', authRoutes);
 
 // User management routes (superadmin only)
 apiRouter.use('/users', usersRoutes);
+
+// System settings routes (superadmin only)
+apiRouter.use('/settings', settingsRoutes);
+
+// Activity log routes (superadmin only)
+apiRouter.use('/activities', activitiesRoutes);
 
 // Admin routes (admin level users)
 apiRouter.use('/admin', adminRoutes);
