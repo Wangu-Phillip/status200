@@ -135,34 +135,67 @@ router.get(
         return;
       }
 
-      // Fetch stats
-      const where = { department: targetDept };
+      // Fetch stats from appropriate table based on department
+      let total = 0;
+      let pending = 0;
+      let underReview = 0;
+      let approved = 0;
+      let rejected = 0;
+      let highPriority = 0;
 
-      const total = await prisma.application.count({ where });
-      const pending = await prisma.application.count({
-        where: { ...where, status: 'Submitted' },
-      });
-      const underReview = await prisma.application.count({
-        where: { ...where, status: 'Under Review' },
-      });
-      const approved = await prisma.application.count({
-        where: {
-          ...where,
-          status: 'Approved',
-        },
-      });
-      const rejected = await prisma.application.count({
-        where: {
-          ...where,
-          status: 'Rejected',
-        },
-      });
-      const highPriority = await prisma.application.count({
-        where: {
-          ...where,
-          priority: 'High',
-        },
-      });
+      if (targetDept === 'complaints') {
+        total = await prisma.complaint.count({ where: { department: targetDept } });
+        pending = await prisma.complaint.count({
+          where: { department: targetDept, status: { in: ['Registered', 'Submitted'] } },
+        });
+        underReview = await prisma.complaint.count({
+          where: { department: targetDept, status: 'Under Review' },
+        });
+        approved = await prisma.complaint.count({
+          where: { department: targetDept, status: 'Approved' },
+        });
+        rejected = await prisma.complaint.count({
+          where: { department: targetDept, status: 'Rejected' },
+        });
+        highPriority = await prisma.complaint.count({
+          where: { department: targetDept, priority: 'High' },
+        });
+      } else if (targetDept === 'tenders') {
+        total = await prisma.tender.count({ where: { department: targetDept } });
+        pending = await prisma.tender.count({
+          where: { department: targetDept, status: 'Submitted' },
+        });
+        underReview = await prisma.tender.count({
+          where: { department: targetDept, status: 'Under Review' },
+        });
+        approved = await prisma.tender.count({
+          where: { department: targetDept, status: 'Approved' },
+        });
+        rejected = await prisma.tender.count({
+          where: { department: targetDept, status: 'Rejected' },
+        });
+        highPriority = await prisma.tender.count({
+          where: { department: targetDept, priority: 'High' },
+        });
+      } else {
+        // licensing and qos use Application table
+        total = await prisma.application.count({ where: { department: targetDept } });
+        pending = await prisma.application.count({
+          where: { department: targetDept, status: 'Submitted' },
+        });
+        underReview = await prisma.application.count({
+          where: { department: targetDept, status: 'Under Review' },
+        });
+        approved = await prisma.application.count({
+          where: { department: targetDept, status: 'Approved' },
+        });
+        rejected = await prisma.application.count({
+          where: { department: targetDept, status: 'Rejected' },
+        });
+        highPriority = await prisma.application.count({
+          where: { department: targetDept, priority: 'High' },
+        });
+      }
 
       res.json({
         total,

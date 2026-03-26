@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
+import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -72,6 +73,13 @@ const AdminDashboard = () => {
     adminCount: 0,
     citizenCount: 0,
   });
+  const [departmentStats, setDepartmentStats] = useState({
+    licensing: { total: 0, pending: 0, approved: 0, rejected: 0 },
+    complaints: { total: 0, pending: 0, approved: 0, rejected: 0 },
+    tenders: { total: 0, pending: 0, approved: 0, rejected: 0 },
+    qos: { total: 0, pending: 0, approved: 0, rejected: 0 },
+  });
+  const [systemStatsLoading, setSystemStatsLoading] = useState(false);
   
   const { toast } = useToast();
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -99,9 +107,10 @@ const AdminDashboard = () => {
       return;
     }
     refreshData();
-    // Load users if superadmin
+    // Load users and system stats if superadmin
     if (user.adminLevel === 'superadmin') {
       loadUsers();
+      loadSystemStats();
     }
   }, [user, navigate]);
 
@@ -141,6 +150,44 @@ const AdminDashboard = () => {
       });
     } finally {
       setUserLoading(false);
+    }
+  };
+
+  const loadSystemStats = async () => {
+    setSystemStatsLoading(true);
+    try {
+      const depts = ['licensing', 'complaints', 'tenders', 'qos'];
+      const statsData = {};
+
+      for (const dept of depts) {
+        try {
+          console.log(`Fetching stats for department: ${dept}`);
+          const data = await adminApi.getAdminStats(dept);
+          console.log(`✓ ${dept} stats:`, data);
+          
+          statsData[dept] = {
+            total: data.total || 0,
+            pending: (data.pending || 0) + (data.underReview || 0),
+            approved: data.approved || 0,
+            rejected: data.rejected || 0,
+          };
+        } catch (error) {
+          console.error(`✗ Failed to load ${dept} stats:`, error.message);
+          statsData[dept] = { total: 0, pending: 0, approved: 0, rejected: 0 };
+        }
+      }
+
+      console.log('Final system stats:', statsData);
+      setDepartmentStats(statsData);
+    } catch (error) {
+      console.error('Failed to load system stats:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load system statistics',
+        variant: 'destructive',
+      });
+    } finally {
+      setSystemStatsLoading(false);
     }
   };
 
@@ -800,7 +847,218 @@ const AdminDashboard = () => {
         {activeView === 'dashboard' && (
           /* Dashboard View - Always visible */
           <>
-            {user?.adminLevel !== 'superadmin' && !user?.department ? (
+            {user?.adminLevel === 'superadmin' ? (
+              /* Superadmin Dashboard */
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                  <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-500 font-medium">Total Users</p>
+                          <p className="text-3xl font-bold text-slate-900 mt-1">{userStats.totalUsers}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <Users className="h-6 w-6 text-slate-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-500 font-medium">Admin Users</p>
+                          <p className="text-3xl font-bold text-blue-600 mt-1">{userStats.adminCount}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Shield className="h-6 w-6 text-blue-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-500 font-medium">Citizen Users</p>
+                          <p className="text-3xl font-bold text-teal-600 mt-1">{userStats.citizenCount}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-lg bg-teal-100 flex items-center justify-center">
+                          <Users className="h-6 w-6 text-teal-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* System Charts */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-slate-900">System Analytics</h2>
+                    <Button
+                      onClick={loadSystemStats}
+                      disabled={systemStatsLoading}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      {systemStatsLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <BarChart3 className="h-4 w-4" />
+                      )}
+                      Refresh Data
+                    </Button>
+                  </div>
+                  
+                  {systemStatsLoading ? (
+                    <Card className="bg-white border-0 shadow-md">
+                      <CardContent className="py-12 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-[#003366] mx-auto" />
+                        <p className="text-slate-500 mt-4">Loading system analytics...</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Applications by Department */}
+                      <Card className="bg-white border-0 shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">Applications by Department</CardTitle>
+                          <CardDescription>Total submissions per department</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={[
+                              { name: 'Licensing', value: departmentStats.licensing?.total || 0, fill: '#3b82f6' },
+                              { name: 'Complaints', value: departmentStats.complaints?.total || 0, fill: '#f97316' },
+                              { name: 'Tenders', value: departmentStats.tenders?.total || 0, fill: '#10b981' },
+                              { name: 'QoS', value: departmentStats.qos?.total || 0, fill: '#a855f7' },
+                            ]}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis />
+                              <Tooltip />
+                              <Bar dataKey="value" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Applications by Status */}
+                      <Card className="bg-white border-0 shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">Applications by Status</CardTitle>
+                          <CardDescription>Overall submission status distribution</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={[
+                                  { 
+                                    name: 'Pending', 
+                                    value: (departmentStats.licensing?.pending || 0) + (departmentStats.complaints?.pending || 0) + (departmentStats.tenders?.pending || 0) + (departmentStats.qos?.pending || 0),
+                                    fill: '#f59e0b'
+                                  },
+                                  { 
+                                    name: 'Approved', 
+                                    value: (departmentStats.licensing?.approved || 0) + (departmentStats.complaints?.approved || 0) + (departmentStats.tenders?.approved || 0) + (departmentStats.qos?.approved || 0),
+                                    fill: '#10b981'
+                                  },
+                                  { 
+                                    name: 'Rejected', 
+                                    value: (departmentStats.licensing?.rejected || 0) + (departmentStats.complaints?.rejected || 0) + (departmentStats.tenders?.rejected || 0) + (departmentStats.qos?.rejected || 0),
+                                    fill: '#ef4444'
+                                  },
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, value }) => `${name}: ${value}`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                <Cell fill="#f59e0b" />
+                                <Cell fill="#10b981" />
+                                <Cell fill="#ef4444" />
+                              </Pie>
+                              <Tooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* User Distribution */}
+                      <Card className="bg-white border-0 shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">User Distribution</CardTitle>
+                          <CardDescription>System users by type</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={[
+                                  { name: 'Admin Users', value: userStats.adminCount, fill: '#3b82f6' },
+                                  { name: 'Citizen Users', value: userStats.citizenCount, fill: '#14b8a6' },
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, value }) => `${name}: ${value}`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                <Cell fill="#3b82f6" />
+                                <Cell fill="#14b8a6" />
+                              </Pie>
+                              <Tooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Department Status Breakdown */}
+                      <Card className="bg-white border-0 shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">Department Status Summary</CardTitle>
+                          <CardDescription>Status breakdown by department</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {Object.entries(departmentStats).map(([dept, stats]) => (
+                            <div key={dept} className="border-b border-slate-100 pb-4 last:border-b-0">
+                              <div className="flex justify-between items-center mb-2">
+                                <h4 className="font-semibold text-slate-900 capitalize">{dept}</h4>
+                                <span className="text-sm font-bold text-slate-600">{stats.total} total</span>
+                              </div>
+                              <div className="flex gap-2 text-xs">
+                                <div className="flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                                  <span className="text-slate-600">Pending: {stats.pending}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                  <span className="text-slate-600">Approved: {stats.approved}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                  <span className="text-slate-600">Rejected: {stats.rejected}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : user?.adminLevel === 'admin' && !user?.department ? (
               <Card className="border-0 shadow-md">
                 <CardContent className="py-16 text-center">
                   <AlertCircle className="h-16 w-16 text-slate-300 mx-auto mb-4" />
@@ -815,9 +1073,7 @@ const AdminDashboard = () => {
                 <BarChart3 className="h-16 w-16 text-slate-300 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome to Dashboard</h2>
                 <p className="text-slate-500 mb-6">
-                  {user?.adminLevel === 'superadmin' 
-                    ? 'Select a view from the sidebar to manage your system.' 
-                    : 'Navigate to Submissions to review current submissions.'}
+                  Navigate to Submissions to review current submissions.
                 </p>
               </div>
             )}
