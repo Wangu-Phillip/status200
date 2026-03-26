@@ -74,42 +74,78 @@ export default function AboutPage() {
       </nav>
 
       {/* Hero Section with Parallax */}
-      <section ref={heroRef} className="relative min-h-[80vh] flex items-center overflow-hidden pt-16">
+      <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden pt-16">
         <motion.div 
           className="absolute inset-0 bg-[#0A192F]"
           style={{ y }}
         >
-          {/* Animated Background Elements */}
+          {/* Enhanced Animated Background Elements */}
           <div className="absolute inset-0 overflow-hidden">
-            {[...Array(20)].map((_, i) => (
+            {[...Array(30)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute rounded-full bg-white/5"
+                className="absolute rounded-full bg-[#75B2DD]/10"
                 style={{
-                  width: Math.random() * 300 + 50,
-                  height: Math.random() * 300 + 50,
+                  width: Math.random() * 200 + 50,
+                  height: Math.random() * 200 + 50,
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
                 }}
                 animate={{
-                  y: [0, -30, 0],
-                  scale: [1, 1.1, 1],
-                  opacity: [0.1, 0.2, 0.1]
+                  y: [0, -40, 0],
+                  x: [0, 20, 0],
+                  scale: [1, 1.2, 1],
+                  opacity: [0.05, 0.15, 0.05]
                 }}
                 transition={{
-                  duration: 5 + Math.random() * 5,
+                  duration: 8 + Math.random() * 10,
                   repeat: Infinity,
-                  delay: Math.random() * 2
+                  ease: "easeInOut",
+                  delay: Math.random() * 5
+                }}
+              />
+            ))}
+            
+            {/* Pulsing Core Dots */}
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={`pulse-${i}`}
+                className="absolute w-1 h-1 bg-[#75B2DD] rounded-full shadow-[0_0_10px_#75B2DD]"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  scale: [0, 4, 0],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  delay: i * 1.5
                 }}
               />
             ))}
           </div>
           
+          {/* Animated Connecting Lines (SVG) */}
+          <svg className="absolute inset-0 w-full h-full opacity-10" pointerEvents="none">
+            <motion.path
+              d="M0 100 Q 250 50 500 100 T 1000 100"
+              stroke="#75B2DD"
+              strokeWidth="2"
+              fill="none"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            />
+          </svg>
+          
           {/* Grid Pattern */}
           <div className="absolute inset-0" style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px'
+            backgroundImage: `linear-gradient(rgba(117,178,221,0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(117,178,221,0.05) 1px, transparent 1px)`,
+            backgroundSize: '80px 80px'
           }} />
         </motion.div>
 
@@ -117,64 +153,118 @@ export default function AboutPage() {
           className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
           style={{ opacity }}
         >
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
-              initial={{ opacity: 0, x: -50 }}
+              initial={{ opacity: 0, x: -100 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 1, ease: "easeOut" }}
             >
-              <motion.p 
-                className="text-[#75B2DD] text-xs uppercase tracking-[0.3em] font-semibold mb-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="inline-block px-4 py-1.5 bg-[#75B2DD]/10 border border-[#75B2DD]/20 rounded-full mb-6"
               >
-                About BOCRA
-              </motion.p>
+                <p className="text-[#75B2DD] text-[10px] uppercase tracking-[0.4em] font-bold">
+                  Botswana Communications Regulatory Authority
+                </p>
+              </motion.div>
+              
               <motion.h1 
-                className="font-heading font-black text-4xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-tight mb-6"
-                initial={{ opacity: 0, y: 20 }}
+                className="font-heading font-black text-5xl sm:text-6xl lg:text-7xl text-white tracking-tight leading-[1.1] mb-8"
+                initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
               >
                 Connecting<br />
-                <span className="text-[#75B2DD]">Botswana's</span><br />
+                <motion.span 
+                  className="text-transparent bg-clip-text bg-gradient-to-r from-[#75B2DD] via-white to-[#75B2DD] bg-[length:200%_auto]"
+                  animate={{ backgroundPosition: ["0% center", "200% center"] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                >
+                  Botswana's
+                </motion.span><br />
                 Digital Future
               </motion.h1>
+              
               <motion.p 
-                className="text-slate-300 text-lg leading-relaxed max-w-xl"
+                className="text-slate-400 text-xl leading-relaxed max-w-xl mb-10"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
               >
-                The Botswana Communications Regulatory Authority (BOCRA) is the independent regulator 
-                for the communications sector in Botswana, ensuring fair competition, consumer protection, 
-                and national connectivity.
+                Ensuring fair competition, consumer protection, and national 
+                connectivity as the independent regulator for the communications sector.
               </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="flex flex-wrap gap-4"
+              >
+                <Button 
+                  size="lg" 
+                  className="bg-[#75B2DD] hover:bg-[#5a9ac9] text-[#0A192F] font-bold rounded-sm px-8"
+                >
+                  Explore Services
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="border-white/20 text-white hover:bg-white/5 rounded-sm px-8"
+                >
+                  Learn More
+                </Button>
+              </motion.div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="relative"
+              initial={{ opacity: 0, scale: 0.5, rotateY: 30 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+              transition={{ duration: 1.2, delay: 0.4, type: "spring", damping: 15 }}
+              className="relative perspective-1000"
             >
-              <div className="relative">
-                {/* Glowing effect */}
+              {/* Floating Tech Icons Decor */}
+              {[Wifi, Globe, Radio, Shield].map((Icon, i) => (
                 <motion.div
-                  className="absolute inset-0 bg-[#75B2DD]/20 blur-3xl rounded-full"
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.3, 0.5, 0.3]
+                  key={i}
+                  className="absolute p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl z-20 shadow-2xl"
+                  style={{
+                    left: i === 0 ? '-10%' : i === 1 ? '90%' : i === 2 ? '0%' : '80%',
+                    top: i === 0 ? '10%' : i === 1 ? '20%' : i === 2 ? '70%' : '80%',
                   }}
-                  transition={{ duration: 4, repeat: Infinity }}
-                />
+                  animate={{
+                    y: [0, -20, 0],
+                    rotate: [0, 10, -10, 0]
+                  }}
+                  transition={{
+                    duration: 5 + i,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.5
+                  }}
+                >
+                  <Icon className="w-8 h-8 text-[#75B2DD]" />
+                </motion.div>
+              ))}
+
+              <motion.div
+                className="relative z-10"
+                animate={{ 
+                  y: [0, -15, 0],
+                  scale: [1, 1.02, 1]
+                }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              >
+                {/* Glowing Aura behind logo */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#75B2DD]/30 to-purple-500/10 blur-[100px] rounded-full" />
                 <img 
                   src={BOCRA_LOGO} 
                   alt="BOCRA Logo" 
-                  className="relative z-10 w-full max-w-md mx-auto drop-shadow-2xl"
+                  className="relative z-10 w-full max-w-lg mx-auto drop-shadow-[0_20px_50px_rgba(117,178,221,0.2)]"
                 />
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         </motion.div>
