@@ -197,7 +197,7 @@ export default function AboutPage() {
                   size="lg" 
                   className="border-white/20 text-white hover:bg-white/5 rounded-sm px-8"
                 >
-                  Learn More
+                  Explore Our History
                 </Button>
               </motion.div>
             </motion.div>

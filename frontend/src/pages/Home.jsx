@@ -134,7 +134,7 @@ const Home = () => {
               <div>
                 <p className="section-kicker mb-3">Botswana Communications Regulatory Authority</p>
                 <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.08] hero-title">
-                  Access BOCRA&apos; <br className="hidden sm:block" />
+                  Access BOCRA<br className="hidden sm:block" />
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#003366] to-[#0A4D8C]">
                     Services In Minutes
                   </span>
@@ -240,7 +240,7 @@ const Home = () => {
                     <h3 className="text-lg font-bold text-slate-900 mb-3">{mandate.title}</h3>
                     <p className="text-slate-600 leading-relaxed text-sm mb-4">{mandate.description}</p>
                     <Link to="/mandate" className="inline-flex items-center text-sm font-semibold text-[#003366] hover:text-[#F47920] transition-colors">
-                      Learn More <ArrowRight className="ml-1 w-4 h-4" />
+                      Explore Sector <ArrowRight className="ml-1 w-4 h-4" />
                     </Link>
                   </div>
                 </div>
@@ -391,7 +391,7 @@ const Home = () => {
 
                     <p className="text-slate-600 line-clamp-2 mb-4">{news.excerpt}</p>
                     <Link to="/media" className="inline-flex items-center text-sm font-semibold text-[#003366] hover:text-[#F47920] transition-colors">
-                      Learn More <ArrowRight className="ml-1 w-4 h-4" />
+                      Read Full Update <ArrowRight className="ml-1 w-4 h-4" />
                     </Link>
                   </div>
                 </div>
