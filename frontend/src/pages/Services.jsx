@@ -36,9 +36,9 @@ const serviceCategories = [
     color: "from-[#16A34A] to-[#0D5A2E]",
     accent: "#16A34A",
     items: [
-      { id: "qos", title: "QoS Reporting", icon: BarChart, link: "/dashboard" },
-      { id: "live", title: "Live QoS Monitor", icon: Monitor, link: "/dashboard" },
-      { id: "analytics", title: "BOCRA Analytics", icon: Database, link: "/dashboard" }
+      { id: "qos", title: "QoS Reporting", icon: BarChart, link: "/qos-reporting" },
+      { id: "live", title: "Live QoS Monitor", icon: Monitor, link: "/live-qos" },
+      { id: "analytics", title: "BOCRA Analytics", icon: Database, link: "/analytics" }
     ]
   },
   {
@@ -303,12 +303,6 @@ export default function ServicesPage() {
         </motion.div>
       </main>
 
-      {/* Footer Branding */}
-      <footer className="relative z-10 py-16 text-center opacity-50">
-        <p className="text-slate-900 font-black tracking-[0.4em] text-[9px] uppercase">
-          © {new Date().getFullYear()} Botswana Communications Regulatory Authority
-        </p>
-      </footer>
     </div>
   );
 }

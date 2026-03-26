@@ -134,7 +134,7 @@ const Home = () => {
               <div>
                 <p className="section-kicker mb-3">Botswana Communications Regulatory Authority</p>
                 <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.08] hero-title">
-                  Access BOCRA&apos;s <br className="hidden sm:block" />
+                  Access BOCRA&apos; <br className="hidden sm:block" />
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#003366] to-[#0A4D8C]">
                     Services In Minutes
                   </span>

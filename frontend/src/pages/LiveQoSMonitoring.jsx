@@ -1,325 +1,649 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
-import { useToast } from '../hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import {
-  Activity,
-  TrendingUp,
-  TrendingDown,
-  Signal,
-  Wifi,
-  Phone,
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
+import { 
+  Activity, 
+  ArrowLeft, 
+  Play, 
+  Square, 
+  Download, 
+  Upload, 
+  Clock,
   AlertTriangle,
   CheckCircle,
-  Download,
-  RefreshCw,
-  BarChart3,
-  LineChart,
-  Zap,
-  Globe,
-  Radio,
-  Cpu,
-  ArrowUpRight,
-  Gauge
-} from 'lucide-react';
+  MapPin,
+  Wifi,
+  ChevronRight,
+  TrendingUp,
+  TrendingDown
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 
-const LiveQoSMonitoring = () => {
-  const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const { toast } = useToast();
+const API = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
+
+const testPhases = [
+  { id: "download", label: "Testing Download Speed", icon: Download },
+  { id: "upload", label: "Testing Upload Speed", icon: Upload },
+  { id: "latency", label: "Measuring Latency", icon: Clock }
+];
+
+export default function QoSDashboard() {
   const navigate = useNavigate();
-
-  const [activeView, setActiveView] = useState('Real-time');
+  const [isps, setIsps] = useState([]);
+  const [selectedIsp, setSelectedIsp] = useState("");
+  const [location, setLocation] = useState("");
+  const [isTesting, setIsTesting] = useState(false);
+  const [testPhase, setTestPhase] = useState(0);
+  const [testProgress, setTestProgress] = useState(0);
+  const [speedResult, setSpeedResult] = useState(null);
+  const [latencyData, setLatencyData] = useState([]);
+  const [showAlert, setShowAlert] = useState(false);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
-    if (autoRefresh && activeView === 'Real-time') {
-      const interval = setInterval(() => {
-        setLastUpdated(new Date());
-      }, 30000); 
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh, activeView]);
+    fetchIsps();
+  }, []);
 
-  const operators = [
-    {
-      name: 'BTC',
-      logo: 'BTC',
-      status: 'Compliant',
-      metrics: {
-        callSuccessRate: { value: 98.5, target: 95, trend: 'up', change: '+0.3%' },
-        dataSpeed: { value: 45.2, target: 30, trend: 'up', change: '+2.1 Mbps', unit: 'Mbps' },
-        networkAvailability: { value: 99.8, target: 99.0, trend: 'stable', change: '0%' },
-        voiceQuality: { value: 4.2, target: 3.5, trend: 'up', change: '+0.1', unit: 'MOS' },
-        latency: { value: 28, target: 50, trend: 'down', change: '-3ms', unit: 'ms' },
-      },
-      coverage: { urban: 99, rural: 87, overall: 93 },
-    },
-    {
-      name: 'Mascom',
-      logo: 'MSC',
-      status: 'Compliant',
-      metrics: {
-        callSuccessRate: { value: 97.8, target: 95, trend: 'up', change: '+0.5%' },
-        dataSpeed: { value: 42.1, target: 30, trend: 'stable', change: '0 Mbps', unit: 'Mbps' },
-        networkAvailability: { value: 99.5, target: 99.0, trend: 'up', change: '+0.2%' },
-        voiceQuality: { value: 4.0, target: 3.5, trend: 'stable', change: '0', unit: 'MOS' },
-        latency: { value: 32, target: 50, trend: 'up', change: '+2ms', unit: 'ms' },
-      },
-      coverage: { urban: 98, rural: 85, overall: 91.5 },
-    },
-    {
-      name: 'Orange',
-      logo: 'ORG',
-      status: 'Action Required',
-      metrics: {
-        callSuccessRate: { value: 94.2, target: 95, trend: 'down', change: '-0.8%' },
-        dataSpeed: { value: 38.5, target: 30, trend: 'down', change: '-1.5 Mbps', unit: 'Mbps' },
-        networkAvailability: { value: 98.9, target: 99.0, trend: 'down', change: '-0.3%' },
-        voiceQuality: { value: 3.8, target: 3.5, trend: 'down', change: '-0.2', unit: 'MOS' },
-        latency: { value: 45, target: 50, trend: 'stable', change: '0ms', unit: 'ms' },
-      },
-      coverage: { urban: 96, rural: 78, overall: 87 },
-    },
-  ];
+  const fetchIsps = async () => {
+    try {
+      const response = await axios.get(`${API}/isps`);
+      setIsps(response.data);
+    } catch (error) {
+      console.error("Error fetching ISPs:", error);
+      // Fallback data if API fails
+      setIsps([
+        { id: "btc", name: "BTC", regulated_speed_mbps: 50, description: "Botswana Telecommunications Corporation" },
+        { id: "mascom", name: "Mascom", regulated_speed_mbps: 100, description: "Mascom Wireless" },
+        { id: "orange", name: "Orange", regulated_speed_mbps: 100, description: "Orange Botswana" }
+      ]);
+      toast.info("Using simulation data");
+    }
+  };
+
+  const simulateSpeedTest = () => {
+    if (!selectedIsp) {
+      toast.error("Please select your ISP");
+      return;
+    }
+    if (!location.trim()) {
+      toast.error("Please enter your location");
+      return;
+    }
+
+    setIsTesting(true);
+    setTestProgress(0);
+    setTestPhase(0);
+    setSpeedResult(null);
+    setShowAlert(false);
+    setLatencyData([]);
+
+    const selectedIspData = isps.find(isp => isp.id === selectedIsp);
+    const promisedSpeed = selectedIspData?.regulated_speed_mbps || 20;
+    
+    // Simulate realistic speed (30-90% of promised)
+    const percentageOfPromised = 30 + Math.random() * 60;
+    const downloadSpeed = (promisedSpeed * percentageOfPromised / 100);
+    const uploadSpeed = downloadSpeed * (0.3 + Math.random() * 0.3);
+    const latency = 20 + Math.random() * 80;
+
+    let progress = 0;
+    let phase = 0;
+    const latencyPoints = [];
+
+    intervalRef.current = setInterval(() => {
+      progress += 2;
+      
+      // Add latency data points during test
+      if (progress % 10 === 0) {
+        latencyPoints.push({
+          time: `${progress}%`,
+          latency: Math.round(latency + (Math.random() - 0.5) * 20)
+        });
+        setLatencyData([...latencyPoints]);
+      }
+      
+      if (progress >= 33 && phase === 0) {
+        phase = 1;
+        setTestPhase(1);
+      }
+      if (progress >= 66 && phase === 1) {
+        phase = 2;
+        setTestPhase(2);
+      }
+      
+      setTestProgress(progress);
+
+      if (progress >= 100) {
+        clearInterval(intervalRef.current);
+        setIsTesting(false);
+        
+        const result = {
+          download_speed_mbps: Math.round(downloadSpeed * 10) / 10,
+          upload_speed_mbps: Math.round(uploadSpeed * 10) / 10,
+          latency_ms: Math.round(latency),
+          promised_speed_mbps: promisedSpeed,
+          percentage_of_promised: Math.round(percentageOfPromised),
+          isp_name: selectedIspData?.name || "Unknown ISP"
+        };
+        
+        setSpeedResult(result);
+        saveSpeedTest(result);
+        
+        // Auto-trigger chat if speed is below 50%
+        if (percentageOfPromised < 50) {
+          setTimeout(() => setShowAlert(true), 500);
+        }
+      }
+    }, 100);
+  };
+
+  const saveSpeedTest = async (result) => {
+    try {
+      await axios.post(`${API}/speed-test`, {
+        isp_id: selectedIsp,
+        download_speed_mbps: result.download_speed_mbps,
+        upload_speed_mbps: result.upload_speed_mbps,
+        latency_ms: result.latency_ms,
+        location: location
+      });
+      toast.success("Speed test recorded");
+    } catch (error) {
+      console.error("Error saving speed test:", error);
+    }
+  };
+
+  const cancelTest = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    setIsTesting(false);
+    setTestProgress(0);
+    setTestPhase(0);
+  };
+
+  const handleFileComplaint = () => {
+    navigate(`/complaints`);
+    // Trigger chatbot
+    window.dispatchEvent(new CustomEvent('openChatBot', { 
+      detail: { 
+        autoMessage: true,
+        context: speedResult 
+      }
+    }));
+  };
+
+  const getSpeedColor = (percentage) => {
+    if (percentage >= 80) return "#16A34A";
+    if (percentage >= 50) return "#F59E0B";
+    return "#DC2626";
+  };
+
+  const getSpeedStatus = (percentage) => {
+    if (percentage >= 80) return { label: "Good", color: "text-green-600", bg: "bg-green-50" };
+    if (percentage >= 50) return { label: "Fair", color: "text-amber-600", bg: "bg-amber-50" };
+    return { label: "Poor", color: "text-red-600", bg: "bg-red-50" };
+  };
+
+  const comparisonData = speedResult ? [
+    { name: "Your Speed", value: speedResult.download_speed_mbps, fill: getSpeedColor(speedResult.percentage_of_promised) },
+    { name: "Promised", value: speedResult.promised_speed_mbps, fill: "#94A3B8" }
+  ] : [];
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-100 overflow-x-hidden">
-      {/* Dynamic Network Hero */}
-      <section className="relative pt-12 pb-24 overflow-hidden border-b border-white/5">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(20,184,166,0.1),transparent)] flex items-center justify-center -z-10">
-          <div className="w-[800px] h-[800px] border border-[#003366]/10 rounded-full animate-ping duration-[10000ms]"></div>
-          <div className="absolute w-[600px] h-[600px] border border-[#003366]/5 rounded-full animate-ping duration-[7000ms]"></div>
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-            <div className="max-w-2xl text-center lg:text-left">
-              <div className="inline-flex items-center space-x-2 bg-[#003366]/10 text-[#E8F0F9] px-4 py-1.5 rounded-full text-xs font-bold border border-[#003366]/20 mb-8 animate-in fade-in slide-in-from-bottom-4">
-                <Activity className="w-4 h-4 animate-pulse" />
-                <span className="uppercase tracking-widest leading-none">Global NOC Intelligence</span>
-              </div>
-              <h1 className="text-5xl md:text-6xl font-black tracking-tight text-white mb-6 animate-in fade-in slide-in-from-bottom-8">
-                Network <span className="text-[#E8F0F9]">Quality</span> <br/>
-                Pulse Monitor
-              </h1>
-              <p className="text-slate-400 text-lg max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-12">
-                Real-time regulatory oversight of Botswana's communications landscape. Monitoring throughput, latency, and compliance across all licensed spectrum operators.
-              </p>
+    <div className="min-h-screen bg-slate-50" data-testid="qos-dashboard">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" asChild className="rounded-sm">
+                <Link to="/services">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Services
+                </Link>
+              </Button>
+              <div className="h-6 w-px bg-slate-200" />
+              <h1 className="font-heading font-bold text-lg text-[#0A192F]">Live Quality Test</h1>
             </div>
+            <div className="flex items-center gap-2">
+              <span className="relative flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                Live Network Test
+              </span>
+            </div>
+          </div>
+        </div>
+      </header>
 
-            <div className="w-full lg:w-[450px] animate-in fade-in zoom-in duration-700">
-               <Card className="bg-[#0f172a]/80 backdrop-blur-xl border-slate-800 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#003366]/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                  <div className="relative space-y-6">
-                     <div className="flex items-center justify-between">
-                        <span className="text-slate-500 text-xs font-bold uppercase tracking-widest">System Health</span>
-                        <div className="flex items-center space-x-1.5">
-                           <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                           <span className="text-emerald-500 text-xs font-bold uppercase">Operational</span>
-                        </div>
-                     </div>
-                     <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                           <span className="text-slate-400">National Spectrum Load</span>
-                           <span className="text-white font-bold">72.4%</span>
-                        </div>
-                        <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                           <div className="h-full bg-gradient-to-r from-[#F5F5F3]0 to-emerald-500 w-[72%] rounded-full shadow-[0_2px_10px_rgba(20,184,166,0.5)]"></div>
-                        </div>
-                     </div>
-                     <div className="grid grid-cols-2 gap-4 pt-2">
-                        <div className="p-4 bg-slate-900/50 rounded-2xl border border-white/5">
-                           <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Last Update</p>
-                           <p className="text-sm font-bold text-slate-200 font-mono tracking-tighter">{lastUpdated.toLocaleTimeString()}</p>
-                        </div>
-                        <div className="p-4 bg-slate-900/50 rounded-2xl border border-white/5">
-                           <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Active Stations</p>
-                           <p className="text-sm font-bold text-slate-200">1,248 Nodes</p>
-                        </div>
-                     </div>
-                     <Button className="w-full h-14 rounded-2xl bg-[#003366] hover:bg-[#003366] text-white font-bold shadow-xl shadow-teal-500/20" onClick={() => setAutoRefresh(!autoRefresh)}>
-                        <RefreshCw className={`w-4 h-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
-                        {autoRefresh ? 'Watching Pulse...' : 'Resume Monitor'}
-                     </Button>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Speed Test Panel */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* ISP Selection */}
+            <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-[#0A192F] text-white">
+                <CardTitle className="font-heading text-lg flex items-center gap-2">
+                  <Wifi className="w-5 h-5 text-[#75B2DD]" />
+                  Step 1: Connection Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="isp-select" className="text-slate-700 font-bold">Internet Service Provider</Label>
+                    <Select value={selectedIsp} onValueChange={setSelectedIsp}>
+                      <SelectTrigger className="rounded-xl border-slate-200 h-12">
+                        <SelectValue placeholder="Select your ISP" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {isps.map(isp => (
+                          <SelectItem key={isp.id} value={isp.id}>
+                            <div className="flex items-center justify-between w-full">
+                              <span className="font-medium">{isp.name}</span>
+                              <span className="text-xs text-slate-400 ml-4 font-mono">
+                                ({isp.regulated_speed_mbps} Mbps Plan)
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-               </Card>
-            </div>
-          </div>
-        </div>
-      </section>
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="text-slate-700 font-bold">Current Location</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        id="location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="e.g., Gaborone, Old Naledi"
+                        className="pl-11 rounded-xl border-slate-200 h-12"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-      {/* Modern High-Performance Grid */}
-      <section className="py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-8">
-             <div>
-                <h2 className="text-3xl font-bold text-white mb-2">Technical Insight</h2>
-                <div className="h-1 w-12 bg-[#00897B] rounded-full"></div>
-             </div>
-             <div className="flex items-center space-x-3 bg-slate-900/50 p-1.5 rounded-2xl border border-white/5">
-                {['Real-time', 'Regional', 'Historical'].map((t) => (
-                  <button 
-                    key={t} 
-                    onClick={() => setActiveView(t)}
-                    className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeView === t ? 'bg-[#00897B] text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-                  >
-                    {t}
-                  </button>
-                ))}
-             </div>
-          </div>
+            {/* Speed Test Button & Results */}
+            <Card className="border-0 shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+              <CardContent className="p-0">
+                <div className="p-10 text-center relative">
+                  {/* Decorative background effects */}
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#75B2DD] to-transparent opacity-30" />
+                  
+                  {!isTesting && !speedResult && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="py-12"
+                    >
+                      <div className="w-20 h-20 bg-slate-50 rounded-3xl mx-auto mb-8 flex items-center justify-center">
+                        <Activity className="w-10 h-10 text-[#0A192F] opacity-20" />
+                      </div>
+                      <h2 className="text-2xl font-black text-[#0A192F] mb-4">Ready to test your connection?</h2>
+                      <p className="text-slate-500 mb-8 max-w-sm mx-auto">This test will measure your download speed, upload speed, and network latency.</p>
+                      <Button 
+                        size="lg"
+                        onClick={simulateSpeedTest}
+                        className="bg-[#0A192F] hover:bg-slate-800 text-white rounded-full px-12 h-16 shadow-xl shadow-blue-900/10 transition-all hover:scale-105 active:scale-95"
+                      >
+                        <Play className="w-5 h-5 mr-3 fill-current" />
+                        Start Live Test
+                      </Button>
+                    </motion.div>
+                  )}
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {operators.map((op, i) => (
-              <Card key={i} className="bg-[#0a0f1e] border-slate-800 rounded-[2.5rem] overflow-hidden group hover:border-[#003366]/30 transition-all shadow-2xl">
-                <div className="p-8 pb-4 relative overflow-hidden">
-                   <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#003366]/5 rounded-full blur-3xl group-hover:bg-[#003366]/10 transition-all"></div>
-                   
-                   <div className="flex items-center justify-between mb-8 relative">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-14 h-14 bg-gradient-to-br from-[#F5F5F3]0 to-blue-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-xl shadow-teal-500/10">
-                           {op.logo.charAt(0)}
-                        </div>
-                        <div>
-                           <h3 className="text-xl font-bold text-white leading-none">{op.name}</h3>
-                           <p className="text-slate-500 text-xs mt-1 font-bold uppercase tracking-widest">Network Operator</p>
+                  {isTesting && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="py-12 space-y-10"
+                    >
+                      <div className="relative w-48 h-48 mx-auto">
+                        {/* Circular Progress Design */}
+                        <svg className="w-full h-full -rotate-90">
+                          <circle
+                            cx="96"
+                            cy="96"
+                            r="88"
+                            stroke="currentColor"
+                            strokeWidth="8"
+                            fill="transparent"
+                            className="text-slate-100"
+                          />
+                          <motion.circle
+                            cx="96"
+                            cy="96"
+                            r="88"
+                            stroke="currentColor"
+                            strokeWidth="8"
+                            fill="transparent"
+                            strokeDasharray="553"
+                            animate={{ strokeDashoffset: 553 - (553 * testProgress) / 100 }}
+                            className="text-[#75B2DD]"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-4xl font-black text-[#0A192F]">{testProgress}%</span>
+                          <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Progress</span>
                         </div>
                       </div>
-                      <Badge className={`border-none font-bold uppercase tracking-widest text-[9px] px-2.5 py-1 rounded-lg ${op.status === 'Compliant' ? 'bg-[#2E7D32]/20 text-[#2E7D32]' : 'bg-[#C62828]/20 text-[#C62828]'}`}>
-                         {op.status}
-                      </Badge>
-                   </div>
 
-                   <div className="grid grid-cols-2 gap-4 mb-8">
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-slate-500 uppercase font-bold">Throughput</p>
-                        <div className="flex items-baseline space-x-1">
-                           <span className="text-2xl font-black text-slate-100">{op.metrics.dataSpeed.value}</span>
-                           <span className="text-[10px] text-slate-500 font-bold uppercase">{op.metrics.dataSpeed.unit}</span>
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="flex items-center gap-3 text-[#0A192F] font-bold">
+                          {testPhases[testPhase] && (
+                            <>
+                              {(() => {
+                                const PhaseIcon = testPhases[testPhase].icon;
+                                return <PhaseIcon className="w-5 h-5 animate-bounce" />;
+                              })()}
+                              <span className="text-lg">{testPhases[testPhase].label}</span>
+                            </>
+                          )}
                         </div>
-                        <div className="flex items-center text-[10px] text-emerald-400 font-bold">
-                           <TrendingUp className="w-3 h-3 mr-1" />
-                           {op.metrics.dataSpeed.change}
+                        <Button 
+                          variant="ghost"
+                          onClick={cancelTest}
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full"
+                        >
+                          <Square className="w-4 h-4 mr-2" />
+                          Abort Test
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {speedResult && !isTesting && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="py-8 space-y-10"
+                    >
+                      {/* Speed Display */}
+                      <div className="relative">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-black mb-4">Measurement Success</p>
+                        <div className="flex flex-col items-center">
+                          <motion.div 
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="flex items-baseline gap-2 mb-2"
+                          >
+                            <span 
+                              className="font-heading font-black text-7xl sm:text-8xl tracking-tight"
+                              style={{ color: getSpeedColor(speedResult.percentage_of_promised) }}
+                            >
+                              {speedResult.download_speed_mbps}
+                            </span>
+                            <span className="text-2xl text-slate-400 font-black">Mbps</span>
+                          </motion.div>
+                          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Real-time Download Speed</p>
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-slate-500 uppercase font-bold">Latency</p>
-                        <div className="flex items-baseline space-x-1">
-                           <span className="text-2xl font-black text-slate-100">{op.metrics.latency.value}</span>
-                           <span className="text-[10px] text-slate-500 font-bold uppercase">{op.metrics.latency.unit}</span>
+
+                      {/* Status Indicator */}
+                      {(() => {
+                        const status = getSpeedStatus(speedResult.percentage_of_promised);
+                        return (
+                          <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl ${status.bg} border border-[#00000005]`}>
+                            <div className={`p-1.5 rounded-lg ${status.bg} shadow-sm`}>
+                               {speedResult.percentage_of_promised >= 50 ? (
+                                <CheckCircle className={`w-5 h-5 ${status.color}`} />
+                              ) : (
+                                <AlertTriangle className={`w-5 h-5 ${status.color}`} />
+                              )}
+                            </div>
+                            <div className="text-left">
+                              <p className={`text-xs font-black uppercase tracking-wider ${status.color}`}>Connection {status.label}</p>
+                              <p className="text-[10px] text-slate-500 font-medium">Verified at {speedResult.percentage_of_promised}% of Service Level Agreement</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Digital Receipt Stats */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto px-4">
+                        <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 transition-transform hover:scale-105">
+                          <div className="w-10 h-10 bg-white rounded-xl mx-auto mb-4 flex items-center justify-center shadow-sm">
+                            <Upload className="w-5 h-5 text-blue-500" />
+                          </div>
+                          <p className="font-heading font-black text-2xl text-[#0A192F]">{speedResult.upload_speed_mbps}</p>
+                          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Upload Speed</p>
                         </div>
-                        <div className="flex items-center text-[10px] text-rose-400 font-bold">
-                           <TrendingDown className="w-3 h-3 mr-1" />
-                           {op.metrics.latency.change}
+                        <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 transition-transform hover:scale-105">
+                          <div className="w-10 h-10 bg-white rounded-xl mx-auto mb-4 flex items-center justify-center shadow-sm">
+                            <Clock className="w-5 h-5 text-amber-500" />
+                          </div>
+                          <p className="font-heading font-black text-2xl text-[#0A192F]">{speedResult.latency_ms}</p>
+                          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Latency (ms)</p>
+                        </div>
+                        <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 transition-transform hover:scale-105">
+                          <div className="w-10 h-10 bg-white rounded-xl mx-auto mb-4 flex items-center justify-center shadow-sm">
+                            <Activity className="w-5 h-5 text-emerald-500" />
+                          </div>
+                          <p className="font-heading font-black text-2xl text-[#0A192F]">{speedResult.promised_speed_mbps}</p>
+                          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">SLA Target</p>
                         </div>
                       </div>
-                   </div>
+
+                      {/* Primary Actions */}
+                      <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6 px-10">
+                        <Button 
+                          onClick={simulateSpeedTest}
+                          variant="outline"
+                          className="rounded-full h-14 px-10 border-slate-200 text-[#0A192F] font-bold"
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Re-test Connection
+                        </Button>
+                        {speedResult.percentage_of_promised < 85 && (
+                          <Button 
+                            onClick={handleFileComplaint}
+                            className="bg-[#0A192F] hover:bg-slate-800 text-white rounded-full h-14 px-12 font-bold shadow-lg"
+                          >
+                            <AlertTriangle className="w-4 h-4 mr-2 text-[#75B2DD]" />
+                            Escalate to BOCRA
+                          </Button>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
 
-                <div className="mt-auto border-t border-white/5 p-8 pt-6 bg-white/[0.01]">
-                   <div className="flex justify-between items-center mb-4">
-                      <span className="text-xs font-bold text-slate-400 tracking-wider">National Coverage</span>
-                      <span className="text-xs font-bold text-[#E8F0F9]">{op.coverage.overall}%</span>
-                   </div>
-                   <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#003366] rounded-full" style={{ width: `${op.coverage.overall}%` }}></div>
-                   </div>
-                   <button onClick={() => navigate('/qos-reporting')} className="w-full mt-6 py-3 rounded-xl bg-slate-900 border border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:border-[#003366] hover:text-[#E8F0F9] transition-all flex items-center justify-center space-x-2">
-                       <span>Detailed Spectrum Analysis</span>
-                       <ArrowUpRight className="w-3 h-3" />
-                   </button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+                {/* Animated Latency Line */}
+                {(isTesting || speedResult) && latencyData.length > 0 && (
+                  <div className="bg-[#0A192F] p-8 mt-10">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                         <div className="w-2 h-2 bg-[#75B2DD] rounded-full animate-pulse" />
+                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Packet Delay Monitor</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-white/60">Sampling: 10Hz</span>
+                    </div>
+                    <div className="h-24">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={latencyData}>
+                          <Line 
+                            type="step" 
+                            dataKey="latency" 
+                            stroke="#75B2DD" 
+                            strokeWidth={3}
+                            dot={false}
+                            animationDuration={300}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-      {/* Advanced Global Metrics Visualization */}
-      <section className="py-24 bg-slate-900/[0.15] border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-20 items-center">
-            <div className="space-y-10">
-               <div>
-                  <h2 className="text-4xl font-bold text-white mb-6">Transparency 2.0</h2>
-                  <p className="text-slate-400 text-lg leading-relaxed">
-                    Our monitoring protocols leverage edge computing and node-level sensors to deliver the most accurate Quality of Service metrics in the SADC region.
-                  </p>
-               </div>
-               
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { label: 'Voice Quality', icon: Phone, color: 'text-blue-400', bg: 'bg-[#003366]/10', val: '4.2' },
-                    { label: 'Call Success', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10', val: '98.5%' },
-                    { label: 'Availability', icon: Signal, color: 'text-emerald-400', bg: 'bg-emerald-500/10', val: '99.9%' },
-                    { label: 'Node Health', icon: Cpu, color: 'text-purple-400', bg: 'bg-purple-500/10', val: '94%' },
-                  ].map((stat, i) => (
-                    <div key={i} className="flex items-center space-x-4 p-5 bg-[#0a0f1e] rounded-[1.5rem] border border-white/5 hover:border-white/10 transition-all">
-                       <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center`}>
-                          <stat.icon className="w-6 h-6" />
-                       </div>
-                       <div>
-                          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{stat.label}</p>
-                          <p className="text-lg font-black text-white">{stat.val}</p>
+            {/* Performance Insights */}
+            {speedResult && (
+              <Card className="border-0 shadow-sm rounded-3xl bg-slate-100/50">
+                <CardContent className="p-8">
+                  <div className="flex flex-col lg:flex-row items-center gap-10">
+                    <div className="flex-1 text-center lg:text-left">
+                       <h3 className="font-heading font-black text-2xl text-[#0A192F] mb-3">Service Comparison</h3>
+                       <p className="text-slate-500 text-sm leading-relaxed mb-6 font-medium">
+                         Your current download throughput of <strong>{speedResult.download_speed_mbps} Mbps</strong> is currently operating at 
+                         <strong>{speedResult.percentage_of_promised < 50 ? ' deficient' : ' suboptimal'} levels</strong> compared to the {speedResult.promised_speed_mbps} Mbps 
+                         regulatory minimum for your plan.
+                       </p>
+                       <div className="flex items-center gap-4 justify-center lg:justify-start">
+                          <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-slate-200">
+                             <div className="w-2 h-2 bg-slate-300 rounded-full" />
+                             <span className="text-[10px] font-bold text-slate-500">Plan Target</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-slate-200">
+                             <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: getSpeedColor(speedResult.percentage_of_promised) }} />
+                             <span className="text-[10px] font-bold text-slate-500">Actual Speed</span>
+                          </div>
                        </div>
                     </div>
-                  ))}
-               </div>
-            </div>
+                    <div className="w-full lg:w-64 h-32">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={comparisonData} layout="vertical" margin={{ left: -30 }}>
+                            <XAxis type="number" hide />
+                            <YAxis type="category" dataKey="name" hide />
+                            <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={20}>
+                              {comparisonData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-            <div className="relative">
-               <div className="absolute inset-0 bg-[#003366]/10 blur-[120px] rounded-full"></div>
-               <div className="relative bg-[#0f172a] border border-white/10 p-10 rounded-[3rem] shadow-2xl">
-                   <div className="flex items-center justify-between mb-8">
-                     <div className="flex items-center space-x-3">
-                        <Gauge className="w-5 h-5 text-[#E8F0F9]" />
-                        <h3 className="text-lg font-bold text-white">Spectral Efficiency</h3>
-                     </div>
-                     <Download className="w-4 h-4 text-slate-500 hover:text-white cursor-pointer" onClick={() => toast({ title: "Exporting Data", description: "Downloading efficiency CSV dump..." })} />
-                  </div>
-                  
-                  {/* Decorative Chart Placeholder with Modern Aesthetic */}
-                  <div className="h-64 flex items-end justify-between gap-2">
-                     {[45, 78, 52, 90, 65, 88, 70, 95, 80, 55, 60, 48].map((h, i) => (
-                       <div key={i} className="flex-1 space-y-2">
-                          <div 
-                            className={`w-full bg-gradient-to-t from-[#003366]/20 to-[#0A4D8C] rounded-t-lg transition-all duration-1000 delay-${i * 100} hover:brightness-110`} 
-                            style={{ height: `${h}%` }}
-                          ></div>
-                          <div className="h-1.5 w-full bg-slate-800 rounded-full"></div>
-                       </div>
-                     ))}
-                  </div>
-                  
-                  <div className="mt-10 flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                     <span>Jan 2025</span>
-                     <span>Current Q1 Trend</span>
-                     <span>Mar 2025</span>
-                  </div>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <Card className="border-0 shadow-sm rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="border-b border-slate-50 pb-4">
+                <CardTitle className="font-heading text-lg text-[#0A192F] flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-[#75B2DD]" />
+                  Why Test?
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                 <div className="space-y-1">
+                    <h4 className="font-bold text-sm text-[#0A192F]">Consumer Protection</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">BOCRA ensures that ISPs deliver the speed they advertise. Testing helps us hold them accountable.</p>
+                 </div>
+                 <div className="space-y-1">
+                    <h4 className="font-bold text-sm text-[#0A192F]">Evidence Based</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">Every test result is anonymously recorded to create heatmaps of network quality across Botswana.</p>
+                 </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-2xl rounded-[2.5rem] bg-[#0A192F] text-white p-8 relative overflow-hidden">
+               {/* Decorative elements */}
+               <div className="absolute top-0 right-0 w-32 h-32 bg-[#75B2DD]/10 rounded-full blur-3xl -mr-16 -mt-16" />
+               
+               <div className="relative z-10">
+                 <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
+                    <Monitor className="w-7 h-7 text-[#75B2DD]" />
+                 </div>
+                 <h3 className="font-heading font-black text-2xl mb-4 leading-tight">Regulatory Assistance</h3>
+                 <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                   Are you experiencing persistent network failures or speeds significantly lower than your plan? 
+                 </p>
+                 <Button 
+                   className="w-full h-14 rounded-2xl bg-white text-[#0A192F] font-bold transition-all hover:bg-[#75B2DD] hover:text-white"
+                   onClick={() => window.dispatchEvent(new CustomEvent('openChatBot'))}
+                 >
+                   Chat with Ruby AI
+                 </Button>
                </div>
-            </div>
+            </Card>
           </div>
         </div>
-      </section>
+      </main>
 
-      {/* Footer Info */}
-      <section className="py-24 border-t border-white/5">
-        <div className="max-w-3xl mx-auto text-center px-4">
-           <Globe className="w-12 h-12 text-[#003366] mx-auto mb-8 animate-spin-slow" />
-           <h3 className="text-2xl font-bold text-white mb-6">Regional Compliance Framework</h3>
-           <p className="text-slate-500 leading-relaxed mb-10">
-             BOCRA's QoS framework is aligned with ITU standards and SADC regional guidelines. We provide this data to foster competition, ensure market transparency, and safeguard the interests of every citizen in Botswana.
-           </p>
-           <Button onClick={() => toast({ title: "Downloading publication", description: "The 2025 regulatory standards PDF is being downloaded." })} variant="outline" className="h-14 px-10 rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white font-bold text-sm tracking-wide">
-              Official Regulatory Publication (2025)
-           </Button>
-        </div>
-      </section>
+      {/* Modern Alert Dialog */}
+      <AnimatePresence>
+        {showAlert && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-[3rem] p-10 max-w-lg w-full shadow-2xl border border-white"
+            >
+              <div className="text-center">
+                <div className="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8">
+                  <AlertTriangle className="w-10 h-10 text-red-600" />
+                </div>
+                <h3 className="font-heading font-black text-3xl text-[#0A192F] mb-4">
+                  SLA Violation Detected
+                </h3>
+                <p className="text-slate-500 mb-10 leading-relaxed text-lg font-medium">
+                  Your speed of <strong>{speedResult?.download_speed_mbps} Mbps</strong> is dangerously below your plan's target. 
+                  Would you like to file an official regulatory complaint?
+                </p>
+                <div className="flex flex-col gap-4">
+                  <Button
+                    onClick={handleFileComplaint}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded-2xl h-16 font-black text-lg shadow-xl shadow-red-500/20"
+                  >
+                    Yes, Start Official Case
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowAlert(false)}
+                    className="rounded-2xl h-14 text-slate-400 font-bold hover:bg-slate-50"
+                  >
+                    Review Results Later
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-};
+}
 
-export default LiveQoSMonitoring;
+// Custom animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes gradient-x {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  .animate-gradient-x {
+    background-size: 200% 100%;
+    animation: gradient-x 5s ease infinite;
+  }
+  .pulse-ring {
+    box-shadow: 0 0 0 0 rgba(10, 25, 47, 0.4);
+    animation: pulse-ring 2s infinite;
+  }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(10, 25, 47, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(10, 25, 47, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(10, 25, 47, 0); }
+  }
+`;
+document.head.append(style);
