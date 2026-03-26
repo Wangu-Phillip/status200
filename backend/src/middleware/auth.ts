@@ -8,6 +8,7 @@ export interface AuthRequest extends Request {
     id: string;
     email: string;
     userType: string;
+    adminLevel?: string;
     name: string;
     department?: string;
   };
@@ -34,6 +35,14 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 export const authorizeAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user || req.user.userType !== 'admin') {
     res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+  next();
+};
+
+export const authorizeSuperAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user || req.user.adminLevel !== 'superadmin') {
+    res.status(403).json({ error: 'Superadmin access required' });
     return;
   }
   next();

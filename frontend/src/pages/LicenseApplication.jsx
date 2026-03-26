@@ -7,8 +7,8 @@ import { Textarea } from '../components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { useToast } from '../hooks/use-toast';
 import { licenseTypes } from '../mockData';
-import { Upload, FileText, CheckCircle, Copy, Hash } from 'lucide-react';
-import { addSubmission, DEPARTMENTS } from '../utils/persistence';
+import { Upload, FileText, CheckCircle, Copy, Hash, Loader2 } from 'lucide-react';
+import * as api from '../services/api';
 
 const LicenseApplication = () => {
   const navigate = useNavigate();
@@ -25,6 +25,7 @@ const LicenseApplication = () => {
   });
   const [files, setFiles] = useState([]);
   const [submittedToken, setSubmittedToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,25 +36,39 @@ const LicenseApplication = () => {
     setFiles([...files, ...selectedFiles]);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    const submission = addSubmission({
-      type: 'license',
-      department: DEPARTMENTS.LICENSING,
-      citizenName: formData.applicantName,
-      citizenEmail: formData.email,
-      subject: `${formData.licenseType} - ${formData.duration} Year(s)`,
-      description: `Organization: ${formData.organization}\nAddress: ${formData.address}\nPurpose: ${formData.purpose}`,
-      priority: formData.duration >= 3 ? 'High' : 'Medium',
-    });
-    
-    setSubmittedToken(submission.id);
-    
-    toast({
-      title: 'License Application Submitted',
-      description: `Reference Token: ${submission.id}`,
-    });
+    try {
+      // Prepare application data
+      const applicationData = {
+        applicationType: `License - ${formData.licenseType}`,
+        businessName: formData.organization,
+        sector: formData.licenseType,
+        description: `Applicant: ${formData.applicantName}\nPhone: ${formData.phone}\nAddress: ${formData.address}\nPurpose: ${formData.purpose}\nDuration: ${formData.duration} year(s)`,
+        department: 'licensing',
+      };
+
+      // Submit application via backend API
+      const response = await api.submitApplication(applicationData);
+      
+      setSubmittedToken(response.referenceNumber);
+      
+      toast({
+        title: 'License Application Submitted',
+        description: `Reference Token: ${response.referenceNumber}`,
+      });
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to submit application',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Token Success Modal
@@ -296,11 +311,18 @@ const LicenseApplication = () => {
               </div>
 
               <div className="flex justify-end space-x-4 pt-6 border-t">
-                <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
+                <Button type="button" variant="outline" onClick={() => navigate('/dashboard')} disabled={isLoading}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-[#003366] hover:bg-[#0A4D8C] text-white px-8">
-                  Submit Application
+                <Button type="submit" disabled={isLoading} className="bg-[#003366] hover:bg-[#0A4D8C] text-white px-8">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Application'
+                  )}
                 </Button>
               </div>
             </form>

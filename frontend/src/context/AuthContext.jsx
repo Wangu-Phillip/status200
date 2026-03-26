@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { authenticateAdmin, getAdminByEmail } from '../utils/persistence';
 
 const AuthContext = createContext();
 
@@ -98,15 +99,34 @@ export const AuthProvider = ({ children }) => {
       // Fallback for development if backend is down
       if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
         console.warn('Backend connection refused. Using mock login flow for development.');
-        const mockUser = {
-          id: 'dev-user-id',
-          email: email,
-          name: email.split('@')[0] || 'Citizen',
-          userType: email.includes('admin') ? 'admin' : 'citizen',
-          tier: 'Tier 1 Citizen',
-          trustScore: 82
-        };
-        const mockToken = 'dev-token-' + Date.now();
+        
+        // Try to authenticate as admin first
+        const adminUser = authenticateAdmin(email, password);
+        
+        let mockUser;
+        let mockToken = 'dev-token-' + Date.now();
+        
+        if (adminUser) {
+          // Admin login successful
+          mockUser = {
+            id: adminUser.id,
+            email: adminUser.email,
+            name: adminUser.name,
+            userType: 'admin',
+            adminLevel: adminUser.adminLevel,
+            department: adminUser.department,
+          };
+        } else {
+          // Fallback: create citizen user
+          mockUser = {
+            id: 'dev-user-id',
+            email: email,
+            name: email.split('@')[0] || 'Citizen',
+            userType: 'citizen',
+            tier: 'Tier 1 Citizen',
+            trustScore: 82
+          };
+        }
         
         localStorage.setItem('bocra_token', mockToken);
         localStorage.setItem('bocra_user', JSON.stringify(mockUser));

@@ -20,6 +20,11 @@ async function main() {
   // Hash demo passwords
   const passwordCitizen = await bcrypt.hash('password123', 10);
   const passwordAdmin = await bcrypt.hash('admin123456', 10);
+  const passwordSuperAdmin = await bcrypt.hash('SuperAdmin123!', 10);
+  const passwordLicenseAdmin = await bcrypt.hash('LicenseAdmin123!', 10);
+  const passwordComplaintsAdmin = await bcrypt.hash('ComplaintsAdmin123!', 10);
+  const passwordQoSAdmin = await bcrypt.hash('QoSAdmin123!', 10);
+  const passwordTendersAdmin = await bcrypt.hash('TendersAdmin123!', 10);
 
   // Create test citizen user
   const citizen = await prisma.user.create({
@@ -189,10 +194,26 @@ async function main() {
   await prisma.user.create({
     data: {
       id: uuidv4(),
-      email: 'licensing@bocra.gov.zm',
-      password: passwordAdmin,
-      name: 'Admin - Licensing',
+      email: 'superadmin@bocra.org.bw',
+      password: passwordSuperAdmin,
+      name: 'Super Admin',
       userType: 'admin',
+      adminLevel: 'superadmin',
+      department: null, // Superadmin has no default department
+      organization: 'BOCRA',
+    },
+  });
+
+  console.log('✅ Created superadmin user');
+
+  await prisma.user.create({
+    data: {
+      id: uuidv4(),
+      email: 'admin.licensing@bocra.org.bw',
+      password: passwordLicenseAdmin,
+      name: 'Licensing Admin',
+      userType: 'admin',
+      adminLevel: 'admin',
       department: 'licensing',
       organization: 'BOCRA',
     },
@@ -201,16 +222,43 @@ async function main() {
   await prisma.user.create({
     data: {
       id: uuidv4(),
-      email: 'complaints@bocra.gov.zm',
-      password: passwordAdmin,
-      name: 'Admin - Complaints',
+      email: 'admin.complaints@bocra.org.bw',
+      password: passwordComplaintsAdmin,
+      name: 'Complaints Admin',
       userType: 'admin',
+      adminLevel: 'admin',
       department: 'complaints',
       organization: 'BOCRA',
     },
   });
 
-  console.log('✅ Created admin users');
+  await prisma.user.create({
+    data: {
+      id: uuidv4(),
+      email: 'admin.qos@bocra.org.bw',
+      password: passwordQoSAdmin,
+      name: 'QoS Admin',
+      userType: 'admin',
+      adminLevel: 'admin',
+      department: 'qos',
+      organization: 'BOCRA',
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      id: uuidv4(),
+      email: 'admin.tenders@bocra.org.bw',
+      password: passwordTendersAdmin,
+      name: 'Tenders Admin',
+      userType: 'admin',
+      adminLevel: 'admin',
+      department: 'tenders',
+      organization: 'BOCRA',
+    },
+  });
+
+  console.log('✅ Created 4 department-scoped admin users');
 
   // Create test status checks
   await prisma.statusCheck.create({
@@ -226,11 +274,17 @@ async function main() {
   console.log('\n✨ Database seed completed successfully!\n');
   console.log('📋 Test Credentials:');
   console.log('   Citizen User: citizen@example.com / password123');
-  console.log('   Admin (Licensing): licensing@bocra.gov.zm / admin123456');
-  console.log('   Admin (Complaints): complaints@bocra.gov.zm / admin123456');
+  console.log('\n  👑 Super Admin (Can switch departments):');
+  console.log('     superadmin@bocra.org.bw / SuperAdmin123!');
+  console.log('\n  🛡️  Department Admins:');
+  console.log('     Licensing: admin.licensing@bocra.org.bw / LicenseAdmin123!');
+  console.log('     Complaints: admin.complaints@bocra.org.bw / ComplaintsAdmin123!');
+  console.log('     QoS: admin.qos@bocra.org.bw / QoSAdmin123!');
+  console.log('     Tenders: admin.tenders@bocra.org.bw / TendersAdmin123!');
   console.log('\n📊 Test Data Summary:');
   console.log('   - 1 citizen user created');
-  console.log('   - 2 admin users created');
+  console.log('   - 1 superadmin user created');
+  console.log('   - 4 department-scoped admin users created');
   console.log('   - 2 applications created');
   console.log('   - 2 complaints created');
   console.log('   - 2 documents created');

@@ -77,7 +77,7 @@ router.get('/applications/:id', authenticateToken, async (req: AuthRequest, res:
 router.post('/applications', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-    const { applicationType, businessName, sector, description } = req.body;
+    const { applicationType, businessName, sector, description, department, priority } = req.body;
 
     if (!applicationType || !businessName || !sector) {
       res.status(400).json({ error: 'Missing required fields' });
@@ -95,6 +95,8 @@ router.post('/applications', authenticateToken, async (req: AuthRequest, res: Re
         businessName,
         sector,
         description: description || '',
+        department: department || null,
+        priority: priority || 'Medium',
         status: 'Submitted',
       },
       include: { documents: true },
@@ -904,5 +906,235 @@ router.get('/search', authenticateToken, async (req: AuthRequest, res: Response)
     res.status(500).json({ error: 'Search failed' });
   }
 });
+
+// =====================
+// TENDERS ROUTES
+// =====================
+
+// Get user tenders
+router.get('/tenders', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { page = 1, limit = 10 } = req.query;
+    const skip = ((Number(page) - 1) * Number(limit)) || 0;
+
+    const tenders = await prisma.tender.findMany({
+      where: { userId },
+      include: { documents: true },
+      orderBy: { submissionDate: 'desc' },
+      skip,
+      take: Number(limit),
+    });
+
+    const total = await prisma.tender.count({ where: { userId } });
+
+    res.json({
+      tenders,
+      total,
+      page: Number(page),
+      pageSize: Number(limit),
+    });
+  } catch (error) {
+    console.error('Get tenders error:', error);
+    res.status(500).json({ error: 'Failed to fetch tenders' });
+  }
+});
+
+// Get single tender
+router.get('/tenders/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    const tender = await prisma.tender.findUnique({
+      where: { id },
+      include: { documents: true },
+    });
+
+    if (!tender) {
+      res.status(404).json({ error: 'Tender not found' });
+      return;
+    }
+
+    // Verify ownership
+    if (tender.userId !== userId) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    res.json(tender);
+  } catch (error) {
+    console.error('Get tender error:', error);
+    res.status(500).json({ error: 'Failed to fetch tender' });
+  }
+});
+
+// Submit new tender
+router.post('/tenders', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { title, bidderName, bidderEmail, bidderPhone, description, estimatedValue, submittedAmount } = req.body;
+
+    if (!title || !bidderName || !bidderEmail) {
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
+    }
+
+    const tenderNumber = generateReferenceNumber('TND');
+
+    const tender = await prisma.tender.create({
+      data: {
+        id: uuidv4(),
+        userId: userId!,
+        tenderNumber,
+        title,
+        bidderName,
+        bidderEmail,
+        bidderPhone: bidderPhone || '',
+        description: description || '',
+        estimatedValue: estimatedValue || 0,
+        submittedAmount: submittedAmount || 0,
+        status: 'Submitted',
+        department: 'tenders',
+      },
+      include: { documents: true },
+    });
+
+    // Log activity
+    await prisma.activityLog.create({
+      data: {
+        id: uuidv4(),
+        userId: userId!,
+        action: 'tender_submitted',
+        actionType: 'tender',
+        description: `Submitted tender: ${title}`,
+        entityId: tender.id,
+        status: 'successful',
+      },
+    });
+
+    res.status(201).json(tender);
+  } catch (error) {
+    console.error('Submit tender error:', error);
+    res.status(500).json({ error: 'Failed to submit tender' });
+  }
+});
+
+// Update tender
+router.put('/tenders/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const { title, description, submittedAmount, status } = req.body;
+
+    const tender = await prisma.tender.findUnique({
+      where: { id },
+    });
+
+    if (!tender) {
+      res.status(404).json({ error: 'Tender not found' });
+      return;
+    }
+
+    if (tender.userId !== userId) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const updated = await prisma.tender.update({
+      where: { id },
+      data: {
+        title: title || tender.title,
+        description: description || tender.description,
+        submittedAmount: submittedAmount !== undefined ? submittedAmount : tender.submittedAmount,
+        status: status || tender.status,
+        lastUpdated: new Date(),
+      },
+      include: { documents: true },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Update tender error:', error);
+    res.status(500).json({ error: 'Failed to update tender' });
+  }
+});
+
+// Delete tender
+router.delete('/tenders/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    const tender = await prisma.tender.findUnique({
+      where: { id },
+    });
+
+    if (!tender) {
+      res.status(404).json({ error: 'Tender not found' });
+      return;
+    }
+
+    if (tender.userId !== userId) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    await prisma.tender.delete({
+      where: { id },
+    });
+
+    res.json({ message: 'Tender deleted successfully' });
+  } catch (error) {
+    console.error('Delete tender error:', error);
+    res.status(500).json({ error: 'Failed to delete tender' });
+  }
+});
+
+// Upload document for tender
+router.post(
+  '/tenders/:id/documents',
+  authenticateToken,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+      const { documentType, filename } = req.body;
+
+      // Verify tender ownership
+      const tender = await prisma.tender.findUnique({
+        where: { id },
+      });
+
+      if (!tender) {
+        res.status(404).json({ error: 'Tender not found' });
+        return;
+      }
+
+      if (tender.userId !== userId) {
+        res.status(403).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      const document = await prisma.document.create({
+        data: {
+          id: uuidv4(),
+          tenderId: id,
+          userId: userId!,
+          filename: filename || 'document',
+          category: documentType || 'general',
+          documentType: documentType || 'document',
+          status: 'uploaded',
+          uploadedDate: new Date(),
+        },
+      });
+
+      res.status(201).json(document);
+    } catch (error) {
+      console.error('Upload tender document error:', error);
+      res.status(500).json({ error: 'Failed to upload document' });
+    }
+  }
+);
 
 export default router;
