@@ -24,10 +24,10 @@ const serviceCategories = [
     color: "from-[#0A192F] to-[#25406E]",
     accent: "#75B2DD",
     items: [
-      { id: "telecom", title: "Telecommunications", icon: Wifi, link: "/license-application" },
-      { id: "broadcast", title: "Broadcasting", icon: Radio, link: "/license-application" },
-      { id: "postal", title: "Postal Services", icon: Mail, link: "/license-application" },
-      { id: "type", title: "Type Approval", icon: CheckCircle2, link: "/type-approval" }
+      { id: "telecom", title: "Telecommunications", icon: Wifi, link: "/dashboard" },
+      { id: "broadcast", title: "Broadcasting", icon: Radio, link: "/dashboard" },
+      { id: "postal", title: "Postal Services", icon: Mail, link: "/dashboard" },
+      { id: "type", title: "Type Approval", icon: CheckCircle2, link: "/dashboard" }
     ]
   },
   {
@@ -36,9 +36,9 @@ const serviceCategories = [
     color: "from-[#16A34A] to-[#0D5A2E]",
     accent: "#16A34A",
     items: [
-      { id: "qos", title: "QoS Reporting", icon: BarChart, link: "/qos-reporting" },
-      { id: "live", title: "Live QoS Monitor", icon: Monitor, link: "/live-qos" },
-      { id: "analytics", title: "BOCRA Analytics", icon: Database, link: "/analytics" }
+      { id: "qos", title: "QoS Reporting", icon: BarChart, link: "/dashboard" },
+      { id: "live", title: "Live QoS Monitor", icon: Monitor, link: "/dashboard" },
+      { id: "analytics", title: "BOCRA Analytics", icon: Database, link: "/dashboard" }
     ]
   },
   {
@@ -47,9 +47,9 @@ const serviceCategories = [
     color: "from-[#F59E0B] to-[#B45309]",
     accent: "#F59E0B",
     items: [
-      { id: "complaints", title: "File Complaint", icon: UserCheck, link: "/complaints" },
-      { id: "incident", title: "Cyber Incidents", icon: ShieldAlert, link: "/cyber-incident" },
-      { id: "search", title: "Find Help", icon: Search, link: "/contact" }
+      { id: "complaints", title: "File Complaint", icon: UserCheck, link: "/dashboard" },
+      { id: "incident", title: "Cyber Incidents", icon: ShieldAlert, link: "/dashboard" },
+      { id: "search", title: "Find Help", icon: Search, link: "/dashboard" }
     ]
   },
   {
@@ -58,7 +58,7 @@ const serviceCategories = [
     color: "from-[#DC2626] to-[#991B1B]",
     accent: "#DC2626",
     items: [
-      { id: "domain", title: ".BW Domain Registry", icon: Globe, link: "/domain-registry" }
+      { id: "domain", title: ".BW Domain Registry", icon: Globe, link: "/dashboard" }
     ]
   }
 ];
