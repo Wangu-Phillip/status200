@@ -13,6 +13,7 @@ import { Label } from '../components/ui/label';
 import UserForm from '../components/admin/UserForm';
 import UserList from '../components/admin/UserList';
 import UserModal from '../components/admin/UserModal';
+import TenderDetailModal from '../components/TenderDetailModal';
 import {
   DEPARTMENTS,
   DEPARTMENT_LABELS,
@@ -73,6 +74,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({});
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [adminNote, setAdminNote] = useState('');
+  const [selectedTenderDetail, setSelectedTenderDetail] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'submissions', 'users', 'applications', or 'settings'
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
@@ -2013,6 +2015,18 @@ const AdminDashboard = () => {
                           </div>
                         ) : (
                           <>
+                            {user?.department === 'tenders' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={submissionsLoading}
+                                className="text-slate-600 border-slate-200"
+                                onClick={() => setSelectedTenderDetail(sub)}
+                              >
+                                <Eye className="h-4 w-4 mr-1.5" />
+                                View Details
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
@@ -3029,6 +3043,18 @@ const AdminDashboard = () => {
       {viewingUser && (
         <UserModal user={viewingUser} onClose={() => setViewingUser(null)} />
       )}
+
+      {/* Tender Detail Modal */}
+      <TenderDetailModal
+        tender={selectedTenderDetail}
+        isOpen={!!selectedTenderDetail}
+        onClose={() => setSelectedTenderDetail(null)}
+        onAddNote={(tenderId) => handleAddNote(tenderId)}
+        onStatusChange={(tenderId, newStatus) => handleStatusChange(tenderId, newStatus)}
+        loading={submissionsLoading}
+        adminNote={adminNote}
+        setAdminNote={setAdminNote}
+      />
     </div>
   );
 };
