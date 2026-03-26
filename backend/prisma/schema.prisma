@@ -106,6 +106,43 @@ model Tender {
   @@map("tenders")
 }
 
+model TenderPosting {
+  id              String     @id @default(uuid())
+  tenderNumber    String     @unique
+  title           String
+  description     String
+  status          String     @default("Open")  // "Open", "Closed", "Awarded"
+  category        String     // Type of tender
+  estimatedValue  Float?
+  openingDate     DateTime   @default(now())
+  closingDate     DateTime
+  location        String?
+  createdBy       String
+  lastUpdatedBy   String?
+  adminNotes      String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  documents       TenderDocument[]
+
+  @@map("tender_postings")
+}
+
+model TenderDocument {
+  id              String     @id @default(uuid())
+  tenderPostingId String
+  filename        String
+  fileType        String
+  filePath        String
+  fileSize        Int
+  uploadedBy      String
+  uploadedDate    DateTime   @default(now())
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  tenderPosting   TenderPosting @relation(fields: [tenderPostingId], references: [id], onDelete: Cascade)
+
+  @@map("tender_documents")
+}
+
 model Document {
   id            String       @id @default(uuid())
   applicationId String?

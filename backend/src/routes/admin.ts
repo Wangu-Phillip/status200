@@ -670,4 +670,276 @@ router.put(
   }
 );
 
+// =====================
+// TENDER POSTINGS API (Admin-created tenders for citizens)
+// =====================
+
+/**
+ * Get all tender postings
+ */
+router.get(
+  '/tender-postings',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+      const status = req.query.status as string;
+
+      const where: any = {};
+      if (status) where.status = status;
+
+      const postings = await prisma.tenderPosting.findMany({
+        where,
+        include: {
+          documents: true,
+        },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const total = await prisma.tenderPosting.count({ where });
+
+      res.json({
+        postings,
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      });
+    } catch (error) {
+      console.error('Get tender postings error:', error);
+      res.status(500).json({ error: 'Failed to fetch tender postings' });
+    }
+  }
+);
+
+/**
+ * Create a new tender posting
+ */
+router.post(
+  '/tender-postings',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { 
+        tenderNumber, 
+        title, 
+        description, 
+        category, 
+        estimatedValue,
+        closingDate,
+        location
+      } = req.body;
+
+      if (!tenderNumber || !title || !description || !category || !closingDate) {
+        res.status(400).json({ 
+          error: 'Missing required fields: tenderNumber, title, description, category, closingDate' 
+        });
+        return;
+      }
+
+      // Check if tenderNumber already exists
+      const existing = await prisma.tenderPosting.findUnique({
+        where: { tenderNumber },
+      });
+
+      if (existing) {
+        res.status(400).json({ error: 'Tender number already exists' });
+        return;
+      }
+
+      const posting = await prisma.tenderPosting.create({
+        data: {
+          tenderNumber,
+          title,
+          description,
+          category,
+          estimatedValue: estimatedValue ? parseFloat(estimatedValue) : null,
+          closingDate: new Date(closingDate),
+          location: location || null,
+          createdBy: req.user!.id,
+          lastUpdatedBy: req.user!.id,
+        },
+        include: {
+          documents: true,
+        },
+      });
+
+      res.status(201).json({
+        message: 'Tender posting created successfully',
+        posting,
+      });
+    } catch (error) {
+      console.error('Create tender posting error:', error);
+      res.status(500).json({ error: 'Failed to create tender posting' });
+    }
+  }
+);
+
+/**
+ * Update a tender posting
+ */
+router.put(
+  '/tender-postings/:id',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { title, description, status, category, estimatedValue, closingDate, location, adminNotes } = req.body;
+
+      const posting = await prisma.tenderPosting.update({
+        where: { id },
+        data: {
+          ...(title && { title }),
+          ...(description && { description }),
+          ...(status && { status }),
+          ...(category && { category }),
+          ...(estimatedValue && { estimatedValue: parseFloat(estimatedValue) }),
+          ...(closingDate && { closingDate: new Date(closingDate) }),
+          ...(location !== undefined && { location }),
+          ...(adminNotes && { adminNotes }),
+          lastUpdatedBy: req.user!.id,
+          updatedAt: new Date(),
+        },
+        include: {
+          documents: true,
+        },
+      });
+
+      res.json({
+        message: 'Tender posting updated successfully',
+        posting,
+      });
+    } catch (error) {
+      console.error('Update tender posting error:', error);
+      res.status(500).json({ error: 'Failed to update tender posting' });
+    }
+  }
+);
+
+/**
+ * Delete a tender posting
+ */
+router.delete(
+  '/tender-postings/:id',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      await prisma.tenderPosting.delete({
+        where: { id },
+      });
+
+      res.json({ message: 'Tender posting deleted successfully' });
+    } catch (error) {
+      console.error('Delete tender posting error:', error);
+      res.status(500).json({ error: 'Failed to delete tender posting' });
+    }
+  }
+);
+
+/**
+ * Get documents for a tender posting
+ */
+router.get(
+  '/tender-postings/:id/documents',
+  authenticateToken,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const documents = await prisma.tenderDocument.findMany({
+        where: { tenderPostingId: id },
+        orderBy: { uploadedDate: 'desc' },
+      });
+
+      res.json({ documents });
+    } catch (error) {
+      console.error('Get tender documents error:', error);
+      res.status(500).json({ error: 'Failed to fetch documents' });
+    }
+  }
+);
+
+/**
+ * Upload a document to a tender posting
+ */
+router.post(
+  '/tender-postings/:id/documents',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { filename, fileType, filePath, fileSize } = req.body;
+
+      if (!filename || !fileType || !filePath || fileSize === undefined) {
+        res.status(400).json({ 
+          error: 'Missing required fields: filename, fileType, filePath, fileSize' 
+        });
+        return;
+      }
+
+      // Verify tender posting exists
+      const posting = await prisma.tenderPosting.findUnique({
+        where: { id },
+      });
+
+      if (!posting) {
+        res.status(404).json({ error: 'Tender posting not found' });
+        return;
+      }
+
+      const document = await prisma.tenderDocument.create({
+        data: {
+          tenderPostingId: id,
+          filename,
+          fileType,
+          filePath,
+          fileSize: parseInt(fileSize),
+          uploadedBy: req.user!.id,
+        },
+      });
+
+      res.status(201).json({
+        message: 'Document uploaded successfully',
+        document,
+      });
+    } catch (error) {
+      console.error('Upload tender document error:', error);
+      res.status(500).json({ error: 'Failed to upload document' });
+    }
+  }
+);
+
+/**
+ * Delete a tender document
+ */
+router.delete(
+  '/tender-documents/:documentId',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { documentId } = req.params;
+
+      await prisma.tenderDocument.delete({
+        where: { id: documentId },
+      });
+
+      res.json({ message: 'Document deleted successfully' });
+    } catch (error) {
+      console.error('Delete tender document error:', error);
+      res.status(500).json({ error: 'Failed to delete document' });
+    }
+  }
+);
+
 export default router;

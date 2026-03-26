@@ -41,6 +41,8 @@ import {
   Plus,
   Settings,
   Loader2,
+  Upload,
+  Check,
 } from 'lucide-react';
 
 import { Menu, X as XIcon } from 'lucide-react';
@@ -60,6 +62,23 @@ const AdminDashboard = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'submissions', 'users', 'applications', or 'settings'
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
+  const [tenderView, setTenderView] = useState('submissions'); // 'submissions' or 'postings'
+  const [tenderPostings, setTenderPostings] = useState([]);
+  const [tenderPostingsLoading, setTenderPostingsLoading] = useState(false);
+  const [showTenderForm, setShowTenderForm] = useState(false);
+  const [editingTender, setEditingTender] = useState(null);
+  const [tenderDocumentsLoading, setTenderDocumentsLoading] = useState(false);
+  const [formDocuments, setFormDocuments] = useState([]); // Files to upload with tender
+  const [formData, setFormData] = useState({
+    tenderNumber: '',
+    title: '',
+    category: '',
+    closingDate: '',
+    estimatedValue: '',
+    location: '',
+    description: '',
+  });
+  const [documentsToDeleteAfterSave, setDocumentsToDeleteAfterSave] = useState([]);
   
   // User management state (for superadmin)
   const [users, setUsers] = useState([]);
@@ -331,6 +350,158 @@ const AdminDashboard = () => {
     } finally {
       setSubmissionsLoading(false);
     }
+  };
+
+  const loadTenderPostings = async () => {
+    setTenderPostingsLoading(true);
+    try {
+      const data = await adminApi.getTenderPostings({ page: 1, limit: 100 });
+      setTenderPostings(data.postings || []);
+    } catch (error) {
+      console.error('Failed to load tender postings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load tender postings',
+        variant: 'destructive',
+      });
+    } finally {
+      setTenderPostingsLoading(false);
+    }
+  };
+
+  const handleCreateTenderPosting = async (submitFormData) => {
+    setTenderPostingsLoading(true);
+    try {
+      const response = await adminApi.createTenderPosting(submitFormData);
+      const newTenderId = response.posting?.id;
+
+      // Upload documents if any
+      if (formDocuments.length > 0 && newTenderId) {
+        for (const file of formDocuments) {
+          const docData = {
+            filename: file.name,
+            fileType: file.type,
+            filePath: `tenders/${newTenderId}/${file.name}`,
+            fileSize: file.size,
+          };
+          await adminApi.uploadTenderPostingDocument(newTenderId, docData);
+        }
+      }
+
+      toast({
+        title: 'Success',
+        description: formDocuments.length > 0 
+          ? `Tender posting created with ${formDocuments.length} document(s)` 
+          : 'Tender posting created successfully',
+      });
+      handleFormReset();
+      loadTenderPostings();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setTenderPostingsLoading(false);
+    }
+  };
+
+  const handleDeleteTenderPosting = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this tender posting?')) {
+      return;
+    }
+    setTenderPostingsLoading(true);
+    try {
+      await adminApi.deleteTenderPosting(id);
+      toast({
+        title: 'Success',
+        description: 'Tender posting deleted successfully',
+      });
+      loadTenderPostings();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setTenderPostingsLoading(false);
+    }
+  };
+
+  const handleEditTender = (tender) => {
+    setFormData({
+      tenderNumber: tender.tenderNumber,
+      title: tender.title,
+      category: tender.category,
+      closingDate: tender.closingDate,
+      estimatedValue: tender.estimatedValue || '',
+      location: tender.location || '',
+      description: tender.description,
+    });
+    setEditingTender(tender);
+    setShowTenderForm(true);
+    setFormDocuments([]);
+    setDocumentsToDeleteAfterSave([]);
+  };
+
+  const handleUpdateTenderPosting = async (formDataToUpdate) => {
+    setTenderPostingsLoading(true);
+    try {
+      // Update the tender posting
+      await adminApi.updateTenderPosting(editingTender.id, formDataToUpdate);
+      
+      // Delete marked documents
+      for (const docId of documentsToDeleteAfterSave) {
+        await adminApi.deleteTenderDocument(docId);
+      }
+      
+      // Upload new documents
+      for (const file of formDocuments) {
+        const docData = {
+          filename: file.name,
+          fileType: file.type,
+          filePath: `tenders/${editingTender.id}/${file.name}`,
+          fileSize: file.size,
+        };
+        await adminApi.uploadTenderPostingDocument(editingTender.id, docData);
+      }
+      
+      toast({
+        title: 'Success',
+        description: 'Tender posting updated successfully',
+      });
+      setShowTenderForm(false);
+      setEditingTender(null);
+      setFormDocuments([]);
+      setDocumentsToDeleteAfterSave([]);
+      loadTenderPostings();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setTenderPostingsLoading(false);
+    }
+  };
+
+  const handleFormReset = () => {
+    setFormData({
+      tenderNumber: '',
+      title: '',
+      category: '',
+      closingDate: '',
+      estimatedValue: '',
+      location: '',
+      description: '',
+    });
+    setFormDocuments([]);
+    setDocumentsToDeleteAfterSave([]);
+    setEditingTender(null);
+    setShowTenderForm(false);
   };
 
   const refreshData = async () => {
@@ -1083,9 +1254,424 @@ const AdminDashboard = () => {
         {/* Submissions View - Only show when department is selected */}
         {activeView === 'submissions' && user?.department && (
           <>
-            {/* Search & Filter */}
-            <Card className="border-0 shadow-md mb-6">
-              <CardContent className="pt-6">
+            {/* Tender View Toggle - Only for Tenders Department */}
+            {user?.department === DEPARTMENTS.TENDERS && (
+              <div className="mb-6 flex gap-2">
+                <Button
+                  onClick={() => {
+                    setTenderView('submissions');
+                    setSearchTerm('');
+                    setFilterStatus('all');
+                  }}
+                  variant={tenderView === 'submissions' ? 'default' : 'outline'}
+                  className={`gap-2 ${
+                    tenderView === 'submissions'
+                      ? 'bg-[#003366] hover:bg-[#0A4D8C]'
+                      : 'border-slate-200'
+                  }`}
+                >
+                  <FileText className="h-4 w-4" />
+                  Tender Submissions
+                </Button>
+                <Button
+                  onClick={() => {
+                    setTenderView('postings');
+                    loadTenderPostings();
+                    setSearchTerm('');
+                    setFilterStatus('all');
+                  }}
+                  variant={tenderView === 'postings' ? 'default' : 'outline'}
+                  className={`gap-2 ${
+                    tenderView === 'postings'
+                      ? 'bg-[#003366] hover:bg-[#0A4D8C]'
+                      : 'border-slate-200'
+                  }`}
+                >
+                  <Plus className="h-4 w-4" />
+                  Tender Postings
+                </Button>
+              </div>
+            )}
+
+            {/* Tender Postings View */}
+            {tenderView === 'postings' && user?.department === DEPARTMENTS.TENDERS ? (
+              <>
+                {/* Create Button */}
+                {!showTenderForm && (
+                  <div className="mb-6">
+                    <Button
+                      onClick={() => setShowTenderForm(true)}
+                      className="bg-[#003366] hover:bg-[#0A4D8C] text-white gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create New Tender
+                    </Button>
+                  </div>
+                )}
+
+                {/* Create/Edit Tender Form */}
+                {showTenderForm && (
+                  <Card className="border-0 shadow-md mb-6 bg-slate-50">
+                    <CardHeader>
+                      <CardTitle>{editingTender ? 'Edit Tender Posting' : 'Create New Tender Posting'}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Tender Number *</label>
+                          <Input
+                            placeholder="e.g., TND-2026-001"
+                            className="border-slate-200"
+                            value={formData.tenderNumber}
+                            onChange={(e) => setFormData({...formData, tenderNumber: e.target.value})}
+                            disabled={editingTender}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Title *</label>
+                          <Input
+                            placeholder="Tender title"
+                            className="border-slate-200"
+                            value={formData.title}
+                            onChange={(e) => setFormData({...formData, title: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Category *</label>
+                          <select
+                            value={formData.category}
+                            onChange={(e) => setFormData({...formData, category: e.target.value})}
+                            className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                          >
+                            <option value="">Select a category</option>
+                            <option value="Goods">Goods</option>
+                            <option value="Services">Services</option>
+                            <option value="Works">Works</option>
+                            <option value="Consultancy">Consultancy</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Closing Date *</label>
+                          <Input
+                            type="datetime-local"
+                            className="border-slate-200"
+                            value={formData.closingDate}
+                            onChange={(e) => setFormData({...formData, closingDate: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Estimated Value</label>
+                          <Input
+                            type="number"
+                            placeholder="0.00"
+                            className="border-slate-200"
+                            value={formData.estimatedValue}
+                            onChange={(e) => setFormData({...formData, estimatedValue: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Location</label>
+                          <Input
+                            placeholder="Tender location"
+                            className="border-slate-200"
+                            value={formData.location}
+                            onChange={(e) => setFormData({...formData, location: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-slate-700 mb-1 block">Description *</label>
+                        <textarea
+                          placeholder="Tender description and requirements"
+                          className="w-full h-24 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                          value={formData.description}
+                          onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        />
+                      </div>
+
+                      {/* Existing Documents (Edit Mode) */}
+                      {editingTender && editingTender.documents && editingTender.documents.length > 0 && (
+                        <div className="bg-white rounded-lg p-4 border border-slate-200">
+                          <h4 className="font-semibold text-slate-900 mb-2">Existing Documents</h4>
+                          <div className="space-y-2">
+                            {editingTender.documents
+                              .filter(doc => !documentsToDeleteAfterSave.includes(doc.id))
+                              .map((doc) => (
+                                <div key={doc.id} className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-slate-600" />
+                                    <div>
+                                      <p className="text-sm font-medium text-slate-900">{doc.filename}</p>
+                                      <p className="text-xs text-slate-500">{(doc.fileSize / 1024).toFixed(2)} KB</p>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setDocumentsToDeleteAfterSave([...documentsToDeleteAfterSave, doc.id])}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* New Documents Upload */}
+                      <div className="bg-white rounded-lg p-4 border border-slate-200">
+                        <h4 className="font-semibold text-slate-900 mb-3">Upload Documents</h4>
+                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-[#003366] transition-colors cursor-pointer">
+                          <input
+                            type="file"
+                            id="formDocumentUpload"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files || []);
+                              setFormDocuments([...formDocuments, ...files]);
+                              e.target.value = '';
+                            }}
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip"
+                          />
+                          <label htmlFor="formDocumentUpload" className="flex flex-col items-center cursor-pointer">
+                            <Upload className="h-8 w-8 text-slate-400 mb-2" />
+                            <p className="text-sm text-slate-600">Click to upload or drag and drop</p>
+                            <p className="text-xs text-slate-500 mt-1">PDF, DOC, DOCX, XLS, XLSX, PPT, ZIP</p>
+                          </label>
+                        </div>
+                        
+                        {/* Selected Files List */}
+                        {formDocuments.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            <p className="text-sm font-medium text-slate-700">Selected Documents ({formDocuments.length})</p>
+                            {formDocuments.map((file, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-slate-600" />
+                                  <div>
+                                    <p className="text-sm font-medium text-slate-900">{file.name}</p>
+                                    <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(2)} KB</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setFormDocuments(formDocuments.filter((_, i) => i !== index))}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          onClick={handleFormReset}
+                          variant="outline"
+                          disabled={tenderPostingsLoading}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (!formData.tenderNumber || !formData.title || !formData.category || !formData.closingDate || !formData.description) {
+                              toast({
+                                title: 'Error',
+                                description: 'Please fill in all required fields',
+                                variant: 'destructive',
+                              });
+                              return;
+                            }
+
+                            const submitData = {
+                              tenderNumber: formData.tenderNumber,
+                              title: formData.title,
+                              category: formData.category,
+                              closingDate: formData.closingDate,
+                              description: formData.description,
+                              estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : null,
+                              location: formData.location || null,
+                            };
+
+                            if (editingTender) {
+                              handleUpdateTenderPosting(submitData);
+                            } else {
+                              handleCreateTenderPosting(submitData);
+                            }
+                          }}
+                          disabled={tenderPostingsLoading}
+                          className="bg-[#003366] hover:bg-[#0A4D8C] text-white"
+                        >
+                          {tenderPostingsLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : editingTender ? (
+                            <>
+                              <Check className="h-4 w-4 mr-2" />
+                              Update Tender
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Create Tender
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Tender Postings List */}
+                <div className="space-y-4">
+                  {tenderPostingsLoading && !showTenderForm ? (
+                    <Card className="border-0 shadow-md">
+                      <CardContent className="py-16 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-[#003366] mx-auto" />
+                        <p className="text-slate-500 mt-4">Loading tender postings...</p>
+                      </CardContent>
+                    </Card>
+                  ) : tenderPostings.length === 0 ? (
+                    <Card className="border-0 shadow-md">
+                      <CardContent className="py-16 text-center">
+                        <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-slate-700 mb-2">No Tender Postings</h3>
+                        <p className="text-slate-500">
+                          Create your first tender posting to get started.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    tenderPostings.map((tender) => (
+                      <Card key={tender.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                        <CardContent className="pt-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-lg font-bold text-slate-900">{tender.title}</h3>
+                                <Badge className={`${
+                                  tender.status === 'Open' ? 'bg-green-500' :
+                                  tender.status === 'Closed' ? 'bg-amber-500' :
+                                  'bg-slate-500'
+                                }`}>
+                                  {tender.status}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
+                                <span className="flex items-center gap-1.5">
+                                  <Hash className="h-3.5 w-3.5" />
+                                  <span className="font-mono font-semibold text-[#003366]">{tender.tenderNumber}</span>
+                                </span>
+                                <span>•</span>
+                                <span>{tender.category}</span>
+                                <span>•</span>
+                                <span>Closes: {new Date(tender.closingDate).toLocaleDateString()}</span>
+                              </div>
+                              {tender.estimatedValue && (
+                                <div className="text-sm text-slate-600 font-semibold">
+                                  Estimated Value: ${tender.estimatedValue.toFixed(2)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <p className="text-slate-600 mb-4 line-clamp-2">{tender.description}</p>
+
+                          {/* Documents Section */}
+                          <div className="bg-slate-50 rounded-xl p-4 mb-4 border border-slate-100">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="font-semibold text-slate-900">Documents ({tender.documents?.length || 0})</h4>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-sm gap-1"
+                                onClick={() => {
+                                  // TODO: Show upload modal
+                                  toast({
+                                    title: 'Upload Documents',
+                                    description: 'Document upload functionality coming soon',
+                                  });
+                                }}
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                Add Document
+                              </Button>
+                            </div>
+                            {tender.documents && tender.documents.length > 0 ? (
+                              <div className="space-y-2">
+                                {tender.documents.map((doc) => (
+                                  <div
+                                    key={doc.id}
+                                    className="flex items-center justify-between p-2 bg-white rounded border border-slate-200"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="h-4 w-4 text-slate-600" />
+                                      <div>
+                                        <p className="text-sm font-medium text-slate-900">{doc.filename}</p>
+                                        <p className="text-xs text-slate-500">{(doc.fileSize / 1024).toFixed(2)} KB</p>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-red-600 hover:text-red-700"
+                                      onClick={() => {
+                                        if (window.confirm('Delete this document?')) {
+                                          adminApi.deleteTenderDocument(doc.id).then(() => {
+                                            toast({
+                                              title: 'Success',
+                                              description: 'Document deleted successfully',
+                                            });
+                                            loadTenderPostings();
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-slate-500">No documents uploaded yet</p>
+                            )}
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={tenderPostingsLoading}
+                              onClick={() => handleEditTender(tender)}
+                              className="text-slate-600 border-slate-200"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={tenderPostingsLoading}
+                              onClick={() => handleDeleteTenderPosting(tender.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Original Submissions View */}
+                <Card className="border-0 shadow-md mb-6">
+                  <CardContent className="pt-6">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -1259,6 +1845,8 @@ const AdminDashboard = () => {
                 ))
               )}
             </div>
+              </>
+            )}
           </>
         )}
 

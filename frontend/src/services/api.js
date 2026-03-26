@@ -274,3 +274,46 @@ export const addTenderNotes = (tenderNumber, notes) =>
     method: 'PUT',
     body: JSON.stringify({ notes }),
   });
+
+// =====================
+// TENDER POSTINGS API (Admin-created tenders)
+// =====================
+
+export const getTenderPostings = ({ page = 1, limit = 10, status = null } = {}) => {
+  const query = new URLSearchParams();
+  query.append('page', page);
+  query.append('limit', limit);
+  if (status) query.append('status', status);
+  return apiCall(`/admin/tender-postings?${query.toString()}`);
+};
+
+export const createTenderPosting = (data) =>
+  apiCall('/admin/tender-postings', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const updateTenderPosting = (id, data) =>
+  apiCall(`/admin/tender-postings/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+export const deleteTenderPosting = (id) =>
+  apiCall(`/admin/tender-postings/${id}`, {
+    method: 'DELETE',
+  });
+
+export const getTenderDocuments = (tenderPostingId) =>
+  apiCall(`/admin/tender-postings/${tenderPostingId}/documents`);
+
+export const uploadTenderPostingDocument = (tenderPostingId, data) =>
+  apiCall(`/admin/tender-postings/${tenderPostingId}/documents`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const deleteTenderDocument = (documentId) =>
+  apiCall(`/admin/tender-documents/${documentId}`, {
+    method: 'DELETE',
+  });
