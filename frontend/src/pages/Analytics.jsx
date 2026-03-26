@@ -482,7 +482,7 @@ export default function AnalyticsPage() {
                     asChild 
                     className="bg-white text-[#0A192F] hover:bg-slate-100 rounded-sm"
                   >
-                    <Link to="/license-application">Apply for License</Link>
+                    <Link to="/dashboard">Apply via Dashboard</Link>
                   </Button>
                   <Button 
                     asChild 
