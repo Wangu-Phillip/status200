@@ -90,17 +90,17 @@ const Tenders = () => {
         <div className="absolute inset-0 z-0 scale-110">
           <div className="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/80 to-transparent z-10"></div>
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-40"></div>
-          <div className="absolute inset-0 basket-pattern opacity-[0.03] text-teal-500 z-10"></div>
+          <div className="absolute inset-0 basket-pattern opacity-[0.03] text-[#0099CC] z-10"></div>
         </div>
         
         <div className="container mx-auto px-6 lg:px-20 relative z-20">
           <div className="max-w-2xl animate-in fade-in slide-in-from-left-8 duration-700">
-            <Badge className="mb-6 bg-teal-600/20 text-teal-400 border-teal-500/30 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-[0.2em]">
+            <Badge className="mb-6 bg-[#003366]/20 text-[#0099CC] border-[#0099CC]/30 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-[0.2em]">
               Procurement Portal
             </Badge>
             <h1 className="text-5xl lg:text-7xl font-black tracking-tighter text-white mb-6 leading-[0.9]">
               Tenders & <br />
-              Contracts<span className="text-teal-500">.</span>
+              Contracts<span className="text-[#0099CC]">.</span>
             </h1>
             <p className="text-slate-400 text-lg lg:text-xl font-medium max-w-xl leading-relaxed">
               Explore strategic procurement opportunities with BOCRA. We are committed to transparency, competition, and excellence in all regulatory ventures.
@@ -119,7 +119,7 @@ const Tenders = () => {
                 onClick={() => setActiveCategory(cat)}
                 className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${
                   activeCategory === cat 
-                    ? 'bg-[#00897B] text-white shadow-lg shadow-teal-900/40' 
+                    ? 'bg-[#00897B] text-white shadow-lg shadow-[#001F40]/40' 
                     : 'text-slate-500 hover:text-slate-100 hover:bg-white/5'
                 }`}
               >
@@ -129,7 +129,7 @@ const Tenders = () => {
           </div>
 
           <div className="relative w-full lg:w-96 group">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-teal-400 transition-colors" />
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-[#0099CC] transition-colors" />
             <input 
               type="text" 
               placeholder="Search tender reference..." 
@@ -149,7 +149,7 @@ const Tenders = () => {
                 className="bg-[#0a0f1e] border border-white/5 p-10 rounded-[3rem] group hover:border-[#00897B]/50 hover:shadow-2xl transition-all duration-500 relative overflow-hidden animate-in fade-in slide-in-from-bottom-8"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-teal-500/10 transition-all"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#0099CC]/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-[#0099CC]/10 transition-all"></div>
                 
                 <div className="flex justify-between items-start mb-8 relative">
                   <div className="flex flex-col">
@@ -171,7 +171,7 @@ const Tenders = () => {
 
                 <div className="grid grid-cols-2 gap-6 mb-10">
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-slate-500 group-hover:bg-teal-900/30 group-hover:text-teal-400 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-slate-500 group-hover:bg-[#001F40]/30 group-hover:text-[#0099CC] transition-all">
                       <Calendar className="w-5 h-5" />
                     </div>
                     <div>
@@ -198,7 +198,7 @@ const Tenders = () => {
                   </div>
                   <Button 
                     onClick={() => handleTenderAction(tender.id)}
-                    className="bg-[#00897B] hover:bg-[#4DB6AC] text-white rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-teal-900/20 group-hover:scale-105 transition-all"
+                    className="bg-[#00897B] hover:bg-[#4DB6AC] text-white rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[#001F40]/20 group-hover:scale-105 transition-all"
                   >
                     View Specs
                     <ChevronRight className="ml-2 w-4 h-4" />
@@ -239,7 +239,7 @@ const Tenders = () => {
               </Button>
               <Button 
                 onClick={() => window.location.href = 'mailto:procurement@bocra.org.bw?subject=Tender Inquiry'}
-                className="h-16 px-10 rounded-[1.25rem] bg-[#00897B] text-white font-black uppercase tracking-widest text-[10px] hover:bg-[#4DB6AC] shadow-2xl shadow-teal-900/40 transition-all"
+                className="h-16 px-10 rounded-[1.25rem] bg-[#00897B] text-white font-black uppercase tracking-widest text-[10px] hover:bg-[#4DB6AC] shadow-2xl shadow-[#001F40]/40 transition-all"
               >
                 Contact Unit
               </Button>

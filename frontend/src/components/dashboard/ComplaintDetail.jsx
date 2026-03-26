@@ -20,11 +20,11 @@ const ComplaintTimeline = ({ status }) => {
       {steps.map((step, idx) => (
         <React.Fragment key={step}>
           <div className="flex flex-col items-center flex-1">
-            <div className={`w-3 h-3 rounded-full mb-2 ${idx <= currentStep ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]' : 'bg-slate-800 border border-slate-700'}`}></div>
-            <span className={`text-[10px] font-bold uppercase tracking-tighter ${idx <= currentStep ? 'text-orange-400' : 'text-slate-600'}`}>{step}</span>
+            <div className={`w-3 h-3 rounded-full mb-2 ${idx <= currentStep ? 'bg-[#F47920] shadow-[0_0_8px_rgba(244,121,32,0.5)]' : 'bg-slate-800 border border-slate-700'}`}></div>
+            <span className={`text-[10px] font-bold uppercase tracking-tighter ${idx <= currentStep ? 'text-[#F47920]' : 'text-slate-600'}`}>{step}</span>
           </div>
           {idx < steps.length - 1 && (
-            <div className={`h-[2px] flex-1 mb-5 ${idx < currentStep ? 'bg-orange-500/50' : 'bg-slate-800'}`}></div>
+            <div className={`h-[2px] flex-1 mb-5 ${idx < currentStep ? 'bg-[#F47920]/50' : 'bg-slate-800'}`}></div>
           )}
         </React.Fragment>
       ))}
@@ -133,7 +133,7 @@ const ComplaintDetail = ({ complaintId, onClose, onUpdate, onDelete }) => {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
         <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-lg p-8">
-          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#F47920]" />
           <p className="text-slate-400 mt-4">Loading complaint details...</p>
         </div>
       </div>
@@ -177,7 +177,7 @@ const ComplaintDetail = ({ complaintId, onClose, onUpdate, onDelete }) => {
             </div>
             <div>
               <p className="text-slate-400 text-sm font-medium mb-2">Status</p>
-              <Badge className="border-orange-500/30 text-orange-400 bg-orange-500/10 px-3 py-1">
+              <Badge className="border-orange-500/30 text-[#F47920] bg-[#F47920]/10 px-3 py-1">
                 {complaint.status}
               </Badge>
             </div>
@@ -294,7 +294,7 @@ const ComplaintDetail = ({ complaintId, onClose, onUpdate, onDelete }) => {
                         size="sm"
                         variant="ghost"
                         onClick={() => api.downloadDocument(doc.id)}
-                        className="text-orange-500 hover:text-orange-400"
+                        className="text-[#F47920] hover:text-[#F47920]"
                       >
                         <Download className="w-4 h-4" />
                       </Button>

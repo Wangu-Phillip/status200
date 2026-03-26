@@ -86,8 +86,8 @@ const ApplicationDetail = ({ applicationId, onClose, onUpdate, onDelete }) => {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Approved': return 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10';
-      case 'Under Review': return 'border-teal-500/30 text-teal-400 bg-teal-500/10';
+      case 'Approved': return 'border-[#6DC04B]/30 text-[#6DC04B] bg-[#6DC04B]/10';
+      case 'Under Review': return 'border-[#0099CC]/30 text-[#0099CC] bg-[#0099CC]/10';
       case 'Pending Review': return 'border-amber-500/30 text-amber-400 bg-amber-500/10';
       case 'Pending Documents': return 'border-amber-500/30 text-amber-400 bg-amber-500/10';
       case 'Submitted': return 'border-blue-500/30 text-blue-400 bg-blue-500/10';
@@ -103,7 +103,7 @@ const ApplicationDetail = ({ applicationId, onClose, onUpdate, onDelete }) => {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
         <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-lg p-8">
-          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#F47920]" />
           <p className="text-slate-400 mt-4">Loading application details...</p>
         </div>
       </div>
@@ -233,7 +233,7 @@ const ApplicationDetail = ({ applicationId, onClose, onUpdate, onDelete }) => {
                         size="sm"
                         variant="ghost"
                         onClick={() => api.downloadDocument(doc.id)}
-                        className="text-orange-500 hover:text-orange-400"
+                        className="text-[#F47920] hover:text-[#F47920]"
                       >
                         <Download className="w-4 h-4" />
                       </Button>

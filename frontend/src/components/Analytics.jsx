@@ -33,7 +33,7 @@ const Analytics = ({ userType = 'client' }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-teal-600">{adminAnalytics.totalApplicationsThisMonth}</div>
+            <div className="text-2xl font-bold text-[#003366]">{adminAnalytics.totalApplicationsThisMonth}</div>
             <p className="text-xs text-gray-500">This month</p>
           </CardContent>
         </Card>
@@ -93,7 +93,7 @@ const Analytics = ({ userType = 'client' }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-cyan-600">{adminAnalytics.complianceRate}%</div>
+            <div className="text-2xl font-bold text-[#0099CC]">{adminAnalytics.complianceRate}%</div>
             <p className="text-xs text-gray-500">Overall rate</p>
           </CardContent>
         </Card>
@@ -108,7 +108,7 @@ const Analytics = ({ userType = 'client' }) => {
           <CardTitle className="text-sm font-medium text-gray-600">Processing Time</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-teal-600">{clientAnalytics.avgProcessingTime}</div>
+          <div className="text-2xl font-bold text-[#003366]">{clientAnalytics.avgProcessingTime}</div>
           <p className="text-xs text-gray-500">Average for your applications</p>
         </CardContent>
       </Card>

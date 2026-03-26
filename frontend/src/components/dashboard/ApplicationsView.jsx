@@ -85,8 +85,8 @@ const ApplicationsView = () => {
   
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Approved': return 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10';
-      case 'Under Review': return 'border-teal-500/30 text-teal-400 bg-teal-500/10';
+      case 'Approved': return 'border-[#6DC04B]/30 text-[#6DC04B] bg-[#6DC04B]/10';
+      case 'Under Review': return 'border-[#0099CC]/30 text-[#0099CC] bg-[#0099CC]/10';
       case 'Pending Review': return 'border-amber-500/30 text-amber-400 bg-amber-500/10';
       case 'Pending Documents': return 'border-amber-500/30 text-amber-400 bg-amber-500/10';
       case 'Rejected': return 'border-red-500/30 text-red-400 bg-red-500/10';
@@ -104,7 +104,7 @@ const ApplicationsView = () => {
         <div className="flex items-center space-x-3">
           <Button 
             onClick={() => setShowNewApplicationForm(true)}
-            className="flex items-center space-x-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-white font-bold text-sm"
+            className="flex items-center space-x-2 px-4 py-2.5 bg-[#003366] hover:bg-[#0099CC] rounded-xl text-white font-bold text-sm"
           >
             <Plus className="w-4 h-4" />
             <span>New Application</span>
@@ -120,7 +120,7 @@ const ApplicationsView = () => {
               placeholder="Search apps..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-[#0a0f1e] border border-[#1e293b] rounded-xl pl-10 pr-4 py-2.5 text-sm w-64 focus:ring-1 focus:ring-teal-500 outline-none transition-all placeholder:text-slate-700"
+              className="bg-[#0a0f1e] border border-[#1e293b] rounded-xl pl-10 pr-4 py-2.5 text-sm w-64 focus:ring-1 focus:ring-[#0099CC] outline-none transition-all placeholder:text-slate-700"
             />
           </div>
         </div>
@@ -143,7 +143,7 @@ const ApplicationsView = () => {
                   value={formData.applicationType} 
                   onChange={(e) => setFormData({...formData, applicationType: e.target.value})} 
                   required 
-                  className="w-full bg-[#111827] border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm"
+                  className="w-full bg-[#111827] border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-[#0099CC] outline-none text-sm"
                 >
                   <option value="">Select application type...</option>
                   <option value="network_license">Network License</option>
@@ -162,7 +162,7 @@ const ApplicationsView = () => {
                   onChange={(e) => setFormData({...formData, businessName: e.target.value})} 
                   required 
                   placeholder="Enter your business name"
-                  className="w-full bg-[#111827] border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm"
+                  className="w-full bg-[#111827] border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-[#0099CC] outline-none text-sm"
                 />
               </div>
 
@@ -172,7 +172,7 @@ const ApplicationsView = () => {
                   value={formData.sector} 
                   onChange={(e) => setFormData({...formData, sector: e.target.value})} 
                   required 
-                  className="w-full bg-[#111827] border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm"
+                  className="w-full bg-[#111827] border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-[#0099CC] outline-none text-sm"
                 >
                   <option value="">Select sector...</option>
                   <option value="Telecommunications">Telecommunications</option>
@@ -189,7 +189,7 @@ const ApplicationsView = () => {
                   onChange={(e) => setFormData({...formData, description: e.target.value})} 
                   placeholder="Provide a detailed description of your application..."
                   rows="5" 
-                  className="w-full bg-[#111827] border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm resize-none"
+                  className="w-full bg-[#111827] border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-[#0099CC] outline-none text-sm resize-none"
                 />
               </div>
 
@@ -204,7 +204,7 @@ const ApplicationsView = () => {
                 </Button>
                 <Button 
                   type="submit"
-                  className="bg-teal-600 hover:bg-teal-500 rounded-xl px-6 py-3 text-white font-bold flex items-center" 
+                  className="bg-[#003366] hover:bg-[#0099CC] rounded-xl px-6 py-3 text-white font-bold flex items-center" 
                   disabled={submitting}
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
@@ -219,7 +219,7 @@ const ApplicationsView = () => {
       {/* Applications List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-teal-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#0099CC]" />
         </div>
       ) : filteredApplications.length > 0 ? (
         <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] overflow-hidden shadow-2xl relative w-full">
@@ -242,7 +242,7 @@ const ApplicationsView = () => {
                 >
                   <td className="px-8 py-6">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-teal-500/10 rounded-xl flex items-center justify-center text-teal-400">
+                      <div className="w-10 h-10 bg-[#0099CC]/10 rounded-xl flex items-center justify-center text-[#0099CC]">
                         <FileText className="w-5 h-5" />
                       </div>
                       <span className="font-bold text-slate-200">{app.referenceNumber}</span>
@@ -266,7 +266,7 @@ const ApplicationsView = () => {
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={(e) => handleEditApplication(app.id, e)}
-                        className="p-2.5 bg-slate-800/50 rounded-xl text-slate-500 hover:text-teal-400 hover:bg-teal-500/10 transition-all"
+                        className="p-2.5 bg-slate-800/50 rounded-xl text-slate-500 hover:text-[#0099CC] hover:bg-[#0099CC]/10 transition-all"
                         title="View details"
                       >
                         <ArrowUpRight className="w-4 h-4" />

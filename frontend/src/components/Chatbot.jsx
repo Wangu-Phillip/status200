@@ -171,9 +171,9 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
         <button
           id="chatbot-trigger"
           onClick={() => setIsOpen(true)}
-          className="w-12 h-12 bg-teal-600 rounded-2xl shadow-2xl shadow-teal-500/30 flex items-center justify-center text-white hover:scale-110 transition-transform group overflow-hidden"
+          className="w-12 h-12 bg-[#003366] rounded-2xl shadow-2xl shadow-[#0099CC]/30 flex items-center justify-center text-white hover:scale-110 transition-transform group overflow-hidden"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-400 to-blue-600 opacity-20 animate-pulse"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0099CC] to-blue-600 opacity-20 animate-pulse"></div>
           <Sparkles className="w-6 h-6 relative animate-in zoom-in spin-in duration-700" />
         </button>
       )}
@@ -186,13 +186,13 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
           {/* Header */}
           <div className="relative bg-[#111827] border-b border-[#1e293b] p-6 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+              <div className="w-10 h-10 bg-[#003366] rounded-xl flex items-center justify-center text-white shadow-lg">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-bold text-white tracking-tight">Ruby</h3>
                 <div className="flex items-center space-x-1">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                  <span className="w-1.5 h-1.5 bg-[#6DC04B] rounded-full animate-pulse"></span>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Active Assistant</span>
                 </div>
               </div>
@@ -216,7 +216,7 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 fade-in duration-300`}>
                 <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed ${
                   m.role === 'user' 
-                    ? 'bg-teal-600 text-white shadow-lg rounded-tr-none' 
+                    ? 'bg-[#003366] text-white shadow-lg rounded-tr-none' 
                     : 'bg-[#1e293b] border border-[#334155] text-slate-200 rounded-tl-none'
                 }`}>
                   {m.content}
@@ -227,13 +227,13 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
               <div className="flex flex-col space-y-3 pt-2">
                 <Button 
                   onClick={() => handleLanguageSelect('en')} 
-                  className="w-full bg-slate-800 border border-slate-700 hover:bg-teal-600 hover:border-teal-500 rounded-xl py-6 font-bold text-slate-200 transition-all"
+                  className="w-full bg-slate-800 border border-slate-700 hover:bg-[#003366] hover:border-[#0099CC] rounded-xl py-6 font-bold text-slate-200 transition-all"
                 >
                   🇬🇧 English
                 </Button>
                 <Button 
                   onClick={() => handleLanguageSelect('tn')} 
-                  className="w-full bg-slate-800 border border-slate-700 hover:bg-teal-600 hover:border-teal-500 rounded-xl py-6 font-bold text-slate-200 transition-all"
+                  className="w-full bg-slate-800 border border-slate-700 hover:bg-[#003366] hover:border-[#0099CC] rounded-xl py-6 font-bold text-slate-200 transition-all"
                 >
                   🇧🇼 Setswana
                 </Button>
@@ -242,9 +242,9 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
             {isTyping && (
               <div className="flex justify-start">
                 <div className="bg-[#1e293b] px-5 py-3 rounded-2xl rounded-tl-none flex space-x-1">
-                  <span className="w-1.5 h-1.5 bg-teal-500/50 rounded-full animate-bounce"></span>
-                  <span className="w-1.5 h-1.5 bg-teal-500/50 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                  <span className="w-1.5 h-1.5 bg-teal-500/50 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                  <span className="w-1.5 h-1.5 bg-[#0099CC]/50 rounded-full animate-bounce"></span>
+                  <span className="w-1.5 h-1.5 bg-[#0099CC]/50 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                  <span className="w-1.5 h-1.5 bg-[#0099CC]/50 rounded-full animate-bounce [animation-delay:0.4s]"></span>
                 </div>
               </div>
             )}
@@ -258,7 +258,7 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
                 <button 
                   key={s}
                   onClick={() => handleSend(s)}
-                  className="px-3 py-1.5 bg-[#111827] border border-[#1e293b] rounded-xl text-[10px] font-bold text-slate-400 hover:text-teal-400 hover:border-teal-400 transition-all flex items-center"
+                  className="px-3 py-1.5 bg-[#111827] border border-[#1e293b] rounded-xl text-[10px] font-bold text-slate-400 hover:text-[#0099CC] hover:border-[#0099CC] transition-all flex items-center"
                 >
                   <CornerDownRight className="w-3 h-3 mr-1 opacity-50" />
                   {s}
@@ -270,7 +270,7 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
           {/* Input */}
           {language && (
             <div className="relative p-6">
-              <div className="flex items-center space-x-2 bg-[#111827] border border-[#1e293b] rounded-2xl p-2 focus-within:ring-1 focus-within:ring-teal-500 transition-all">
+              <div className="flex items-center space-x-2 bg-[#111827] border border-[#1e293b] rounded-2xl p-2 focus-within:ring-1 focus-within:ring-[#0099CC] transition-all">
                 <input
                   type="text"
                   value={inputValue}
@@ -282,7 +282,7 @@ const Ruby = ({ isOpen: externalOpen, initialMessage }) => {
                 <button 
                   onClick={() => handleSend()}
                   disabled={!inputValue.trim()}
-                  className="w-11 h-11 bg-teal-600 disabled:opacity-50 rounded-xl flex items-center justify-center text-white"
+                  className="w-11 h-11 bg-[#003366] disabled:opacity-50 rounded-xl flex items-center justify-center text-white"
                 >
                   <Send className="w-5 h-5" />
                 </button>

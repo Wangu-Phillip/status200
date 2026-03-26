@@ -134,7 +134,7 @@ const SettingsView = () => {
                       <p className="font-bold text-slate-200">{pref.label}</p>
                       <p className="text-slate-500 text-sm mt-1">{pref.desc}</p>
                     </div>
-                    <div className={`w-12 h-6 rounded-full relative transition-all cursor-pointer bg-teal-600`}>
+                    <div className={`w-12 h-6 rounded-full relative transition-all cursor-pointer bg-[#003366]`}>
                       <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-lg left-7`}></div>
                     </div>
                   </div>
@@ -166,7 +166,7 @@ const SettingsView = () => {
                     </div>
                     <div 
                       onClick={() => handlePreferenceChange(pref.key, !preferencesData[pref.key])}
-                      className={`w-12 h-6 rounded-full relative transition-all cursor-pointer ${preferencesData[pref.key] ? 'bg-teal-600' : 'bg-slate-800'}`}
+                      className={`w-12 h-6 rounded-full relative transition-all cursor-pointer ${preferencesData[pref.key] ? 'bg-[#003366]' : 'bg-slate-800'}`}
                     >
                       <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-lg ${preferencesData[pref.key] ? 'left-7' : 'left-1'}`}></div>
                     </div>
@@ -180,19 +180,19 @@ const SettingsView = () => {
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
             <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#0099CC]/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
               <div className="flex items-center justify-between mb-8 relative">
                 <h3 className="text-xl font-bold text-slate-100 flex items-center">
-                  <Shield className="w-5 h-5 mr-3 text-teal-500" />
+                  <Shield className="w-5 h-5 mr-3 text-[#0099CC]" />
                   Authentication Protocol
                 </h3>
-                <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-bold uppercase tracking-widest text-[10px]">Active: JWT (RS256)</Badge>
+                <Badge className="bg-[#6DC04B]/10 text-[#4E9933] border-none font-bold uppercase tracking-widest text-[10px]">Active: JWT (RS256)</Badge>
               </div>
               <div className="space-y-6 relative">
                 <div className="p-6 bg-slate-900/50 border border-[#1e293b] rounded-3xl">
                   <div className="flex justify-between items-start mb-2">
                      <p className="font-bold text-slate-200">Session Token Rotation</p>
-                     <span className="text-[10px] text-teal-400 font-bold bg-teal-500/5 px-2 py-1 rounded-lg">ENABLED</span>
+                     <span className="text-[10px] text-[#0099CC] font-bold bg-[#0099CC]/5 px-2 py-1 rounded-lg">ENABLED</span>
                   </div>
                   <p className="text-slate-500 text-sm leading-relaxed">Your portal session uses stateless JSON Web Tokens (JWT) with automatic 15-minute rotation for maximum security.</p>
                 </div>
@@ -203,7 +203,7 @@ const SettingsView = () => {
                   </div>
                   <div className="flex items-center justify-between mt-4">
                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-teal-500/10 rounded-lg flex items-center justify-center text-teal-400">
+                        <div className="w-8 h-8 bg-[#0099CC]/10 rounded-lg flex items-center justify-center text-[#0099CC]">
                            <Globe className="w-4 h-4" />
                         </div>
                         <div>
@@ -223,7 +223,7 @@ const SettingsView = () => {
                     <Key className="w-5 h-5 mr-3 text-blue-500" />
                     Two-Factor (2FA)
                   </h3>
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-[#6DC04B] rounded-full"></div>
                 </div>
                 <p className="text-slate-500 text-sm leading-relaxed mb-8">Protected by SMS-based verification (+267 •••• 124). Switch to Authenticator App for higher security.</p>
                 <Button variant="outline" className="w-full h-14 rounded-2xl border-[#1e293b] bg-transparent hover:bg-blue-500/5 text-slate-300 hover:text-blue-400 font-bold text-sm shadow-inner transition-all" onClick={() => toast({title: "Redirecting", description: "Loading secure 2FA management portal."})}>
@@ -271,7 +271,7 @@ const SettingsView = () => {
                     </div>
                     <div 
                       onClick={() => toast({ title: "Alert Profile Updated", description: `${channel.label} setting has been synchronized.` })}
-                      className="w-12 h-6 rounded-full relative transition-all cursor-pointer bg-teal-600"
+                      className="w-12 h-6 rounded-full relative transition-all cursor-pointer bg-[#003366]"
                     >
                       <div className="absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-lg left-7"></div>
                     </div>
@@ -286,36 +286,36 @@ const SettingsView = () => {
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
             <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#0099CC]/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
               <div className="flex items-center justify-between mb-10 relative">
                 <h3 className="text-xl font-bold text-slate-100 flex items-center">
-                  <Play className="w-5 h-5 mr-3 text-teal-500 fill-teal-500/20" />
+                  <Play className="w-5 h-5 mr-3 text-[#0099CC] fill-teal-500/20" />
                   Quick Onboarding
                 </h3>
-                <Badge className="bg-teal-500/10 text-teal-500 border-none font-bold uppercase tracking-widest text-[10px]">Portal Help</Badge>
+                <Badge className="bg-[#0099CC]/10 text-[#0099CC] border-none font-bold uppercase tracking-widest text-[10px]">Portal Help</Badge>
               </div>
-              <div className="flex items-start justify-between bg-slate-900/50 border border-[#1e293b] p-8 rounded-3xl group-hover:bg-slate-900 group-hover:border-teal-500/30 transition-all cursor-pointer relative overflow-hidden" onClick={replayTour}>
-                 <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-teal-500/5 rounded-full blur-2xl group-hover:bg-teal-500/10 transition-all"></div>
+              <div className="flex items-start justify-between bg-slate-900/50 border border-[#1e293b] p-8 rounded-3xl group-hover:bg-slate-900 group-hover:border-[#0099CC]/30 transition-all cursor-pointer relative overflow-hidden" onClick={replayTour}>
+                 <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-[#0099CC]/5 rounded-full blur-2xl group-hover:bg-[#0099CC]/10 transition-all"></div>
                  <div className="flex-1 max-w-lg relative">
                     <p className="font-bold text-slate-200 text-lg">Replay Portal Tour</p>
                     <p className="text-slate-500 text-sm mt-2 leading-relaxed">Want a refresher? This will reset your first-login tour and guides will walk you through portal features again.</p>
                  </div>
-                 <div className="w-14 h-14 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-400 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-all">
+                 <div className="w-14 h-14 bg-[#0099CC]/10 rounded-2xl flex items-center justify-center text-[#0099CC] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-all">
                     <Play className="w-6 h-6 fill-teal-400" />
                  </div>
               </div>
             </section>
 
             <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#0099CC]/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
               <h3 className="text-xl font-bold text-slate-100 flex items-center mb-8 relative">
-                <User className="w-5 h-5 mr-3 text-teal-500" />
+                <User className="w-5 h-5 mr-3 text-[#0099CC]" />
                 Profile Information
               </h3>
               
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-teal-400" />
+                  <Loader2 className="w-8 h-8 animate-spin text-[#0099CC]" />
                 </div>
               ) : (
                 <form onSubmit={handleProfileUpdate} className="space-y-6 relative">
@@ -326,7 +326,7 @@ const SettingsView = () => {
                         type="text" 
                         value={profileData.name} 
                         onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm"
+                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-[#0099CC] outline-none text-sm"
                       />
                     </div>
                     <div>
@@ -344,7 +344,7 @@ const SettingsView = () => {
                         type="tel" 
                         value={profileData.phone} 
                         onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm"
+                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-[#0099CC] outline-none text-sm"
                       />
                     </div>
                     <div>
@@ -353,7 +353,7 @@ const SettingsView = () => {
                         type="text" 
                         value={profileData.organization} 
                         onChange={(e) => setProfileData({...profileData, organization: e.target.value})}
-                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm"
+                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-[#0099CC] outline-none text-sm"
                       />
                     </div>
                   </div>
@@ -362,7 +362,7 @@ const SettingsView = () => {
                     <Button 
                       type="submit" 
                       disabled={saving}
-                      className="bg-teal-600 hover:bg-teal-500 rounded-xl px-8 py-3 text-white font-bold flex items-center"
+                      className="bg-[#003366] hover:bg-[#0099CC] rounded-xl px-8 py-3 text-white font-bold flex items-center"
                     >
                       {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                       {saving ? 'Saving...' : 'Save Changes'}
@@ -414,7 +414,7 @@ const SettingsView = () => {
               onClick={() => setActiveSubTab(item.id)}
               className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all group font-bold text-sm ${
                 activeSubTab === item.id 
-                  ? 'bg-teal-600/10 text-teal-400 border border-teal-600/20 shadow-lg shadow-teal-500/5' 
+                  ? 'bg-[#003366]/10 text-[#0099CC] border border-[#003366]/20 shadow-lg shadow-[#0099CC]/5' 
                   : 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-300 border border-transparent hover:border-[#1e293b]'
               }`}
             >

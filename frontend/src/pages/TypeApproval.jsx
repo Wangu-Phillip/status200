@@ -58,7 +58,7 @@ const TypeApproval = () => {
         <Card className="mb-8 border-l-4 border-l-teal-600">
           <CardContent className="pt-6">
             <div className="flex items-start">
-              <CheckCircle className="h-6 w-6 text-teal-600 mr-3 flex-shrink-0 mt-1" />
+              <CheckCircle className="h-6 w-6 text-[#003366] mr-3 flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Required Documents</h3>
                 <ul className="text-sm text-gray-600 space-y-1">
@@ -177,10 +177,10 @@ const TypeApproval = () => {
               {/* Document Upload */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900">Supporting Documents</h3>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-teal-500 transition-colors">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-[#0099CC] transition-colors">
                   <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <Label htmlFor="file-upload" className="cursor-pointer">
-                    <span className="text-teal-600 font-semibold hover:text-teal-700">Click to upload</span>
+                    <span className="text-[#003366] font-semibold hover:text-[#003366]">Click to upload</span>
                     <span className="text-gray-600"> or drag and drop</span>
                   </Label>
                   <p className="text-sm text-gray-500 mt-2">PDF, DOC, DOCX, JPG, PNG (max. 10MB each)</p>
@@ -199,7 +199,7 @@ const TypeApproval = () => {
                     {files.map((file, index) => (
                       <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                         <div className="flex items-center">
-                          <FileText className="h-5 w-5 text-teal-600 mr-2" />
+                          <FileText className="h-5 w-5 text-[#003366] mr-2" />
                           <span className="text-sm text-gray-700">{file.name}</span>
                         </div>
                         <Button
@@ -222,7 +222,7 @@ const TypeApproval = () => {
                 <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white px-8">
+                <Button type="submit" className="bg-[#003366] hover:bg-[#003366] text-white px-8">
                   Submit Application
                 </Button>
               </div>
