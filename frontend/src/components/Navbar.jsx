@@ -42,8 +42,6 @@ const Navbar = () => {
     { name: '.bw Domain Registry', path: '/domain-registry', icon: Globe },
     { name: 'Live QoS Monitoring', path: '/live-qos', icon: BarChart3 },
     { name: 'Type Approval', path: '/type-approval', icon: ShieldCheck },
-    { name: 'License Applications', path: '/license-application', icon: Zap },
-    { name: 'Complaints', path: '/complaints', icon: MessageSquare },
   ];
 
   return (
