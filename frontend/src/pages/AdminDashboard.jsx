@@ -147,6 +147,9 @@ const AdminDashboard = () => {
     { id: 2, action: 'Application status updated', reference: 'APP-2026-001', timestamp: new Date(Date.now() - 3600000), type: 'update' },
     { id: 3, action: 'Tender posted', tender: 'TENDER-2026-005', timestamp: new Date(Date.now() - 7200000), type: 'create' },
   ]);
+  const [showAllActivities, setShowAllActivities] = useState(false);
+  const [allActivities, setAllActivities] = useState([]);
+  const [allActivitiesLoading, setAllActivitiesLoading] = useState(false);
   
   const { toast } = useToast();
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -270,6 +273,35 @@ const AdminDashboard = () => {
       setRecentActivities(formattedActivities);
     } catch (error) {
       console.error('Failed to load activities:', error);
+    }
+  };
+
+  const loadAllActivities = async () => {
+    setAllActivitiesLoading(true);
+    try {
+      const data = await adminApi.getActivityLogs({ limit: 100, offset: 0 });
+      const formattedActivities = data.activities.map((activity) => ({
+        id: activity.id,
+        action: activity.action,
+        actionType: activity.actionType,
+        user: activity.user,
+        userName: activity.userName,
+        timestamp: new Date(activity.timestamp),
+        type: activity.actionType.includes('CREATE') ? 'create'
+          : activity.actionType.includes('DELETE') ? 'delete'
+          : 'update',
+      }));
+      setAllActivities(formattedActivities);
+      setShowAllActivities(true);
+    } catch (error) {
+      console.error('Failed to load all activities:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load activity log',
+        variant: 'destructive',
+      });
+    } finally {
+      setAllActivitiesLoading(false);
     }
   };
 
@@ -2888,7 +2920,7 @@ const AdminDashboard = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-3">
-                      {recentActivities.map((activity) => {
+                      {recentActivities.slice(0, 5).map((activity) => {
                         const Icon = activity.type === 'create' ? Plus : activity.type === 'update' ? CheckCheck : Activity;
                         return (
                           <div key={activity.id} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors">
@@ -2909,8 +2941,20 @@ const AdminDashboard = () => {
                       })}
                     </div>
 
-                    <Button variant="outline" className="w-full">
-                      View Full Activity Log
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={loadAllActivities}
+                      disabled={allActivitiesLoading}
+                    >
+                      {allActivitiesLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Loading Activity Log...
+                        </>
+                      ) : (
+                        'View Full Activity Log'
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
@@ -2919,6 +2963,67 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Activity Log Modal */}
+      {showAllActivities && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+            <CardHeader className="border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl">Activity Log</CardTitle>
+                  <CardDescription>Total activities: {allActivities.length}</CardDescription>
+                </div>
+                <button
+                  onClick={() => setShowAllActivities(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <XIcon className="h-6 w-6" />
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-y-auto py-4">
+              <div className="space-y-3">
+                {allActivities.length > 0 ? (
+                  allActivities.map((activity) => {
+                    const Icon = activity.type === 'create' ? Plus : activity.type === 'update' ? CheckCheck : Activity;
+                    return (
+                      <div key={activity.id} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors">
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                          activity.type === 'create' ? 'bg-green-100' : activity.type === 'update' ? 'bg-blue-100' : 'bg-slate-100'
+                        }`}>
+                          <Icon className={`h-5 w-5 ${
+                            activity.type === 'create' ? 'text-green-600' : activity.type === 'update' ? 'text-blue-600' : 'text-slate-600'
+                          }`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-slate-900">{activity.action}</p>
+                          <p className="text-sm text-slate-500">{activity.user}</p>
+                          <p className="text-xs text-slate-400 mt-1">{activity.timestamp.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8">
+                    <Activity className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-500">No activities found</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+            <div className="border-t p-4 flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowAllActivities(false)}
+                className="flex-1"
+              >
+                Close
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* User Detail Modal */}
       {viewingUser && (
