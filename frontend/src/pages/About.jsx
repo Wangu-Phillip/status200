@@ -204,11 +204,11 @@ export default function AboutPage() {
                 className="flex flex-wrap gap-4"
               >
                 <Button 
+                  asChild
                   size="lg" 
                   className="bg-[#75B2DD] hover:bg-[#5a9ac9] text-[#0A192F] font-bold rounded-sm px-8"
-                  onClick={() => document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  Explore Services
+                  <Link to="/services">Explore Services</Link>
                 </Button>
                 <Button 
                   variant="outline" 

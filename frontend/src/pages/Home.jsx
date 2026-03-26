@@ -134,16 +134,16 @@ const Home = () => {
               <div>
                 <p className="section-kicker mb-3">Botswana Communications Regulatory Authority</p>
                 <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.08] hero-title">
-                  Connecting Botswana&apos;s <br className="hidden sm:block" />
+                  Access BOCRA&apos;s <br className="hidden sm:block" />
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#003366] to-[#0A4D8C]">
-                    Digital Future
+                    Services In Minutes
                   </span>
                 </h1>
               </div>
 
               <p className="text-base sm:text-xl text-slate-600 max-w-xl leading-relaxed">
-                Regulatory services that are seamless, transparent, and citizen-centred —
-                built to support trust, innovation, and national digital transformation.
+                Apply, report, track, and manage all regulatory services in one secure platform designed for Botswana's citizens and businesses..
+                How can we help you today?
               </p>
 
               <div className="flex flex-wrap gap-4">
