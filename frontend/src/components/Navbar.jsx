@@ -4,7 +4,7 @@ import { useToast } from '../hooks/use-toast';
 import { Button } from './ui/button';
 import { useTheme } from '../context/ThemeProvider';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, ChevronDown, Globe, BarChart3, Search, Bell, Sun, Moon, ShieldCheck, Zap, MessageSquare } from 'lucide-react';
+import { Menu, X, ChevronDown, Globe, BarChart3, Search, Bell, Sun, Moon, ShieldCheck, Zap, MessageSquare, Briefcase } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import NotificationCenter from './NotificationCenter';
 import {
@@ -121,6 +121,19 @@ const Navbar = () => {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <Link to="/tenders">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${
+                    isActive('/tenders')
+                      ? 'bg-white/15 text-white'
+                      : 'text-white/80'
+                  } hover:bg-white/10 hover:text-white flex items-center gap-2`}
+                >
+                  Tenders
+                </Button>
+              </Link>
 
               <Link to="/about">
                 <Button
@@ -243,7 +256,7 @@ const Navbar = () => {
           <div className="heritage-overlay basket-pattern text-white opacity-[0.04]"></div>
 
           <div className="px-6 space-y-4 relative">
-            {['Home', 'About', 'Documents', 'Contact'].map((item) => (
+            {['Home', 'Tenders', 'About', 'Documents', 'Contact'].map((item) => (
               <Link
                 key={item}
                 to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
