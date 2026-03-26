@@ -206,6 +206,7 @@ export default function AboutPage() {
                 <Button 
                   size="lg" 
                   className="bg-[#75B2DD] hover:bg-[#5a9ac9] text-[#0A192F] font-bold rounded-sm px-8"
+                  onClick={() => document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth' })}
                 >
                   Explore Services
                 </Button>
@@ -351,7 +352,7 @@ export default function AboutPage() {
       </section>
 
       {/* Services We Regulate */}
-      <section className="py-20 bg-[#0A192F] text-white">
+      <section id="services-section" className="py-20 bg-[#0A192F] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
