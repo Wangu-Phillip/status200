@@ -173,6 +173,12 @@ export const updateUserProfile = (data) =>
     body: JSON.stringify(data),
   });
 
+export const changePassword = (currentPassword, newPassword, confirmPassword) =>
+  apiCall('/user/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+  });
+
 // =====================
 // DASHBOARD API
 // =====================
