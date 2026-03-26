@@ -14,6 +14,7 @@ const ApplicationsView = () => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [modalMode, setModalMode] = useState(null); // 'view' or 'edit'
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState({
@@ -72,9 +73,17 @@ const ApplicationsView = () => {
     }
   };
 
-  const handleEditApplication = (appId, e) => {
-    e.stopPropagation();
+  const handleViewApplication = (appId, e) => {
+    if (e) e.stopPropagation();
     setSelectedApplicationId(appId);
+    setModalMode('view');
+    setShowDetailModal(true);
+  };
+
+  const handleEditApplication = (appId, e) => {
+    if (e) e.stopPropagation();
+    setSelectedApplicationId(appId);
+    setModalMode('edit');
     setShowDetailModal(true);
   };
 
@@ -265,7 +274,7 @@ const ApplicationsView = () => {
                   <td className="px-8 py-6 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button 
-                        onClick={(e) => handleEditApplication(app.id, e)}
+                        onClick={(e) => handleViewApplication(app.id, e)}
                         className="p-2.5 bg-slate-800/50 rounded-xl text-slate-500 hover:text-teal-400 hover:bg-teal-500/10 transition-all"
                         title="View details"
                       >
@@ -274,10 +283,7 @@ const ApplicationsView = () => {
                       {['Submitted', 'Pending Review', 'Pending Documents'].includes(app.status) && (
                         <>
                           <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditApplication(app.id, e);
-                            }}
+                            onClick={(e) => handleEditApplication(app.id, e)}
                             className="p-2.5 bg-slate-800/50 rounded-xl text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
                             title="Edit application"
                           >
@@ -338,9 +344,11 @@ const ApplicationsView = () => {
       {showDetailModal && selectedApplicationId && (
         <ApplicationDetail
           applicationId={selectedApplicationId}
+          mode={modalMode}
           onClose={() => {
             setShowDetailModal(false);
             setSelectedApplicationId(null);
+            setModalMode(null);
           }}
           onUpdate={() => fetchApplications()}
           onDelete={() => {

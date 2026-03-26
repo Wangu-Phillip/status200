@@ -4,10 +4,10 @@ import { Button } from '../ui/button';
 import { X, Loader2, Edit2, Trash2, ChevronLeft, Download } from 'lucide-react';
 import * as api from '../../services/api';
 
-const ApplicationDetail = ({ applicationId, onClose, onUpdate, onDelete }) => {
+const ApplicationDetail = ({ applicationId, mode = 'view', onClose, onUpdate, onDelete }) => {
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(mode === 'edit');
   const [formData, setFormData] = useState({
     businessName: '',
     sector: '',
@@ -289,13 +289,40 @@ const ApplicationDetail = ({ applicationId, onClose, onUpdate, onDelete }) => {
                 Cancel
               </Button>
             </>
-          ) : (
+          ) : mode === 'view' ? (
             <Button
               onClick={onClose}
               className="flex-1 bg-slate-700 hover:bg-slate-600"
             >
               Close
             </Button>
+          ) : (
+            <>
+              {canEdit && (
+                <Button
+                  onClick={handleEdit}
+                  className="flex-1 bg-teal-600 hover:bg-teal-700 flex items-center justify-center gap-2"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </Button>
+              )}
+              {canDelete && (
+                <Button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex-1 bg-red-600 hover:bg-red-700 flex items-center justify-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </Button>
+              )}
+              <Button
+                onClick={onClose}
+                className="flex-1 bg-slate-700 hover:bg-slate-600"
+              >
+                Close
+              </Button>
+            </>
           )}
         </div>
       </div>
