@@ -14,6 +14,7 @@ import UserForm from '../components/admin/UserForm';
 import UserList from '../components/admin/UserList';
 import UserModal from '../components/admin/UserModal';
 import TenderDetailModal from '../components/TenderDetailModal';
+import AdminLicensingView from '../components/admin/AdminLicensingView';
 import {
   DEPARTMENTS,
   DEPARTMENT_LABELS,
@@ -76,7 +77,7 @@ const AdminDashboard = () => {
   const [adminNote, setAdminNote] = useState('');
   const [selectedTenderDetail, setSelectedTenderDetail] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'submissions', 'users', 'applications', or 'settings'
+  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'submissions', 'users', 'applications', 'licensing', or 'settings'
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [tenderView, setTenderView] = useState('submissions'); // 'submissions' or 'postings'
   const [tenderPostings, setTenderPostings] = useState([]);
@@ -1025,6 +1026,23 @@ const AdminDashboard = () => {
                 <FileText className="h-4 w-4" />
                 Applications
               </button>
+
+              <button 
+                onClick={() => { 
+                  setActiveView('licensing');
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                  toast({ title: 'License Applications', description: 'Manage citizen license applications.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'licensing' 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Zap className="h-4 w-4" />
+                License Applications
+              </button>
             </>
           )}
 
@@ -1151,6 +1169,8 @@ const AdminDashboard = () => {
                 ? 'User Management' 
                 : activeView === 'applications' 
                 ? 'All Applications' 
+                : activeView === 'licensing'
+                ? 'License Applications'
                 : activeView === 'settings'
                 ? 'Settings'
                 : `${DEPARTMENT_LABELS[user.department] || 'Admin'} - Submissions`}
@@ -1162,6 +1182,8 @@ const AdminDashboard = () => {
                 ? 'Manage all system users and permissions.'
                 : activeView === 'applications'
                 ? 'Manage license applications from all departments'
+                : activeView === 'licensing'
+                ? 'Review and manage citizen license applications'
                 : activeView === 'settings'
                 ? 'Configure system-wide settings and preferences'
                 : `Managing ${DEPARTMENT_LABELS[user.department] || 'submissions'} submissions.`}
@@ -2490,6 +2512,11 @@ const AdminDashboard = () => {
               )}
             </div>
           </>
+        )}
+
+        {/* License Applications View - Only for Superadmins */}
+        {activeView === 'licensing' && user?.adminLevel === 'superadmin' && (
+          <AdminLicensingView user={user} />
         )}
 
         {/* Settings View - Only for Superadmins */}

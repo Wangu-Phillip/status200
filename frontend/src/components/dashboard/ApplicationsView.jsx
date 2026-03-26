@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { FileText, Clock, CheckCircle, AlertCircle, Search, Filter, ArrowUpRight, Hash, Loader2, Plus, X, Edit2, Trash2, Upload, File } from 'lucide-react';
+import { FileText, Clock, CheckCircle, AlertCircle, Search, Filter, ArrowUpRight, Hash, Loader2, Plus, X, Edit2, Trash2, Upload, File, Briefcase } from 'lucide-react';
 import * as api from '../../services/api';
 import ApplicationDetail from './ApplicationDetail';
+import LicenseApplicationForm from './LicenseApplicationForm';
 
 const ApplicationsView = () => {
   const [applications, setApplications] = useState([]);
@@ -11,6 +12,7 @@ const ApplicationsView = () => {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewApplicationForm, setShowNewApplicationForm] = useState(false);
+  const [showLicenseApplicationForm, setShowLicenseApplicationForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -139,6 +141,13 @@ const ApplicationsView = () => {
           >
             <Plus className="w-4 h-4" />
             <span>New Application</span>
+          </Button>
+          <Button 
+            onClick={() => setShowLicenseApplicationForm(true)}
+            className="flex items-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-bold text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>License Application</span>
           </Button>
           <button className="flex items-center space-x-2 px-4 py-2.5 bg-[#0a0f1e] border border-[#1e293b] rounded-xl text-slate-400 hover:text-white transition-all text-sm font-bold">
             <Filter className="w-4 h-4" />
@@ -417,6 +426,17 @@ const ApplicationsView = () => {
           onUpdate={() => fetchApplications()}
           onDelete={() => {
             setShowDetailModal(false);
+            fetchApplications();
+          }}
+        />
+      )}
+
+      {/* License Application Form */}
+      {showLicenseApplicationForm && (
+        <LicenseApplicationForm
+          onClose={() => setShowLicenseApplicationForm(false)}
+          onSuccess={() => {
+            setPage(1);
             fetchApplications();
           }}
         />
