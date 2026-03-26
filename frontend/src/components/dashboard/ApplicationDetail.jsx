@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { X, Loader2, Edit2, Trash2, ChevronLeft, Download } from 'lucide-react';
+import { X, Loader2, Edit2, Trash2, ChevronLeft, Download, Upload, File } from 'lucide-react';
 import * as api from '../../services/api';
 
 const ApplicationDetail = ({ applicationId, mode = 'view', onClose, onUpdate, onDelete }) => {
@@ -16,6 +16,8 @@ const ApplicationDetail = ({ applicationId, mode = 'view', onClose, onUpdate, on
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [newUploadedFiles, setNewUploadedFiles] = useState([]);
+  const [filesToDelete, setFilesToDelete] = useState([]);
 
   useEffect(() => {
     fetchApplication();
@@ -41,6 +43,8 @@ const ApplicationDetail = ({ applicationId, mode = 'view', onClose, onUpdate, on
 
   const handleEdit = () => {
     setIsEditing(true);
+    setNewUploadedFiles([]);
+    setFilesToDelete([]);
   };
 
   const handleCancelEdit = () => {
@@ -50,14 +54,52 @@ const ApplicationDetail = ({ applicationId, mode = 'view', onClose, onUpdate, on
       sector: application.sector || '',
       description: application.description || '',
     });
+    setNewUploadedFiles([]);
+    setFilesToDelete([]);
+  };
+
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setNewUploadedFiles(prev => [...prev, ...files]);
+  };
+
+  const handleRemoveNewFile = (index) => {
+    setNewUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveExistingFile = (docId) => {
+    setFilesToDelete(prev => [...prev, docId]);
+  };
+
+  const handleUndoRemoveFile = (docId) => {
+    setFilesToDelete(prev => prev.filter(id => id !== docId));
   };
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      const updated = await api.updateApplication(applicationId, formData);
+      
+      // Create FormData to handle files
+      const formDataToSubmit = new FormData();
+      formDataToSubmit.append('businessName', formData.businessName);
+      formDataToSubmit.append('sector', formData.sector);
+      formDataToSubmit.append('description', formData.description);
+      
+      // Append new files
+      newUploadedFiles.forEach((file) => {
+        formDataToSubmit.append('documents', file);
+      });
+      
+      // Append files to delete
+      if (filesToDelete.length > 0) {
+        formDataToSubmit.append('deleteDocuments', JSON.stringify(filesToDelete));
+      }
+
+      const updated = await api.updateApplication(applicationId, formDataToSubmit);
       setApplication(updated);
       setIsEditing(false);
+      setNewUploadedFiles([]);
+      setFilesToDelete([]);
       onUpdate?.();
       alert('Application updated successfully');
     } catch (error) {
@@ -219,29 +261,107 @@ const ApplicationDetail = ({ applicationId, mode = 'view', onClose, onUpdate, on
             </div>
 
             {/* Documents */}
-            {application.documents && application.documents.length > 0 && (
-              <div>
-                <p className="text-slate-400 text-sm font-medium mb-3">Attached Documents</p>
-                <div className="space-y-2">
-                  {application.documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between bg-[#0f1419] p-3 rounded border border-[#1e293b]">
-                      <div className="flex-1">
-                        <p className="text-white text-sm">{doc.filename}</p>
-                        <p className="text-slate-500 text-xs">{new Date(doc.uploadedDate).toLocaleDateString()}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => api.downloadDocument(doc.id)}
-                        className="text-orange-500 hover:text-orange-400"
+            <div>
+              <p className="text-slate-400 text-sm font-medium mb-3">Attached Documents</p>
+              
+              {/* Existing Documents */}
+              {application.documents && application.documents.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {application.documents.map((doc) => {
+                    const isMarkedForDelete = filesToDelete.includes(doc.id);
+                    return (
+                      <div 
+                        key={doc.id} 
+                        className={`flex items-center justify-between bg-[#0f1419] p-3 rounded border border-[#1e293b] ${isMarkedForDelete ? 'opacity-50' : ''}`}
                       >
-                        <Download className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex-1">
+                          <p className={`text-sm ${isMarkedForDelete ? 'text-slate-500 line-through' : 'text-white'}`}>{doc.filename}</p>
+                          <p className="text-slate-500 text-xs">{new Date(doc.uploadedDate).toLocaleDateString()}</p>
+                        </div>
+                        {isEditing ? (
+                          isMarkedForDelete ? (
+                            <button
+                              type="button"
+                              onClick={() => handleUndoRemoveFile(doc.id)}
+                              className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
+                              title="Undo delete"
+                            >
+                              <Loader2 className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveExistingFile(doc.id)}
+                              className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                              title="Mark for deletion"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )
+                        ) : (
+                          <button
+                            onClick={() => api.downloadDocument(doc.id)}
+                            className="p-1 text-orange-500 hover:text-orange-400 transition-colors"
+                            title="Download"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Upload New Documents - Only shown in edit mode */}
+              {isEditing && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-center border-2 border-dashed border-[#1e293b] rounded-lg p-4 hover:border-orange-500/50 transition-colors cursor-pointer group bg-[#111827]">
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload-edit"
+                      accept=".pdf,.doc,.docx,.xlsx,.xls,.png,.jpg,.jpeg"
+                    />
+                    <label htmlFor="file-upload-edit" className="flex flex-col items-center justify-center cursor-pointer w-full">
+                      <Upload className="w-6 h-6 text-slate-500 group-hover:text-orange-400 transition-colors mb-1" />
+                      <span className="text-xs font-bold text-slate-400 group-hover:text-slate-300">Add more documents</span>
+                    </label>
+                  </div>
+
+                  {/* New Uploaded Files */}
+                  {newUploadedFiles.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">New Files ({newUploadedFiles.length})</p>
+                      {newUploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-orange-500/10 p-3 rounded-lg border border-orange-500/30">
+                          <div className="flex items-center gap-3">
+                            <File className="w-4 h-4 text-orange-400" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-white truncate font-medium">{file.name}</p>
+                              <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(2)} KB</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveNewFile(index)}
+                            className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!application.documents || application.documents.length === 0 && newUploadedFiles.length === 0 ? (
+                <p className="text-slate-500 text-sm italic">No documents attached</p>
+              ) : null}
+            </div>
           </div>
 
           {/* Delete Confirmation */}

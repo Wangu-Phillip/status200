@@ -2,9 +2,59 @@ import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest, authenticateToken } from '../middleware/auth.js';
 import { v4 as uuidv4 } from 'uuid';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+// @ts-ignore
+import * as fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = Router();
 const prisma = new PrismaClient();
+
+// Create uploads directory
+const uploadsDir = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Multer configuration for file uploads
+const uploadStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueName = `${uuidv4()}-${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
+
+const fileFilter = (_req: any, file: any, cb: any) => {
+  const allowedMimes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+  ];
+  
+  if (allowedMimes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only PDF, DOC, XLSX, PNG, JPG are allowed.'));
+  }
+};
+
+const upload = multer({
+  storage: uploadStorage,
+  fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+});
 
 // Helper to generate ref numbers
 const generateReferenceNumber = (prefix: string) => {
@@ -73,8 +123,8 @@ router.get('/applications/:id', authenticateToken, async (req: AuthRequest, res:
   }
 });
 
-// Submit new application
-router.post('/applications', authenticateToken, async (req: AuthRequest, res: Response) => {
+// Submit new application with file uploads
+router.post('/applications', authenticateToken, upload.array('documents', 10), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     const { applicationType, businessName, sector, description, department, priority } = req.body;
@@ -102,6 +152,31 @@ router.post('/applications', authenticateToken, async (req: AuthRequest, res: Re
       include: { documents: true },
     });
 
+    // Handle file uploads
+    if (req.files && Array.isArray(req.files)) {
+      for (const file of req.files) {
+        await prisma.document.create({
+          data: {
+            id: uuidv4(),
+            applicationId: application.id,
+            userId: userId!,
+            filename: file.originalname,
+            category: 'application_document',
+            documentType: file.mimetype,
+            status: 'uploaded',
+            uploadedDate: new Date(),
+            filePath: `/uploads/${file.filename}`,
+          },
+        });
+      }
+    }
+
+    // Fetch application with documents
+    const applicationWithDocs = await prisma.application.findUnique({
+      where: { id: application.id },
+      include: { documents: true },
+    });
+
     // Log activity
     await prisma.activityLog.create({
       data: {
@@ -115,7 +190,7 @@ router.post('/applications', authenticateToken, async (req: AuthRequest, res: Re
       },
     });
 
-    res.status(201).json(application);
+    res.status(201).json(applicationWithDocs);
   } catch (error) {
     console.error('Submit application error:', error);
     res.status(500).json({ error: 'Failed to submit application' });
@@ -182,15 +257,16 @@ router.post(
 );
 
 // Update application
-router.put('/applications/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put('/applications/:id', authenticateToken, upload.array('documents', 10), async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
-    const { businessName, sector, description } = req.body;
+    const { businessName, sector, description, deleteDocuments } = req.body;
 
     // Verify application ownership
     const application = await prisma.application.findUnique({
       where: { id },
+      include: { documents: true },
     });
 
     if (!application) {
@@ -209,13 +285,68 @@ router.put('/applications/:id', authenticateToken, async (req: AuthRequest, res:
       return;
     }
 
-    const updatedApplication = await prisma.application.update({
+    // Handle document deletions
+    if (deleteDocuments) {
+      try {
+        const docsToDelete = JSON.parse(deleteDocuments);
+        if (Array.isArray(docsToDelete)) {
+          for (const docId of docsToDelete) {
+            // Get document to find file path
+            const doc = await prisma.document.findUnique({
+              where: { id: docId },
+            });
+            
+            if (doc && doc.filePath) {
+              // Delete file from disk
+              const filePath = path.join(__dirname, '../../' + doc.filePath);
+              if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+              }
+            }
+            
+            // Delete document record
+            await prisma.document.delete({
+              where: { id: docId },
+            });
+          }
+        }
+      } catch (parseError) {
+        console.error('Error parsing deleteDocuments:', parseError);
+      }
+    }
+
+    // Update application
+    await prisma.application.update({
       where: { id },
       data: {
         ...(businessName && { businessName }),
         ...(sector && { sector }),
         ...(description !== undefined && { description }),
       },
+    });
+
+    // Handle new file uploads
+    if (req.files && Array.isArray(req.files)) {
+      for (const file of req.files) {
+        await prisma.document.create({
+          data: {
+            id: uuidv4(),
+            applicationId: id,
+            userId: userId!,
+            filename: file.originalname,
+            category: 'application_document',
+            documentType: file.mimetype,
+            status: 'uploaded',
+            uploadedDate: new Date(),
+            filePath: `/uploads/${file.filename}`,
+          },
+        });
+      }
+    }
+
+    // Fetch updated application with all documents
+    const finalApplication = await prisma.application.findUnique({
+      where: { id },
       include: { documents: true },
     });
 
@@ -232,7 +363,7 @@ router.put('/applications/:id', authenticateToken, async (req: AuthRequest, res:
       },
     });
 
-    res.json(updatedApplication);
+    res.json(finalApplication);
   } catch (error) {
     console.error('Update application error:', error);
     res.status(500).json({ error: 'Failed to update application' });

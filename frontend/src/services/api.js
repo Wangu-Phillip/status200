@@ -4,16 +4,33 @@ export const getAuthToken = () => localStorage.getItem('bocra_token');
 
 const apiCall = async (endpoint, options = {}) => {
   const token = getAuthToken();
+  
+  // Determine if we're sending FormData (for file uploads)
+  const isFormData = options.body instanceof FormData;
+  
   const headers = {
-    'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  // Only set Content-Type if not FormData (let browser handle multipart/form-data)
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const requestOptions = {
     ...options,
     headers,
-  });
+  };
+
+  // If body is FormData, send as-is; otherwise stringify if it's an object
+  if (isFormData) {
+    requestOptions.body = options.body;
+  } else if (options.body && typeof options.body === 'object') {
+    requestOptions.body = JSON.stringify(options.body);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, requestOptions);
 
   if (!response.ok) {
     const error = await response.json();
@@ -32,17 +49,33 @@ export const getApplications = ({ page = 1, limit = 10 } = {}) =>
 
 export const getApplication = (id) => apiCall(`/applications/${id}`);
 
-export const submitApplication = (data) =>
-  apiCall('/applications', {
+export const submitApplication = (data) => {
+  const options = {
     method: 'POST',
-    body: JSON.stringify(data),
-  });
+  };
+  
+  if (data instanceof FormData) {
+    options.body = data;
+  } else {
+    options.body = data;
+  }
+  
+  return apiCall('/applications', options);
+};
 
-export const updateApplication = (id, data) =>
-  apiCall(`/applications/${id}`, {
+export const updateApplication = (id, data) => {
+  const options = {
     method: 'PUT',
-    body: JSON.stringify(data),
-  });
+  };
+  
+  if (data instanceof FormData) {
+    options.body = data;
+  } else {
+    options.body = data;
+  }
+  
+  return apiCall(`/applications/${id}`, options);
+};
 
 export const deleteApplication = (id) =>
   apiCall(`/applications/${id}`, {

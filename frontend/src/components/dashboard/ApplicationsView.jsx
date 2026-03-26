@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { FileText, Clock, CheckCircle, AlertCircle, Search, Filter, ArrowUpRight, Hash, Loader2, Plus, X, Edit2, Trash2 } from 'lucide-react';
+import { FileText, Clock, CheckCircle, AlertCircle, Search, Filter, ArrowUpRight, Hash, Loader2, Plus, X, Edit2, Trash2, Upload, File } from 'lucide-react';
 import * as api from '../../services/api';
 import ApplicationDetail from './ApplicationDetail';
 
@@ -23,6 +23,7 @@ const ApplicationsView = () => {
     sector: '',
     description: '',
   });
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   useEffect(() => {
     fetchApplications();
@@ -41,12 +42,33 @@ const ApplicationsView = () => {
     }
   };
 
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setUploadedFiles(prev => [...prev, ...files]);
+  };
+
+  const handleRemoveFile = (index) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmitApplication = async (e) => {
     e.preventDefault();
     try {
       setSubmitting(true);
-      await api.submitApplication(formData);
+      const formDataToSubmit = new FormData();
+      formDataToSubmit.append('applicationType', formData.applicationType);
+      formDataToSubmit.append('businessName', formData.businessName);
+      formDataToSubmit.append('sector', formData.sector);
+      formDataToSubmit.append('description', formData.description);
+      
+      // Append files
+      uploadedFiles.forEach((file, index) => {
+        formDataToSubmit.append(`documents`, file);
+      });
+
+      await api.submitApplication(formDataToSubmit);
       setFormData({ applicationType: '', businessName: '', sector: '', description: '' });
+      setUploadedFiles([]);
       setShowNewApplicationForm(false);
       setPage(1);
       await fetchApplications();
@@ -200,6 +222,48 @@ const ApplicationsView = () => {
                   rows="5" 
                   className="w-full bg-[#111827] border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 focus:ring-1 focus:ring-teal-500 outline-none text-sm resize-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-300 mb-2">Upload Documents</label>
+                <div className="flex items-center justify-center border-2 border-dashed border-[#1e293b] rounded-xl p-6 hover:border-teal-500/50 transition-colors cursor-pointer group bg-[#111827]">
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                    accept=".pdf,.doc,.docx,.xlsx,.xls,.png,.jpg,.jpeg"
+                  />
+                  <label htmlFor="file-upload" className="flex flex-col items-center justify-center cursor-pointer w-full">
+                    <Upload className="w-8 h-8 text-slate-500 group-hover:text-teal-400 transition-colors mb-2" />
+                    <span className="text-sm font-bold text-slate-400 group-hover:text-slate-300">Click to upload or drag and drop</span>
+                    <span className="text-xs text-slate-600 mt-1">PDF, DOC, XLS, PNG, JPG (Max 10MB each)</span>
+                  </label>
+                </div>
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Uploaded Files ({uploadedFiles.length})</p>
+                    {uploadedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-[#0f1419] p-3 rounded-lg border border-[#1e293b]">
+                        <div className="flex items-center gap-3">
+                          <File className="w-4 h-4 text-teal-400" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white truncate font-medium">{file.name}</p>
+                            <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(2)} KB</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(index)}
+                          className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-4 justify-end pt-6 border-t border-[#1e293b]">
