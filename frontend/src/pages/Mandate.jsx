@@ -209,7 +209,7 @@ const Mandate = () => {
                        
                        {/* Right Panel: Visual Decoder */}
                        <div className={`hidden md:flex w-1/3 bg-gradient-to-br ${mandate.color} items-center justify-center p-8 relative overflow-hidden group-hover:w-[35%] transition-all duration-700`}>
-                          <div className="absolute inset-0 opacity-10 bg-[url('/botswana_heritage.png')] bg-cover bg-center mix-blend-overlay" />
+                        <div className="absolute inset-0 opacity-10 basket-pattern text-white mix-blend-overlay"></div>
                           <motion.div 
                             animate={{ rotate: [0, 10, 0] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}

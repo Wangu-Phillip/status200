@@ -14,7 +14,206 @@ import {
   Wifi,
   CheckCircle2
 } from 'lucide-react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { newsItems } from '../mockData';
+
+const ConnectivityNodes = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+      <svg className="w-full h-full" viewBox="0 0 800 600" fill="none">
+        {/* Connection Lines */}
+        <motion.path
+          d="M100 100 L400 300 L700 100"
+          stroke="currentColor"
+          strokeWidth="0.5"
+          className="text-[#75B2DD]"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
+        />
+        <motion.path
+          d="M100 500 L400 300 L700 500"
+          stroke="currentColor"
+          strokeWidth="0.5"
+          className="text-[#F47920]"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 5, repeat: Infinity, repeatType: "reverse", delay: 1 }}
+        />
+        {/* Pinging Particles */}
+        <motion.circle
+          r="3"
+          fill="#F47920"
+          animate={{
+            offsetDistance: ["0%", "100%"]
+          }}
+          style={{ offsetPath: "path('M100 100 L400 300 L700 100')" }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.circle
+          r="3"
+          fill="#75B2DD"
+          animate={{
+            offsetDistance: ["0%", "100%"]
+          }}
+          style={{ offsetPath: "path('M100 500 L400 300 L700 500')" }}
+          transition={{ duration: 5, repeat: Infinity, ease: "linear", delay: 2 }}
+        />
+      </svg>
+    </div>
+  );
+};
+
+const PulsingLogo = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="relative flex items-center justify-center p-4 bg-white/40 backdrop-blur-md rounded-full shadow-2xl border border-white/60 mb-8 w-fit mx-auto lg:mx-0"
+    >
+      <motion.div
+        animate={{ 
+          scale: [1, 1.15, 1],
+          opacity: [0.3, 0.6, 0.3]
+        }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute inset-0 bg-[#75B2DD]/20 rounded-full blur-xl"
+      />
+      <img src="/logo.png" alt="BOCRA Logo" className="h-16 w-auto relative z-10" />
+    </motion.div>
+  );
+};
+
+const ShutterLogo = () => {
+  return (
+    <div className="relative w-full aspect-square max-w-lg mx-auto flex items-center justify-center">
+      {/* Permanent Background Aura */}
+      <motion.div 
+        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute inset-x-0 inset-y-0 bg-[#E8F0F9] blur-[100px] rounded-full z-0 h-3/4 my-auto"
+      />
+
+      <div className="relative z-10 w-full h-full flex items-center justify-center">
+        {/* The Iris Shutter Effect */}
+        <motion.div
+          animate={{ 
+            clipPath: [
+              "circle(100% at 50% 50%)", 
+              "circle(10% at 50% 50%)", 
+              "circle(0% at 50% 50%)",
+              "circle(0% at 50% 50%)",
+              "circle(100% at 50% 50%)"
+            ],
+            opacity: [1, 1, 0, 0, 1]
+          }}
+          transition={{ 
+            duration: 4, 
+            times: [0, 0.35, 0.45, 0.65, 1],
+            ease: "easeInOut",
+            repeat: Infinity,
+            repeatDelay: 5
+          }}
+          className="relative z-20 w-3/4"
+        >
+          <img 
+            src="/logo.png" 
+            alt="BOCRA Logo" 
+            className="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,51,102,0.15)]"
+          />
+        </motion.div>
+
+        {/* Connectivity Symbols - Revealed when shutter closes */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ 
+            opacity: [0, 0, 1, 1, 0],
+            scale: [0.8, 0.8, 1, 1, 0.8]
+          }}
+          transition={{ 
+            duration: 4, 
+            times: [0, 0.4, 0.45, 0.6, 1],
+            ease: "easeInOut",
+            repeat: Infinity,
+            repeatDelay: 5
+          }}
+          className="absolute inset-0 grid grid-cols-2 gap-6 items-center justify-center p-16"
+        >
+          {[Wifi, Globe, Radio, ShieldCheck].map((Icon, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ 
+                scale: [0, 1.1, 1],
+                opacity: 1
+              }}
+              transition={{ 
+                delay: 1.8 + (idx * 0.1),
+                duration: 0.4
+              }}
+              className="p-6 bg-white/40 backdrop-blur-xl shadow-lg rounded-3xl border border-white/50 flex items-center justify-center"
+            >
+              <Icon className="w-10 h-10 text-[#003366]" />
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+const TypewriterText = ({ text, delay = 0 }) => {
+  const letters = Array.from(text);
+  
+  const container = {
+    hidden: { opacity: 0 },
+    visible: (i = 1) => ({
+      opacity: 1,
+      transition: { staggerChildren: 0.15, delayChildren: delay },
+    }),
+  };
+
+  const child = {
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        damping: 12,
+        stiffness: 100,
+      },
+    },
+    hidden: {
+      opacity: 0,
+      y: 20,
+      transition: {
+        type: "spring",
+        damping: 12,
+        stiffness: 100,
+      },
+    },
+  };
+
+  return (
+    <motion.div
+      style={{ display: "inline-block", overflow: "hidden" }}
+      variants={container}
+      initial="hidden"
+      animate="visible"
+      className="inline-flex flex-wrap"
+    >
+      {letters.map((letter, index) => (
+        <motion.span
+          variants={child}
+          key={index}
+          className={letter === " " ? "mr-4" : ""}
+        >
+          {letter}
+        </motion.span>
+      ))}
+    </motion.div>
+  );
+};
 
 const Home = () => {
   const mandates = [
@@ -108,22 +307,21 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-[#F5F5F3] relative">
       <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden opacity-15">
-        <img
-          src="/botswana_heritage.png"
-          alt="Botswana Heritage"
-          className="w-full h-full object-cover object-center scale-105"
-        />
+        <div className="absolute inset-0 basket-pattern text-[#003366] opacity-10"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#F5F5F3]/95 via-[#F5F5F3]/88 to-[#F5F5F3]/96"></div>
       </div>
 
-      <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-24 overflow-hidden">
-        <div className="absolute inset-0 subtle-grid opacity-40"></div>
-        <div className="absolute top-0 left-0 w-full h-[120%] bg-gradient-to-br from-[#003366]/8 via-[#E8F0F9] to-transparent -skew-y-6 origin-top-left -z-10"></div>
+      <section className="relative pt-24 sm:pt-40 pb-16 sm:pb-32 overflow-hidden">
+        <ConnectivityNodes />
+        <div className="absolute inset-0 subtle-grid opacity-30"></div>
+        <div className="absolute top-0 left-0 w-full h-[120%] bg-gradient-to-br from-[#E8F0F9]/50 via-white to-transparent -skew-y-6 origin-top-left -z-10"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-14 items-center">
             <div className="space-y-8">
-              <span className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-[#E8F0F9] text-[#003366] text-sm font-semibold border border-[#003366]/10 shadow-sm">
+              {/* Removed redundant pulsing logo as requested */}
+
+              <span className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-[#E8F0F9] text-[#003366] text-xs font-black uppercase tracking-widest border border-[#003366]/10 shadow-sm">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F47920] opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F47920]"></span>
@@ -131,15 +329,27 @@ const Home = () => {
                 <span>Official Staff &amp; Citizen Portal</span>
               </span>
 
-              <div>
-                <p className="section-kicker mb-3">Botswana Communications Regulatory Authority</p>
-                <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.08] hero-title">
-                  Access BOCRA<br className="hidden sm:block" />
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#003366] to-[#0A4D8C]">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 1.2 }}
+              >
+                <p className="section-kicker mb-4 font-black tracking-[0.3em] text-[#003366] opacity-60">
+                  NATIONAL REGULATORY GATEWAY
+                </p>
+                <h1 className="text-5xl sm:text-7xl lg:text-9xl font-black text-slate-900 tracking-tighter leading-[0.82] hero-title mb-6">
+                  <TypewriterText text="Access BOCRA" />
+                  <br className="hidden sm:block" />
+                  <motion.span 
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.8, duration: 1 }}
+                    className="bg-clip-text text-transparent bg-gradient-to-r from-[#003366] via-[#F47920] to-[#003366] bg-[length:200%_auto] animate-gradient-x"
+                  >
                     Services In Minutes
-                  </span>
+                  </motion.span>
                 </h1>
-              </div>
+              </motion.div>
 
               <p className="text-base sm:text-xl text-slate-600 max-w-xl leading-relaxed">
                 Apply, report, track, and manage all regulatory services in one secure platform designed for Botswana's citizens and businesses..
@@ -181,28 +391,14 @@ const Home = () => {
               </div>
             </div>
 
-            <div className="relative animate-in fade-in zoom-in duration-1000">
-              <div className="absolute -top-16 -right-10 w-72 h-72 bg-[#E8F0F9] rounded-full blur-3xl opacity-60"></div>
-              <div className="absolute -bottom-14 -left-10 w-72 h-72 bg-[#FFF0E6] rounded-full blur-3xl opacity-60"></div>
-
-              <div className="section-shell p-4 sm:p-8 relative overflow-hidden">
-                <div className="heritage-overlay basket-pattern text-[#003366] opacity-[0.04]"></div>
-
-                <div className="relative grid grid-cols-2 gap-5">
-                  {quickLinks.map((link) => (
-                    <Link key={link.title} to={link.path}>
-                      <div className={`${link.tone} p-4 sm:p-6 rounded-2xl transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer h-full`}>
-                        <div className={`w-12 h-12 sm:w-14 sm:h-14 ${link.iconTone} mb-4 shadow-sm`}>
-                          <link.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                        </div>
-                        <h3 className="font-bold text-slate-800 mb-1 leading-snug">{link.title}</h3>
-                        <p className="text-sm text-slate-600">{link.description}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.5 }}
+              className="hidden lg:block relative h-full min-h-[400px] mt-48 translate-y-8"
+            >
+              <ShutterLogo />
+            </motion.div>
           </div>
         </div>
       </section>
