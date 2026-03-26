@@ -189,6 +189,36 @@ const ComplaintDetail = ({ complaintId, onClose, onUpdate, onDelete }) => {
             <ComplaintTimeline status={complaint.status} />
           </div>
 
+          {/* Admin Feedback Section */}
+          {(complaint.adminNotes || complaint.reviewedBy) && (
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 space-y-3">
+              <h3 className="text-slate-300 font-semibold flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                Admin Response
+              </h3>
+              {complaint.reviewedBy && (
+                <div className="flex items-center justify-between text-sm">
+                  <div className="space-y-1">
+                    <p className="text-slate-400">Reviewed by</p>
+                    <p className="text-white font-medium">{complaint.reviewedBy}</p>
+                  </div>
+                  {complaint.reviewedAt && (
+                    <div className="space-y-1 text-right">
+                      <p className="text-slate-400">Date</p>
+                      <p className="text-white font-medium">{new Date(complaint.reviewedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {complaint.adminNotes && (
+                <div className="bg-[#0f1419] rounded p-3 border border-blue-500/20">
+                  <p className="text-slate-400 text-xs font-medium mb-2">Notes</p>
+                  <p className="text-slate-200 text-sm leading-relaxed">{complaint.adminNotes}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Complaint Details */}
           <div className="space-y-4">
             {/* Complaint Type */}

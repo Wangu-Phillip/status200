@@ -335,6 +335,11 @@ const ComplaintsView = () => {
                   <Badge variant="outline" className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(complaint.status)}`}>
                     {complaint.status}
                   </Badge>
+                  {complaint.adminNotes && (
+                    <Badge variant="outline" className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border-blue-500/30 text-blue-400 bg-blue-500/10" title={`Admin feedback: ${complaint.adminNotes.substring(0, 50)}...`}>
+                      ℹ️ Feedback
+                    </Badge>
+                  )}
                 </div>
               </div>
 

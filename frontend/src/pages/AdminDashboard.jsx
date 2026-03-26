@@ -1802,39 +1802,80 @@ const AdminDashboard = () => {
                               <Eye className="h-4 w-4 mr-1.5" />
                               Add Note
                             </Button>
-                            {sub.status === 'Submitted' && (
+                            {/* Status buttons vary by department */}
+                            {user?.department === 'complaints' ? (
                               <>
-                                <Button
-                                  size="sm"
-                                  disabled={submissionsLoading}
-                                  className="bg-[#003366] hover:bg-[#003366] text-white"
-                                  onClick={() => handleStatusChange(sub.id, 'Under Review')}
-                                >
-                                  <Clock className="h-4 w-4 mr-1.5" />
-                                  Start Review
-                                </Button>
+                                {sub.status === 'Registered' && (
+                                  <Button
+                                    size="sm"
+                                    disabled={submissionsLoading}
+                                    className="bg-[#003366] hover:bg-[#003366] text-white"
+                                    onClick={() => handleStatusChange(sub.id, 'Acknowledged')}
+                                  >
+                                    <Clock className="h-4 w-4 mr-1.5" />
+                                    Acknowledge
+                                  </Button>
+                                )}
+                                {(sub.status === 'Registered' || sub.status === 'Acknowledged') && (
+                                  <Button
+                                    size="sm"
+                                    disabled={submissionsLoading}
+                                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                                    onClick={() => handleStatusChange(sub.id, 'In Progress')}
+                                  >
+                                    <Clock className="h-4 w-4 mr-1.5" />
+                                    In Progress
+                                  </Button>
+                                )}
+                                {(sub.status === 'Registered' || sub.status === 'Acknowledged' || sub.status === 'In Progress') && (
+                                  <Button
+                                    size="sm"
+                                    disabled={submissionsLoading}
+                                    className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                                    onClick={() => handleStatusChange(sub.id, 'Resolved')}
+                                  >
+                                    <CheckCheck className="h-4 w-4 mr-1.5" />
+                                    Resolve
+                                  </Button>
+                                )}
                               </>
-                            )}
-                            {(sub.status === 'Submitted' || sub.status === 'Under Review') && (
+                            ) : (
                               <>
-                                <Button
-                                  size="sm"
-                                  disabled={submissionsLoading}
-                                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
-                                  onClick={() => handleStatusChange(sub.id, 'Approved')}
-                                >
-                                  <CheckCheck className="h-4 w-4 mr-1.5" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  disabled={submissionsLoading}
-                                  variant="destructive"
-                                  onClick={() => handleStatusChange(sub.id, 'Rejected')}
-                                >
-                                  <XCircle className="h-4 w-4 mr-1.5" />
-                                  Reject
-                                </Button>
+                                {sub.status === 'Submitted' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      disabled={submissionsLoading}
+                                      className="bg-[#003366] hover:bg-[#003366] text-white"
+                                      onClick={() => handleStatusChange(sub.id, 'Under Review')}
+                                    >
+                                      <Clock className="h-4 w-4 mr-1.5" />
+                                      Start Review
+                                    </Button>
+                                  </>
+                                )}
+                                {(sub.status === 'Submitted' || sub.status === 'Under Review') && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      disabled={submissionsLoading}
+                                      className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                                      onClick={() => handleStatusChange(sub.id, 'Approved')}
+                                    >
+                                      <CheckCheck className="h-4 w-4 mr-1.5" />
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      disabled={submissionsLoading}
+                                      variant="destructive"
+                                      onClick={() => handleStatusChange(sub.id, 'Rejected')}
+                                    >
+                                      <XCircle className="h-4 w-4 mr-1.5" />
+                                      Reject
+                                    </Button>
+                                  </>
+                                )}
                               </>
                             )}
                           </>
