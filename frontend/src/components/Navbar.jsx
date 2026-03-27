@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
 import { Button } from './ui/button';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, ChevronDown, Globe, BarChart3, ShieldCheck } from 'lucide-react';
+import { Menu, X, ChevronDown, Globe, BarChart3, ShieldCheck, Bell } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import NotificationCenter from './NotificationCenter';
 import {
