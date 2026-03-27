@@ -33,56 +33,165 @@ const LiveQoSMonitoring = () => {
   const navigate = useNavigate();
 
   const [activeView, setActiveView] = useState('Real-time');
+  const [refreshCount, setRefreshCount] = useState(0);
+  const [spectralData, setSpectralData] = useState([45, 78, 52, 90, 65, 88, 70, 95, 80, 55, 60, 48]);
+  const [systemMetrics, setSystemMetrics] = useState({
+    spectrumLoad: 72.4,
+    activeNodes: 1248,
+    networkHealth: 4.2,
+    callSuccess: 98.5,
+    availability: 99.9,
+    nodeHealth: 94
+  });
+  const [historicalTrends, setHistoricalTrends] = useState({
+    BTC: [95.2, 96.1, 97.3, 98.5, 98.2, 97.8, 98.5],
+    Mascom: [94.8, 95.5, 96.2, 97.8, 97.5, 97.2, 97.8],
+    Orange: [92.1, 92.8, 93.5, 94.2, 94.0, 93.8, 94.2],
+  });
+  const [regionalData, setRegionalData] = useState({
+    BTC: { urban: 99, semiUrban: 95, rural: 87 },
+    Mascom: { urban: 98, semiUrban: 93, rural: 85 },
+    Orange: { urban: 96, semiUrban: 91, rural: 78 },
+  });
 
+  // Generate realistic mock data with natural variations
+  const generateOperatorData = (baseName, index) => {
+    const variation = Math.sin(refreshCount / 20 + index) * 2;
+    const randomJitter = (Math.random() - 0.5) * 1.5;
+    
+    const baseMetrics = {
+      BTC: {
+        callSuccessRate: 98.5,
+        dataSpeed: 45.2,
+        networkAvailability: 99.8,
+        voiceQuality: 4.2,
+        latency: 28,
+        coverage: 93
+      },
+      Mascom: {
+        callSuccessRate: 97.8,
+        dataSpeed: 42.1,
+        networkAvailability: 99.5,
+        voiceQuality: 4.0,
+        latency: 32,
+        coverage: 91.5
+      },
+      Orange: {
+        callSuccessRate: 94.2,
+        dataSpeed: 38.5,
+        networkAvailability: 98.9,
+        voiceQuality: 3.8,
+        latency: 45,
+        coverage: 87
+      }
+    };
+
+    const base = baseMetrics[baseName];
+    
+    return {
+      name: baseName,
+      logo: baseName.substring(0, 3),
+      status: base.callSuccessRate + variation + randomJitter > 95 ? 'Compliant' : 'Action Required',
+      metrics: {
+        callSuccessRate: { 
+          value: parseFloat((base.callSuccessRate + variation).toFixed(2)), 
+          target: 95, 
+          trend: variation > 0 ? 'up' : variation < 0 ? 'down' : 'stable', 
+          change: variation > 0 ? `+${variation.toFixed(1)}%` : `${variation.toFixed(1)}%` 
+        },
+        dataSpeed: { 
+          value: parseFloat((base.dataSpeed + variation * 1.5).toFixed(2)), 
+          target: 30, 
+          trend: variation > 0 ? 'up' : 'down', 
+          change: `${variation > 0 ? '+' : ''}${(variation * 1.5).toFixed(1)} Mbps`, 
+          unit: 'Mbps' 
+        },
+        networkAvailability: { 
+          value: parseFloat((base.networkAvailability + variation * 0.5).toFixed(2)), 
+          target: 99.0, 
+          trend: variation > 0 ? 'up' : variation < 0 ? 'down' : 'stable', 
+          change: variation > 0 ? `+${(variation * 0.5).toFixed(2)}%` : `${(variation * 0.5).toFixed(2)}%` 
+        },
+        voiceQuality: { 
+          value: parseFloat((base.voiceQuality + variation * 0.15).toFixed(2)), 
+          target: 3.5, 
+          trend: variation > 0 ? 'up' : 'down', 
+          change: `${variation > 0 ? '+' : ''}${(variation * 0.15).toFixed(2)}`, 
+          unit: 'MOS' 
+        },
+        latency: { 
+          value: Math.max(15, Math.round(base.latency - variation * 2)), 
+          target: 50, 
+          trend: variation > 0 ? 'down' : 'up', 
+          change: variation > 0 ? `+${(variation * 2).toFixed(0)}ms` : `${(variation * 2).toFixed(0)}ms`, 
+          unit: 'ms' 
+        },
+      },
+      coverage: { 
+        urban: Math.round(base.coverage + variation * 1.5 + 5), 
+        rural: Math.round(base.coverage - variation * 2 - 5), 
+        overall: parseFloat((base.coverage + variation * 0.5).toFixed(1))
+      },
+    };
+  };
+
+  // Update real-time data
   useEffect(() => {
-    if (autoRefresh && activeView === 'Real-time') {
+    if (autoRefresh) {
       const interval = setInterval(() => {
         setLastUpdated(new Date());
-      }, 30000); 
+        setRefreshCount(prev => prev + 1);
+
+        // Update spectral efficiency chart
+        setSpectralData(prev => prev.map(val => {
+          const change = (Math.random() - 0.5) * 15;
+          return Math.max(20, Math.min(95, val + change));
+        }));
+
+        // Update system metrics
+        setSystemMetrics(prev => ({
+          spectrumLoad: Math.max(45, Math.min(85, prev.spectrumLoad + (Math.random() - 0.5) * 3)),
+          activeNodes: prev.activeNodes + Math.floor((Math.random() - 0.5) * 20),
+          networkHealth: Math.max(3.5, Math.min(4.5, prev.networkHealth + (Math.random() - 0.5) * 0.1)),
+          callSuccess: Math.max(93, Math.min(99, prev.callSuccess + (Math.random() - 0.5) * 1)),
+          availability: Math.max(99.5, Math.min(100, prev.availability + (Math.random() - 0.5) * 0.1)),
+          nodeHealth: Math.max(85, Math.min(98, prev.nodeHealth + (Math.random() - 0.5) * 2))
+        }));
+
+        // Update historical trends
+        setHistoricalTrends(prev => ({
+          BTC: [...prev.BTC.slice(1), Math.max(95, Math.min(99, prev.BTC[prev.BTC.length - 1] + (Math.random() - 0.5) * 1))],
+          Mascom: [...prev.Mascom.slice(1), Math.max(94, Math.min(99, prev.Mascom[prev.Mascom.length - 1] + (Math.random() - 0.5) * 1))],
+          Orange: [...prev.Orange.slice(1), Math.max(92, Math.min(97, prev.Orange[prev.Orange.length - 1] + (Math.random() - 0.5) * 1))],
+        }));
+
+        // Update regional data
+        setRegionalData(prev => ({
+          BTC: { 
+            urban: Math.max(95, Math.min(99, prev.BTC.urban + (Math.random() - 0.5) * 1)),
+            semiUrban: Math.max(90, Math.min(97, prev.BTC.semiUrban + (Math.random() - 0.5) * 1)),
+            rural: Math.max(80, Math.min(92, prev.BTC.rural + (Math.random() - 0.5) * 1))
+          },
+          Mascom: {
+            urban: Math.max(94, Math.min(99, prev.Mascom.urban + (Math.random() - 0.5) * 1)),
+            semiUrban: Math.max(88, Math.min(96, prev.Mascom.semiUrban + (Math.random() - 0.5) * 1)),
+            rural: Math.max(78, Math.min(90, prev.Mascom.rural + (Math.random() - 0.5) * 1))
+          },
+          Orange: {
+            urban: Math.max(92, Math.min(98, prev.Orange.urban + (Math.random() - 0.5) * 1)),
+            semiUrban: Math.max(86, Math.min(94, prev.Orange.semiUrban + (Math.random() - 0.5) * 1)),
+            rural: Math.max(74, Math.min(85, prev.Orange.rural + (Math.random() - 0.5) * 1))
+          }
+        }));
+      }, 5000); 
       return () => clearInterval(interval);
     }
-  }, [autoRefresh, activeView]);
+  }, [autoRefresh]);
 
   const operators = [
-    {
-      name: 'BTC',
-      logo: 'BTC',
-      status: 'Compliant',
-      metrics: {
-        callSuccessRate: { value: 98.5, target: 95, trend: 'up', change: '+0.3%' },
-        dataSpeed: { value: 45.2, target: 30, trend: 'up', change: '+2.1 Mbps', unit: 'Mbps' },
-        networkAvailability: { value: 99.8, target: 99.0, trend: 'stable', change: '0%' },
-        voiceQuality: { value: 4.2, target: 3.5, trend: 'up', change: '+0.1', unit: 'MOS' },
-        latency: { value: 28, target: 50, trend: 'down', change: '-3ms', unit: 'ms' },
-      },
-      coverage: { urban: 99, rural: 87, overall: 93 },
-    },
-    {
-      name: 'Mascom',
-      logo: 'MSC',
-      status: 'Compliant',
-      metrics: {
-        callSuccessRate: { value: 97.8, target: 95, trend: 'up', change: '+0.5%' },
-        dataSpeed: { value: 42.1, target: 30, trend: 'stable', change: '0 Mbps', unit: 'Mbps' },
-        networkAvailability: { value: 99.5, target: 99.0, trend: 'up', change: '+0.2%' },
-        voiceQuality: { value: 4.0, target: 3.5, trend: 'stable', change: '0', unit: 'MOS' },
-        latency: { value: 32, target: 50, trend: 'up', change: '+2ms', unit: 'ms' },
-      },
-      coverage: { urban: 98, rural: 85, overall: 91.5 },
-    },
-    {
-      name: 'Orange',
-      logo: 'ORG',
-      status: 'Action Required',
-      metrics: {
-        callSuccessRate: { value: 94.2, target: 95, trend: 'down', change: '-0.8%' },
-        dataSpeed: { value: 38.5, target: 30, trend: 'down', change: '-1.5 Mbps', unit: 'Mbps' },
-        networkAvailability: { value: 98.9, target: 99.0, trend: 'down', change: '-0.3%' },
-        voiceQuality: { value: 3.8, target: 3.5, trend: 'down', change: '-0.2', unit: 'MOS' },
-        latency: { value: 45, target: 50, trend: 'stable', change: '0ms', unit: 'ms' },
-      },
-      coverage: { urban: 96, rural: 78, overall: 87 },
-    },
+    generateOperatorData('BTC', 0),
+    generateOperatorData('Mascom', 1),
+    generateOperatorData('Orange', 2),
   ];
 
   return (
@@ -124,10 +233,10 @@ const LiveQoSMonitoring = () => {
                      <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                            <span className="text-slate-400">National Spectrum Load</span>
-                           <span className="text-white font-bold">72.4%</span>
+                           <span className="text-white font-bold">{systemMetrics.spectrumLoad.toFixed(1)}%</span>
                         </div>
                         <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                           <div className="h-full bg-gradient-to-r from-[#F5F5F3]0 to-emerald-500 w-[72%] rounded-full shadow-[0_2px_10px_rgba(20,184,166,0.5)]"></div>
+                           <div className="h-full bg-emerald-500 rounded-full shadow-[0_2px_10px_rgba(16,185,129,0.6)]" style={{ width: `${systemMetrics.spectrumLoad}%` }}></div>
                         </div>
                      </div>
                      <div className="grid grid-cols-2 gap-4 pt-2">
@@ -137,7 +246,7 @@ const LiveQoSMonitoring = () => {
                         </div>
                         <div className="p-4 bg-slate-900/50 rounded-2xl border border-white/5">
                            <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Active Stations</p>
-                           <p className="text-sm font-bold text-slate-200">1,248 Nodes</p>
+                           <p className="text-sm font-bold text-slate-200">{systemMetrics.activeNodes.toLocaleString()} Nodes</p>
                         </div>
                      </div>
                      <Button className="w-full h-14 rounded-2xl bg-[#003366] hover:bg-[#003366] text-white font-bold shadow-xl shadow-teal-500/20" onClick={() => setAutoRefresh(!autoRefresh)}>
@@ -173,7 +282,7 @@ const LiveQoSMonitoring = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {operators.map((op, i) => (
+            {activeView === 'Real-time' && operators.map((op, i) => (
               <Card key={i} className="bg-[#0a0f1e] border-slate-800 rounded-[2.5rem] overflow-hidden group hover:border-[#003366]/30 transition-all shadow-2xl">
                 <div className="p-8 pb-4 relative overflow-hidden">
                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#003366]/5 rounded-full blur-3xl group-hover:bg-[#003366]/10 transition-all"></div>
@@ -234,6 +343,65 @@ const LiveQoSMonitoring = () => {
                 </div>
               </Card>
             ))}
+
+            {activeView === 'Regional' && Object.entries(regionalData).map(([operator, regions]) => (
+              <Card key={operator} className="bg-[#0a0f1e] border-slate-800 rounded-[2.5rem] overflow-hidden group hover:border-[#003366]/30 transition-all shadow-2xl">
+                <div className="p-8 space-y-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#F5F5F3]0 to-blue-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-xl shadow-teal-500/10">
+                      {operator.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white leading-none">{operator}</h3>
+                      <p className="text-slate-500 text-xs mt-1 font-bold uppercase tracking-widest">Regional Coverage</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {Object.entries(regions).map(([region, value]) => (
+                      <div key={region} className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-400 capitalize">{region}</span>
+                          <span className="text-white font-bold">{Math.round(value)}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full" style={{ width: `${value}%` }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            ))}
+
+            {activeView === 'Historical' && Object.entries(historicalTrends).map(([operator, trends]) => (
+              <Card key={operator} className="bg-[#0a0f1e] border-slate-800 rounded-[2.5rem] overflow-hidden group hover:border-[#003366]/30 transition-all shadow-2xl">
+                <div className="p-8">
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#F5F5F3]0 to-blue-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-xl shadow-teal-500/10">
+                      {operator.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white leading-none">{operator}</h3>
+                      <p className="text-slate-500 text-xs mt-1 font-bold uppercase tracking-widest">7-Day Trend</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-end justify-between gap-1 h-32 bg-slate-800/30 p-3 rounded-lg">
+                    {trends.map((value, idx) => (
+                      <div key={idx} className="flex-1 flex flex-col items-center gap-1 group/bar">
+                        <span className="text-[8px] text-slate-500 group-hover/bar:text-cyan-400 transition-colors">{value.toFixed(1)}</span>
+                        <div className="w-full bg-gradient-to-t from-emerald-500 to-emerald-300 rounded-t transition-all hover:shadow-lg hover:shadow-emerald-500/50" style={{ height: `${(value / 100) * 100}%`, minHeight: '4px' }}></div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 text-[10px] text-slate-500 text-center font-bold uppercase">
+                    Call Success Rate Trend
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -252,10 +420,10 @@ const LiveQoSMonitoring = () => {
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
-                    { label: 'Voice Quality', icon: Phone, color: 'text-blue-400', bg: 'bg-[#003366]/10', val: '4.2' },
-                    { label: 'Call Success', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10', val: '98.5%' },
-                    { label: 'Availability', icon: Signal, color: 'text-emerald-400', bg: 'bg-emerald-500/10', val: '99.9%' },
-                    { label: 'Node Health', icon: Cpu, color: 'text-purple-400', bg: 'bg-purple-500/10', val: '94%' },
+                    { label: 'Voice Quality', icon: Phone, color: 'text-blue-400', bg: 'bg-[#003366]/10', val: systemMetrics.networkHealth.toFixed(2) },
+                    { label: 'Call Success', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10', val: systemMetrics.callSuccess.toFixed(1) + '%' },
+                    { label: 'Availability', icon: Signal, color: 'text-emerald-400', bg: 'bg-emerald-500/10', val: systemMetrics.availability.toFixed(2) + '%' },
+                    { label: 'Node Health', icon: Cpu, color: 'text-purple-400', bg: 'bg-purple-500/10', val: systemMetrics.nodeHealth.toFixed(0) + '%' },
                   ].map((stat, i) => (
                     <div key={i} className="flex items-center space-x-4 p-5 bg-[#0a0f1e] rounded-[1.5rem] border border-white/5 hover:border-white/10 transition-all">
                        <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center`}>
@@ -278,18 +446,34 @@ const LiveQoSMonitoring = () => {
                         <Gauge className="w-5 h-5 text-[#E8F0F9]" />
                         <h3 className="text-lg font-bold text-white">Spectral Efficiency</h3>
                      </div>
-                     <Download className="w-4 h-4 text-slate-500 hover:text-white cursor-pointer" onClick={() => toast({ title: "Exporting Data", description: "Downloading efficiency CSV dump..." })} />
+                     <Download className="w-4 h-4 text-slate-500 hover:text-emerald-400 cursor-pointer transition-colors" onClick={() => {
+                        const csvData = `Time,Efficiency\n${spectralData.map((val, i) => `Point ${i + 1},${val.toFixed(2)}`).join('\n')}`;
+                        const blob = new Blob([csvData], { type: 'text/csv' });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `spectral_efficiency_${new Date().toISOString().split('T')[0]}.csv`;
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        toast({ 
+                          title: "Export Complete", 
+                          description: `Downloaded ${spectralData.length} spectral efficiency data points` 
+                        });
+                     }} />
                   </div>
                   
-                  {/* Decorative Chart Placeholder with Modern Aesthetic */}
-                  <div className="h-64 flex items-end justify-between gap-2">
-                     {[45, 78, 52, 90, 65, 88, 70, 95, 80, 55, 60, 48].map((h, i) => (
-                       <div key={i} className="flex-1 space-y-2">
+                  {/* Spectral Efficiency Chart with Visible Bars */}
+                  <div className="h-96 bg-slate-800/20 rounded-lg p-4 flex items-end justify-between gap-1.5 border border-slate-700">
+                     {spectralData.map((h, i) => (
+                       <div key={i} className="flex-1 flex flex-col items-center justify-end gap-2 group cursor-pointer">
+                          <div className="text-[8px] text-slate-500 group-hover:text-cyan-400 transition-colors font-mono">
+                            {h.toFixed(0)}
+                          </div>
                           <div 
-                            className={`w-full bg-gradient-to-t from-[#003366]/20 to-[#0A4D8C] rounded-t-lg transition-all duration-1000 delay-${i * 100} hover:brightness-110`} 
-                            style={{ height: `${h}%` }}
+                            className={`w-full bg-gradient-to-t from-cyan-500 to-cyan-300 rounded-t transition-all duration-500 group-hover:shadow-lg group-hover:shadow-cyan-500/70 min-h-3 shadow-md shadow-cyan-500/40`} 
+                            style={{ height: `${Math.max(8, h * 1.2)}%` }}
+                            title={`Efficiency: ${h.toFixed(2)}%`}
                           ></div>
-                          <div className="h-1.5 w-full bg-slate-800 rounded-full"></div>
                        </div>
                      ))}
                   </div>
@@ -313,11 +497,50 @@ const LiveQoSMonitoring = () => {
            <p className="text-slate-500 leading-relaxed mb-10">
              BOCRA's QoS framework is aligned with ITU standards and SADC regional guidelines. We provide this data to foster competition, ensure market transparency, and safeguard the interests of every citizen in Botswana.
            </p>
-           <Button onClick={() => toast({ title: "Downloading publication", description: "The 2025 regulatory standards PDF is being downloaded." })} variant="outline" className="h-14 px-10 rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white font-bold text-sm tracking-wide">
+           <Button onClick={() => toast({ 
+             title: "Downloading publication", 
+             description: "The 2025 regulatory standards PDF is being downloaded. This contains all current QoS compliance requirements." 
+           })} variant="outline" className="h-14 px-10 rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white font-bold text-sm tracking-wide">
               Official Regulatory Publication (2025)
            </Button>
         </div>
       </section>
+
+      {/* Sticky BOCRA QOS Portal Button */}
+      <div className="fixed bottom-8 right-8 z-50 max-w-xs animate-in fade-in slide-in-from-bottom-4">
+        <div className="space-y-3">
+          {/* Information Card */}
+          <div className="bg-gradient-to-r from-[#003366] to-[#005499] border border-cyan-400/30 rounded-2xl p-4 backdrop-blur-sm">
+            <p className="text-[11px] text-cyan-100 leading-relaxed mb-3">
+              <span className="font-bold text-cyan-300">Access Official Data:</span> Visit BOCRA's official QOS monitoring portal for comprehensive real-time network quality metrics and regulatory compliance reports.
+            </p>
+            <div className="flex items-center justify-between text-[10px] text-slate-300">
+              <span className="font-bold uppercase tracking-wide">dqos.bocra.org.bw</span>
+              <Globe className="w-3 h-3 text-cyan-400" />
+            </div>
+          </div>
+
+          {/* CTA Button */}
+          <a 
+            href="https://dqos.bocra.org.bw/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-full block"
+          >
+            <button className="w-full px-6 py-4 rounded-2xl font-bold text-white uppercase tracking-wide text-sm bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 transition-all duration-300 transform hover:scale-105 active:scale-95 border border-cyan-300/50 flex items-center justify-center gap-2 group">
+              <Gauge className="w-4 h-4 group-hover:animate-spin" />
+              <span>Official BOCRA QOS</span>
+              <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            </button>
+          </a>
+
+          {/* Secondary Info */}
+          <div className="text-center text-[9px] text-slate-500 space-y-1">
+            <p>Official regulatory data</p>
+            <p>Updated in real-time</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
