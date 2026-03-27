@@ -146,19 +146,6 @@ const Navbar = () => {
                 </Button>
               </Link>
 
-              <Link to="/documents">
-                <Button
-                  variant="ghost"
-                  className={`rounded-xl px-4 ${
-                    isActive('/documents')
-                      ? 'bg-white/15 text-white'
-                      : 'text-white/80'
-                  } hover:bg-white/10 hover:text-white`}
-                >
-                  Resources
-                </Button>
-              </Link>
-
               <Link to="/careers">
                 <Button
                   variant="ghost"
@@ -169,6 +156,19 @@ const Navbar = () => {
                   } hover:bg-white/10 hover:text-white`}
                 >
                   Careers
+                </Button>
+              </Link>
+
+              <Link to="/documents">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${
+                    isActive('/documents')
+                      ? 'bg-white/15 text-white'
+                      : 'text-white/80'
+                  } hover:bg-white/10 hover:text-white`}
+                >
+                  Resources
                 </Button>
               </Link>
 

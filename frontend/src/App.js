@@ -33,7 +33,7 @@ import Services from './pages/Services';
 import Careers from './pages/Careers';
 import JobApplicationForm from './pages/JobApplicationForm';
 
-import Ruby from './components/Chatbot';
+import Chatbot from './components/Chatbot';
 import CookieConsent from './components/CookieConsent';
 import SessionTimeout from './components/SessionTimeout';
 
@@ -51,7 +51,7 @@ const Layout = ({ children }) => {
         {children}
       </div>
       {!isDashboard && <Footer />}
-      <Ruby />
+      <Chatbot />
       <CookieConsent />
       <SessionTimeout />
       <Toaster />

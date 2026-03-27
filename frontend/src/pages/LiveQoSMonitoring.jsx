@@ -26,6 +26,178 @@ import {
   Gauge
 } from 'lucide-react';
 
+const ISPTestComponent = () => {
+  const [isTesting, setIsTesting] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentStage, setCurrentStage] = useState(''); // 'latency', 'download', 'upload'
+  const [selectedISP, setSelectedISP] = useState('BTC');
+  const [results, setResults] = useState(null);
+
+  const isps = [
+    { id: 'BTC', name: 'BTC Fixed', icon: Globe },
+    { id: 'Mascom', name: 'Mascom 5G', icon: Wifi },
+    { id: 'Orange', name: 'Orange Konnect', icon: Signal },
+    { id: 'Liquid', name: 'Liquid Intelligent', icon: Zap },
+  ];
+
+  const runTest = () => {
+    setIsTesting(true);
+    setResults(null);
+    setProgress(0);
+    
+    // Phase 1: Latency
+    setCurrentStage('Measuring Latency...');
+    let p = 0;
+    const interval = setInterval(() => {
+      p += 1;
+      setProgress(p);
+      
+      if (p === 30) {
+        setCurrentStage('Testing Download Speed...');
+      } else if (p === 70) {
+        setCurrentStage('Testing Upload Speed...');
+      } else if (p >= 100) {
+        clearInterval(interval);
+        setTimeout(() => {
+          setIsTesting(false);
+          setResults({
+            download: (Math.random() * 50 + 20).toFixed(1),
+            upload: (Math.random() * 20 + 5).toFixed(1),
+            latency: Math.floor(Math.random() * 40 + 10),
+            jitter: Math.floor(Math.random() * 10 + 2),
+            timestamp: new Date().toLocaleTimeString()
+          });
+        }, 500);
+      }
+    }, 50);
+  };
+
+  return (
+    <Card className="bg-[#0f172a] border-slate-800 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
+      <div className="grid lg:grid-cols-12 gap-12 items-center">
+        <div className="lg:col-span-4 space-y-8">
+          <div>
+            <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">ISP Live Test</h3>
+            <p className="text-slate-400 text-sm">Select an operator and run a simulated Quality of Service test.</p>
+          </div>
+          
+          <div className="space-y-3">
+            {isps.map(isp => (
+              <button
+                key={isp.id}
+                disabled={isTesting}
+                onClick={() => setSelectedISP(isp.id)}
+                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                  selectedISP === isp.id 
+                    ? 'bg-[#003366]/20 border-[#003366] text-[#E8F0F9]' 
+                    : 'bg-slate-900/50 border-white/5 text-slate-500 hover:border-white/10'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <isp.icon size={18} className={selectedISP === isp.id ? 'text-[#75B2DD]' : ''} />
+                  <span className="text-sm font-bold uppercase tracking-wider">{isp.name}</span>
+                </div>
+                {selectedISP === isp.id && <div className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>}
+              </button>
+            ))}
+          </div>
+
+          <Button 
+            onClick={runTest} 
+            disabled={isTesting}
+            className="w-full h-16 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-emerald-500/20"
+          >
+            {isTesting ? 'Initializing...' : 'Run Connectivity Test'}
+          </Button>
+        </div>
+
+        <div className="lg:col-span-8 h-[400px] bg-slate-900/30 rounded-[2rem] border border-white/5 relative flex flex-col items-center justify-center p-8 overflow-hidden">
+          {/* Animated Background Grids */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+          </div>
+
+          {!isTesting && !results && (
+            <div className="text-center relative z-10">
+              <div className="w-24 h-24 bg-[#003366]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#003366]/20">
+                <Activity size={40} className="text-[#75B2DD] opacity-50" />
+              </div>
+              <h4 className="text-white font-bold mb-2">Ready to Test</h4>
+              <p className="text-slate-500 text-xs uppercase tracking-widest">Select an ISP to begin real-time diagnostic</p>
+            </div>
+          )}
+
+          {isTesting && (
+            <div className="w-full max-w-md space-y-10 relative z-10">
+              <div className="text-center">
+                <h4 className="text-4xl font-black text-white mb-2 tabular-nums">
+                  {currentStage.includes('Download') ? (progress * 1.5).toFixed(1) : progress}%
+                </h4>
+                <p className="text-[#75B2DD] text-xs font-black uppercase tracking-[0.3em] h-4">{currentStage}</p>
+              </div>
+              
+              <div className="relative h-4 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5">
+                <motion.div 
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#003366] to-[#75B2DD]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ ease: "linear" }}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                {['Latency', 'Download', 'Upload'].map((label, i) => (
+                  <div key={label} className="text-center">
+                    <div className={`w-2 h-2 rounded-full mx-auto mb-2 ${
+                      (i === 0 && progress > 0) || (i === 1 && progress > 30) || (i === 2 && progress > 70) 
+                        ? 'bg-emerald-500 animate-pulse' : 'bg-slate-700'
+                    }`}></div>
+                    <span className="text-[9px] text-slate-500 uppercase font-black tracking-widest">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {results && (
+            <div className="w-full grid md:grid-cols-2 gap-8 relative z-10 animate-in fade-in zoom-in duration-500">
+               <div className="col-span-full flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                     <CheckCircle className="text-emerald-500" size={20} />
+                     <h4 className="text-xl font-bold text-white">Test Complete ({selectedISP})</h4>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-mono">{results.timestamp}</span>
+               </div>
+               
+               <div className="p-6 bg-[#0a0f1e] rounded-[1.5rem] border border-white/5 flex flex-col items-center">
+                  <Download className="text-cyan-400 mb-4" size={24} />
+                  <p className="text-[10px] text-slate-500 uppercase font-black mb-1">Download Speed</p>
+                  <p className="text-4xl font-black text-white tabular-nums">{results.download} <span className="text-xs text-slate-500 uppercase">Mbps</span></p>
+               </div>
+
+               <div className="p-6 bg-[#0a0f1e] rounded-[1.5rem] border border-white/5 flex flex-col items-center">
+                  <Zap className="text-amber-400 mb-4" size={24} />
+                  <p className="text-[10px] text-slate-500 uppercase font-black mb-1">Upload Speed</p>
+                  <p className="text-4xl font-black text-white tabular-nums">{results.upload} <span className="text-xs text-slate-500 uppercase">Mbps</span></p>
+               </div>
+
+               <div className="p-4 bg-slate-900 shadow-inner rounded-xl border border-white/5 text-center">
+                  <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Ping (Latency)</p>
+                  <p className="text-lg font-bold text-slate-200">{results.latency} ms</p>
+               </div>
+
+               <div className="p-4 bg-slate-900 shadow-inner rounded-xl border border-white/5 text-center">
+                  <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Jitter</p>
+                  <p className="text-lg font-bold text-slate-200">{results.jitter} ms</p>
+               </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 const LiveQoSMonitoring = () => {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -268,8 +440,8 @@ const LiveQoSMonitoring = () => {
                 <h2 className="text-3xl font-bold text-white mb-2">Technical Insight</h2>
                 <div className="h-1 w-12 bg-[#00897B] rounded-full"></div>
              </div>
-             <div className="flex items-center space-x-3 bg-slate-900/50 p-1.5 rounded-2xl border border-white/5">
-                {['Real-time', 'Regional', 'Historical'].map((t) => (
+             <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 bg-slate-900/50 p-1.5 rounded-2xl border border-white/5">
+                {['Real-time', 'Regional', 'Historical', 'ISP Test'].map((t) => (
                   <button 
                     key={t} 
                     onClick={() => setActiveView(t)}
@@ -402,6 +574,12 @@ const LiveQoSMonitoring = () => {
                 </div>
               </Card>
             ))}
+
+            {activeView === 'ISP Test' && (
+              <div className="col-span-full">
+                <ISPTestComponent />
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -203,8 +203,12 @@ process.on('SIGINT', gracefulShutdown);
 const startServer = async () => {
   try {
     // Test database connection
-    await prisma.$queryRaw`SELECT NOW()`;
-    console.log('Database connection established');
+    try {
+      await prisma.$queryRaw`SELECT NOW()`;
+      console.log('Database connection established');
+    } catch (dbError) {
+      console.warn('WARNING: Database connection failed. Development server will continue for preview.', (dbError as any)?.message);
+    }
 
     app.listen(PORT, () => {
       console.log(

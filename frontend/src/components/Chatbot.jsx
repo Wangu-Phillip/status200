@@ -1,497 +1,309 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  MessageCircle,
-  X,
-  Send,
-  Bot,
-  User,
-  Minimize2,
-  Maximize2,
-  AlertTriangle
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  MessageCircle, 
+  X, 
+  Send, 
+  User, 
+  Bot, 
+  Maximize2, 
+  Minimize2, 
+  Paperclip, 
+  MoreHorizontal,
+  ChevronRight,
+  Globe,
+  CheckCircle2,
+  Sparkles
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { v4 as uuidv4 } from "uuid";
 
-// Initialize Gemini with the same API key
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyCN0eZIKo_pw3504IiZmdaCKIxJYf76_cA');
-
-const getSystemPrompt = (userName, context, language = 'English') => `You are Lesedi AI, the digital assistant for BOCRA (Botswana Communications Regulatory Authority). 
-Your context: Help users with regulatory matters: Licensing, Spectrum, complaints, domains (.bw), and USF projects. 
-Current User: ${userName}
-Language Preference: ${language}
-QoS Context: ${JSON.stringify(context)}
-Crucial objective: If any application is 'Pending Documents' or 'Flagged', proactively mention it to the user.
-Be helpful, brief, and concise. Speak in the language the user speaks (English or Setswana).
-Do NOT use markdown headers or bolding. Keep to plain text paragraphs under 3 sentences.`;
-
-const getModel = (userName, context, language) => genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
-  systemInstruction: getSystemPrompt(userName, context, language)
-});
-
-export default function ChatBot({ isOpen: externalOpen, initialMessage }) {
-  const navigate = useNavigate();
+const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (externalOpen) {
-      setIsOpen(true);
-      if (initialMessage) {
-        setMessages([{ id: uuidv4(), role: 'assistant', content: initialMessage }]);
-      }
-    }
-  }, [externalOpen, initialMessage]);
-  const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState("");
-  const [speedContext, setSpeedContext] = useState(null);
-  const [userName, setUserName] = useState("Citizen");
-  const [language, setLanguage] = useState(null); // 'English' | 'Setswana'
-  const scrollRef = useRef(null);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [language, setLanguage] = useState(null); // 'set' or 'eng'
+  const [userName, setUserName] = useState('');
+  const messagesEndRef = useRef(null);
+
+  const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+
+  // SYSTEM INSTRUCTIONS: Name the Bot "Lesedi AI Bocra Assistant"
+  const SYSTEM_INSTRUCTION = `
+    You are Lesedi AI, the official digital assistant for the Botswana Communications Regulatory Authority (BOCRA).
+    Your purpose is to provide professional, accurate, and helpful information about BOCRA services, regulations, 
+    spectrum management, type approval, careers, tenders, and internet speed test (QoS) interpretations.
+    
+    TONE: Professional, patriotic, efficient, and welcoming.
+    
+    CORE PRIORITIES:
+    1. Explain BOCRA's mandate: Regulating communications (Telecoms, Radio, Postal, etc).
+    2. Guide users to Type Approval, License applications, and Tenders.
+    3. Help citizens understand their rights as consumers of communications services.
+    4. Provide support for the Careers portal.
+    
+    PERSONALIZATION:
+    - If you know the user's name, use it naturally in conversation.
+    - If the user selected Setswana, provide responses that are accessible and culturally resonant (though core technical info is often English-primary in regulation).
+    
+    MODEL: You are powered by Gemini 2.5-flash for real-time intelligence.
+  `;
 
   useEffect(() => {
-    // Get user name from localStorage
-    const userData = localStorage.getItem('bocra_user');
-    if (userData) {
+    // Check for logged in user to get their name
+    const storedUser = localStorage.getItem('bocra_user');
+    if (storedUser) {
       try {
-        const user = JSON.parse(userData);
-        if (user && user.name) {
-          setUserName(user.name.split(' ')[0]);
-        }
-      } catch (e) {
-        console.error("Error parsing user data", e);
-      }
+        const parsed = JSON.parse(storedUser);
+        if (parsed.name) setUserName(parsed.name);
+      } catch (e) {}
     }
 
-    // Generate session ID on mount
-    setSessionId(uuidv4());
-
-    // Add initial welcome message
-    setMessages([{
-      id: "welcome",
-      role: "assistant",
-      content: `Dumela! Hello ${userName}! I am Lesedi AI, your official BOCRA Assistant. Would you like to continue in English or Setswana?`
-    }]);
-
-    // Listen for chatbot open events
-    const handleOpenChat = (e) => {
-      setIsOpen(true);
-      setIsMinimized(false);
-
-      if (e.detail?.autoMessage && e.detail?.context) {
-        setSpeedContext(e.detail.context);
-        // Auto-send a message about the speed test
-        setTimeout(() => {
-          const percentage = e.detail.context.percentage_of_promised;
-          const autoMessage = {
-            id: uuidv4(),
-            role: "assistant",
-            content: `I noticed your speed test results. You're getting **${e.detail.context.download_speed_mbps} Mbps** which is only **${percentage}%** of the ${e.detail.context.promised_speed_mbps} Mbps promised by ${e.detail.context.isp_name}.\n\nThis is below acceptable standards. Would you like me to help you file an official complaint with this evidence?`
-          };
-          setMessages(prev => [...prev, autoMessage]);
-        }, 500);
-      }
+    // Listen for name updates in real-time
+    const handleStorageChange = () => {
+       const user = localStorage.getItem('bocra_user');
+       if (user) {
+          const parsed = JSON.parse(user);
+          if (parsed.name) setUserName(parsed.name);
+       }
     };
-
-    window.addEventListener('openChatBot', handleOpenChat);
-    const handleStorage = () => {
-      const userData = localStorage.getItem('bocra_user');
-      if (userData) {
-        try {
-          const user = JSON.parse(userData);
-          if (user && user.name) {
-            setUserName(user.name.split(' ')[0]);
-          }
-        } catch (e) { }
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => {
-      window.removeEventListener('openChatBot', handleOpenChat);
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, [userName]);
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   useEffect(() => {
-    // Scroll to bottom when messages change
-    if (scrollRef.current) {
-      const scrollElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
+    if (isOpen && messages.length === 0) {
+      // Initial state is just asking for language
+      setMessages([
+        { 
+          id: 1, 
+          text: userName 
+            ? `Dumela/Hello ${userName}! Welcome to BOCRA. Please select your preferred language to begin.` 
+            : "Dumela/Hello! Welcome to BOCRA. I am Lesedi AI, your digital assistant. Please select your preferred language to begin.", 
+          sender: 'bot', 
+          isSystem: true 
+        }
+      ]);
     }
-  }, [messages]);
+  }, [isOpen, userName]);
 
-  const sendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
 
-    const userMessage = {
-      id: uuidv4(),
-      role: "user",
-      content: inputValue
-    };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
+  const handleLanguageSelect = (lang) => {
+     setLanguage(lang);
+     const welcomeText = lang === 'set' 
+        ? `Ke a leboga. Ke Lesedi AI, ke ka go thusa ka eng gompieno ${userName ? userName : ''}?`
+        : `Thank you. I am Lesedi AI. How can I assist you today ${userName ? userName : 'with BOCRA services'}?`;
+     
+     setMessages(prev => [...prev, { id: Date.now(), text: welcomeText, sender: 'bot' }]);
+  };
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || !language) return;
+
+    const currentInput = input;
+    const userMessage = { id: Date.now(), text: currentInput, sender: 'user' };
+    
+    // Save current history BEFORE adding new message
+    const currentHistory = [...messages];
+    
     setMessages(prev => [...prev, userMessage]);
-    setInputValue("");
-    setIsLoading(true);
+    setInput('');
+    setIsTyping(true);
 
     try {
-      // Use Gemini directly
-      const historyMsg = messages
-        .filter(msg => msg.id !== "welcome")
-        .map(msg => ({
-          role: msg.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: msg.content }]
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      const history = currentHistory
+        .filter(m => !m.isSystem)
+        .map(m => ({
+          role: m.sender === 'user' ? 'user' : 'model',
+          parts: [{ text: m.text }],
         }));
+      
+      // GEMINI REQUIREMENT:
+      // 1. History must start with 'user'
+      // 2. Roles must alternate (user, model, user, model...)
+      
+      let validHistory = [];
+      let nextRole = 'user';
+      
+      for (const msg of history) {
+        if (msg.role === nextRole) {
+          validHistory.push(msg);
+          nextRole = nextRole === 'user' ? 'model' : 'user';
+        }
+      }
 
-      const chat = getModel(userName, speedContext, language || 'English').startChat({ history: historyMsg });
-      const result = await chat.sendMessage(inputValue);
-      let aiResponse = result.response.text();
+      const chat = model.startChat({
+        history: validHistory,
+        systemInstruction: SYSTEM_INSTRUCTION,
+      });
 
-      // Clean up response
-      aiResponse = aiResponse.replace(/\*\*/g, '').replace(/\*/g, '').trim();
-
-      const assistantMessage = {
-        id: uuidv4(),
-        role: "assistant",
-        content: aiResponse
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
+      const result = await chat.sendMessage(currentInput);
+      const response = await result.response;
+      const botMessage = { id: Date.now(), text: response.text(), sender: 'bot' };
+      setMessages(prev => [...prev, botMessage]);
     } catch (error) {
-      console.error("Chat error:", error);
-      const errorMessage = {
-        id: uuidv4(),
-        role: "assistant",
-        content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment, or you can file a complaint directly through our QoS dashboard."
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      console.error("AI Error:", error);
+      setMessages(prev => [...prev, { id: Date.now(), text: "I'm experiencing a technical glitch. How else can I help you?", sender: 'bot' }]);
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const handleFileComplaint = () => {
-    if (speedContext?.id) {
-      navigate(`/complaint/${speedContext.id}`);
-      setIsOpen(false);
-    } else {
-      navigate('/qos');
-      setIsOpen(false);
+      setIsTyping(false);
     }
   };
 
   return (
-    <div id="ruby-container" className={`fixed bottom-6 right-6 z-[200] flex flex-col items-start transition-all duration-500 ${isOpen ? 'w-[400px]' : 'w-12'}`}>
-      {/* Mini Aura for Ruby eye */}
-      {!isOpen && (
-        <button
-          id="chatbot-trigger"
-          onClick={() => setIsOpen(true)}
-          className="w-12 h-12 bg-[#003366] rounded-2xl shadow-2xl shadow-[#0099CC]/30 flex items-center justify-center text-white hover:scale-110 transition-transform group overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0099CC] to-blue-600 opacity-20 animate-pulse"></div>
-          <Sparkles className="w-6 h-6 relative animate-in zoom-in spin-in duration-700" />
-        </button>
-      )}
-
-      {/* Main Chat Window */}
-      {isOpen && (
-        <div className="w-full h-[600px] bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] shadow-2xl shadow-black flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-500">
-          <div className="heritage-overlay basket-pattern text-slate-100 opacity-[0.05]"></div>
-
-          {/* Header */}
-          <div className="relative bg-[#111827] border-b border-[#1e293b] p-6 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-[#003366] rounded-xl flex items-center justify-center text-white shadow-lg">
-                <Sparkles className="w-5 h-5" />
+    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 100, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 100, scale: 0.8 }}
+            className={`bg-white border-none shadow-2xl overflow-hidden mb-6 flex flex-col transition-all duration-300 ${isExpanded ? 'w-[450px] h-[700px]' : 'w-[380px] h-[550px]'} rounded-sm`}
+          >
+            {/* Header */}
+            <div className={`p-4 bg-gradient-to-r from-[#0A192F] to-[#01142F] text-white flex items-center justify-between`}>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                   <div className="w-10 h-10 rounded bg-[#75B2DD]/20 flex items-center justify-center">
+                      <Bot className="w-6 h-6 text-[#75B2DD]" />
+                   </div>
+                   <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#0A192F] rounded-full"></span>
+                </div>
+                <div>
+                  <h3 className="font-black text-sm uppercase tracking-widest text-[#75B2DD]">Lesedi AI</h3>
+                  <div className="flex items-center gap-1.5">
+                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">BOCRA Official Assistant</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-white tracking-tight">Ruby</h3>
-                <div className="flex items-center space-x-1">
-                  <span className="w-1.5 h-1.5 bg-[#6DC04B] rounded-full animate-pulse"></span>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Active Assistant</span>
-                  <>
-                    {/* Chat Toggle Button */}
-                    <AnimatePresence>
-                      {!isOpen && (
-                        <motion.button
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0, opacity: 0 }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setIsOpen(true)}
-                          id="chatbot-trigger"
-                          className="fixed bottom-20 right-6 z-50 w-14 h-14 bg-[#0A192F] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-slate-800 transition-colors"
-                          data-testid="chatbot-toggle-btn"
-                        >
-                          <MessageCircle className="w-6 h-6" />
-                        </motion.button>
-                      )}
-                    </AnimatePresence>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setIsExpanded(!isExpanded)} className="p-2 hover:bg-white/10 rounded-sm transition-colors">
+                  {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </button>
+                <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/10 rounded-sm transition-colors">
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
 
-                    {/* Chat Window */}
-                    <AnimatePresence>
-                      {isOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                          animate={{
-                            opacity: 1,
-                            y: 0,
-                            scale: 1,
-                            height: isMinimized ? "auto" : "550px"
-                          }}
-                          exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                          className="fixed bottom-20 right-6 z-50 w-[380px] max-w-[calc(100vw-48px)] bg-white rounded-sm shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
-                          data-testid="chatbot-window"
-                        >
-                          {/* Header */}
-                          <div className="bg-[#0A192F] text-white p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-white/10 rounded-sm flex items-center justify-center">
-                                <Bot className="w-5 h-5" />
-                              </div>
-                              <div>
-                                <h3 className="font-heading font-bold text-sm">Lesedi AI Bocra Assistant</h3>
-                                <div className="flex items-center gap-1">
-                                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                                  <p className="text-[10px] text-slate-300 uppercase tracking-wider font-bold">Online</p>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => setIsMinimized(!isMinimized)}
-                                className="p-2 hover:bg-white/10 rounded-sm transition-colors"
-                                data-testid="chatbot-minimize-btn"
-                              >
-                                {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
-                              </button>
-                              <button
-                                onClick={() => setIsOpen(false)}
-                                className="p-2 hover:bg-white/10 rounded-sm transition-colors"
-                                data-testid="chatbot-close-btn"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50 scrollbar-hide">
+              {messages.map((msg) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-[85%] p-4 rounded-sm shadow-sm ${
+                    msg.sender === 'user' 
+                      ? 'bg-[#0A192F] text-white rounded-tr-none' 
+                      : msg.isSystem 
+                         ? 'bg-white border border-[#75B2DD]/20 text-[#0A192F] rounded-tl-none font-medium'
+                         : 'bg-white border border-slate-100 text-[#0A192F] rounded-tl-none'
+                  }`}>
+                    <p className={`text-sm leading-relaxed ${msg.isSystem ? 'text-[13px]' : ''}`}>{msg.text}</p>
+                    
+                    {msg.isSystem && !language && (
+                       <div className="flex gap-2 mt-4">
+                          <Button 
+                            onClick={() => handleLanguageSelect('eng')}
+                            className="bg-[#0A192F] hover:bg-[#0A192F]/90 text-white text-[10px] font-bold h-9 px-4 rounded-sm uppercase tracking-widest"
+                          >
+                             English
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => handleLanguageSelect('set')}
+                            className="border-slate-200 text-[#0A192F] text-[10px] font-bold h-9 px-4 rounded-sm uppercase tracking-widest"
+                          >
+                             Setswana
+                          </Button>
+                       </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-white border border-slate-100 p-4 rounded-sm rounded-tl-none shadow-sm min-w-[60px]">
+                    <div className="flex space-x-1">
+                      <div className="w-1.5 h-1.5 bg-[#75B2DD] rounded-full animate-bounce"></div>
+                      <div className="w-1.5 h-1.5 bg-[#75B2DD] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-1.5 h-1.5 bg-[#75B2DD] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
 
-                          {/* Messages */}
-                          <div className="relative flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
-                            {messages.map((m, i) => (
-                              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 fade-in duration-300`}>
-                                <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed ${m.role === 'user'
-                                    ? 'bg-[#003366] text-white shadow-lg rounded-tr-none'
-                                    : 'bg-[#1e293b] border border-[#334155] text-slate-200 rounded-tl-none'
-                                  }`}>
-                                  {m.content}
-                                  {/* Speed Alert Banner */}
-                                  {speedContext && speedContext.percentage_of_promised < 50 && !isMinimized && (
-                                    <div className="bg-amber-50 border-b border-amber-200 p-3 flex items-center gap-3">
-                                      <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                                      <div className="flex-1">
-                                        <p className="text-xs text-amber-800 font-medium">
-                                          Low speed detected: {speedContext.percentage_of_promised}% of promised
-                                        </p>
-                                      </div>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={handleFileComplaint}
-                                        className="text-[10px] h-7 px-2 rounded-sm border-amber-300 text-amber-700 hover:bg-amber-100 font-bold uppercase tracking-wider"
-                                      >
-                                        File Complaint
-                                      </Button>
-                                      <Button
-                                        onClick={() => handleLanguageSelect('tn')}
-                                        className="w-full bg-slate-800 border border-slate-700 hover:bg-[#003366] hover:border-[#0099CC] rounded-xl py-6 font-bold text-slate-200 transition-all"
-                                      >
-                                        🇧🇼 Setswana
-                                      </Button>
-                                    </div>
-                                  )}
-                                  {isTyping && (
-                                    <div className="flex justify-start">
-                                      <div className="bg-[#1e293b] px-5 py-3 rounded-2xl rounded-tl-none flex space-x-1">
-                                        <span className="w-1.5 h-1.5 bg-[#0099CC]/50 rounded-full animate-bounce"></span>
-                                        <span className="w-1.5 h-1.5 bg-[#0099CC]/50 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                                        <span className="w-1.5 h-1.5 bg-[#0099CC]/50 rounded-full animate-bounce [animation-delay:0.4s]"></span>
-                                      </div>
-                                    </div>
-                                  )}
+            {/* Input Area */}
+            <form onSubmit={handleSend} className="p-4 bg-white border-t border-slate-100 relative">
+               {!language && (
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                     <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Select Language Above</p>
+                  </div>
+               )}
+              <div className="relative flex items-center gap-2">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={language === 'set' ? "Kwala botshwa..." : "Type your message..."}
+                  className="flex-1 bg-slate-50 border-none h-14 rounded-sm px-4 pr-12 text-sm text-[#0A192F] placeholder:text-slate-300 focus:bg-white transition-all ring-0 outline-none shadow-inner"
+                />
+                <Button 
+                  type="submit" 
+                  disabled={!input.trim() || isTyping || !language}
+                  className="absolute right-1 top-1 w-12 h-12 rounded-sm bg-[#0A192F] text-white hover:bg-[#01142F] p-0 shadow-lg transition-transform active:scale-90"
+                >
+                  <Send size={18} />
+                </Button>
+              </div>
+              <div className="flex items-center justify-between mt-3 px-1">
+                 <div className="flex items-center gap-3">
+                    <button type="button" className="text-slate-300 hover:text-[#75B2DD] transition-colors"><Paperclip size={16} /></button>
+                    <button type="button" className="text-slate-300 hover:text-[#75B2DD] transition-colors"><Globe size={16} /></button>
+                 </div>
+                 <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
+                    <Sparkles size={10} className="text-[#75B2DD]" /> Powered by Gemini
+                 </div>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-                                  {/* Suggested */}
-                                  {language && (
-                                    <div className="relative px-6 pb-2 flex flex-wrap gap-2">
-                                      {CHATBOT_KNOWLEDGE[language].suggested.map((s) => (
-                                        <button
-                                          key={s}
-                                          onClick={() => handleSend(s)}
-                                          className="px-3 py-1.5 bg-[#111827] border border-[#1e293b] rounded-xl text-[10px] font-bold text-slate-400 hover:text-[#0099CC] hover:border-[#0099CC] transition-all flex items-center"
-                                        >
-                                          <CornerDownRight className="w-3 h-3 mr-1 opacity-50" />
-                                          {s}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  )}
-
-                                  {/* Input */}
-                                  {language && (
-                                    <div className="relative p-6">
-                                      <div className="flex items-center space-x-2 bg-[#111827] border border-[#1e293b] rounded-2xl p-2 focus-within:ring-1 focus-within:ring-[#0099CC] transition-all">
-                                        <input
-                                          type="text"
-                                          value={inputValue}
-                                          onChange={(e) => setInputValue(e.target.value)}
-                                          onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                                          placeholder={CHATBOT_KNOWLEDGE[language].placeholder}
-                                          className="flex-1 bg-transparent border-none focus:ring-0 text-sm px-3 py-2 text-white placeholder:text-slate-600"
-                                        />
-                                        <button
-                                          onClick={() => handleSend()}
-                                          disabled={!inputValue.trim()}
-                                          className="w-11 h-11 bg-[#003366] disabled:opacity-50 rounded-xl flex items-center justify-center text-white"
-                                        >
-                                          <Send className="w-5 h-5" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-      )}
-                              </div>
-                            );
+      <motion.button
+        onClick={() => setIsOpen(!isOpen)}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="w-16 h-16 bg-[#0A192F] shadow-2xl flex items-center justify-center rounded-sm group relative"
+      >
+        <div className="absolute -inset-1 bg-gradient-to-r from-[#75B2DD] to-[#0A192F] rounded-sm blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+        {isOpen ? <X className="text-[#75B2DD] z-10" /> : <MessageCircle className="text-[#75B2DD] z-10" />}
+        {!isOpen && (
+           <span className="absolute -top-1 -right-1 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#75B2DD] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-[#75B2DD]"></span>
+           </span>
+        )}
+      </motion.button>
+    </div>
+  );
 };
-                            {/* Messages */}
-                            {!isMinimized && (
-                              <>
-                                <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-                                  <div className="space-y-4">
-                                    {messages.map((message) => (
-                                      <motion.div
-                                        key={message.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}
-                                      >
-                                        <div className={`w-8 h-8 rounded-sm flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-[#75B2DD]" : "bg-slate-100"
-                                          }`}>
-                                          {message.role === "user" ? (
-                                            <User className="w-4 h-4 text-white" />
-                                          ) : (
-                                            <Bot className="w-4 h-4 text-[#0A192F]" />
-                                          )}
-                                        </div>
-                                        <div className={`max-w-[85%] p-3 rounded-sm ${message.role === "user"
-                                          ? "bg-[#0A192F] text-white"
-                                          : "bg-slate-100 text-slate-700"
-                                          } shadow-sm border border-slate-100`}>
-                                          <p className="text-[13px] leading-relaxed whitespace-pre-wrap">{message.content}</p>
 
-                                          {message.id === "welcome" && !language && (
-                                            <div className="flex gap-2 mt-4">
-                                              <Button
-                                                size="sm"
-                                                className="bg-[#75B2DD] hover:bg-[#5a9ac9] text-white text-[10px] h-8 rounded-sm font-bold uppercase tracking-widest"
-                                                onClick={() => {
-                                                  setLanguage('English');
-                                                  setMessages(prev => [...prev, {
-                                                    id: uuidv4(),
-                                                    role: "assistant",
-                                                    content: `Great! How can I assist you with BOCRA matters today?`
-                                                  }]);
-                                                }}
-                                              >
-                                                English
-                                              </Button>
-                                              <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="border-[#75B2DD] text-[#75B2DD] hover:bg-[#75B2DD]/10 text-[10px] h-8 rounded-sm font-bold uppercase tracking-widest"
-                                                onClick={() => {
-                                                  setLanguage("Setswana");
-                                                  setMessages(prev => [...prev, {
-                                                    id: uuidv4(),
-                                                    role: "assistant",
-                                                    content: `Ke itumetse go go thusa! Nka go thusa jang ka dintlha tsa BOCRA gompieno?`
-                                                  }]);
-                                                }}
-                                              >
-                                                Setswana
-                                              </Button>
-                                            </div>
-                                          )}
-                                        </div>
-                                      </motion.div>
-                                    ))}
-
-                                    {isLoading && (
-                                      <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        className="flex gap-3"
-                                      >
-                                        <div className="w-8 h-8 bg-slate-100 rounded-sm flex items-center justify-center">
-                                          <Bot className="w-4 h-4 text-[#0A192F]" />
-                                        </div>
-                                        <div className="bg-slate-100 p-3 rounded-sm">
-                                          <div className="flex gap-1">
-                                            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
-                                          </div>
-                                        </div>
-                                      </motion.div>
-                                    )}
-                                  </div>
-                                </ScrollArea>
-
-                                {/* Input */}
-                                <div className="p-4 border-t border-slate-200 bg-slate-50/50">
-                                  <div className="flex gap-2">
-                                    <Input
-                                      value={inputValue}
-                                      onChange={(e) => setInputValue(e.target.value)}
-                                      onKeyPress={handleKeyPress}
-                                      placeholder="Ask BOCRA Assistant..."
-                                      className="flex-1 rounded-sm border-slate-200 bg-white shadow-inner"
-                                      disabled={isLoading}
-                                    />
-                                    <Button
-                                      onClick={sendMessage}
-                                      disabled={!inputValue.trim() || isLoading}
-                                      className="bg-[#0A192F] hover:bg-slate-800 text-white rounded-sm w-10 p-0"
-                                    >
-                                      <Send className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                  <p className="text-[9px] text-slate-400 mt-2 text-center font-bold uppercase tracking-[0.2em]">
-                                    Powered by Gemini AI
-                                  </p>
-                                </div>
-                              </>
-                            )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </>
-                  );
-}
+export default Chatbot;
