@@ -163,6 +163,7 @@ const ShutterLogo = () => {
 };
 
 const TypewriterText = ({ text, delay = 0 }) => {
+  const API = "/api";
   const letters = Array.from(text);
   
   const container = {
@@ -279,6 +280,7 @@ const Home = () => {
   ];
 
   const newsCardTone = (category) => {
+    const API_URL = '/api';
     const lower = category?.toLowerCase?.() || '';
 
     if (lower.includes('press')) {

@@ -98,11 +98,11 @@ apiRouter.use('/admin', adminRoutes);
 // Type Approval routes (public, no authentication required)
 apiRouter.use('/type-approval', typeApprovalRoutes);
 
+// Public routes (isps, tender postings, etc.)
+apiRouter.use('/', publicRoutes);
+
 // Citizen routes (protected)
 apiRouter.use('/', citizenRoutes);
-
-// Public routes
-apiRouter.use('/', publicRoutes);
 
 // Create status check
 apiRouter.post('/status', async (req: Request, res: Response) => {
@@ -166,10 +166,24 @@ apiRouter.get('/status/:id', async (req: Request, res: Response) => {
 // Mount API router with /api prefix
 app.use('/api', apiRouter);
 
+// Function to print all routes for debug
+const printRoutes = (path: string, layer: any) => {
+  if (layer.route) {
+    layer.route.stack.forEach((s: any) => {
+      const method = s.method.toUpperCase();
+      console.log(`${method} ${path}${layer.route.path}`);
+    });
+  } else if (layer.name === 'router' && layer.handle.stack) {
+    layer.handle.stack.forEach((s: any) => {
+      printRoutes(`${path}${layer.regexp.source.replace('\\/?(?=\\/|$)', '')}`, s);
+    });
+  }
+};
+
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error('SERVER ERROR:', err);
+  res.status(500).json({ error: 'Internal server error', details: err.message });
 });
 
 // Graceful shutdown

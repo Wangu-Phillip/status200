@@ -25,14 +25,16 @@ const DomainRegistry = () => {
   const [searchResults, setSearchResults] = useState(null);
 
   const domainZones = [
-    { zone: '.co.bw', description: 'Commercial', price: 'P250 - P850/year', available: true },
-    { zone: '.org.bw', description: 'Organizations', price: 'P150 - P550/year', available: true },
-    { zone: '.net.bw', description: 'Network', price: 'P200 - P600/year', available: true },
-    { zone: '.ac.bw', description: 'Academic', price: 'P100 - P350/year', available: true },
-    { zone: '.gov.bw', description: 'Government', price: 'Restricted', available: false },
-    { zone: '.shop.bw', description: 'E-commerce', price: 'P300 - P950/year', available: true },
-    { zone: '.agric.bw', description: 'Agriculture', price: 'P180 - P450/year', available: true },
-    { zone: '.me.bw', description: 'Personal', price: 'P150 - P400/year', available: true },
+    { zone: '.co.bw', description: 'Commercial Entities', price: 'P250 - P850/year', available: true },
+    { zone: '.org.bw', description: 'Non-Profit Organizations', price: 'P150 - P550/year', available: true },
+    { zone: '.net.bw', description: 'Network Infrastructure', price: 'P200 - P600/year', available: true },
+    { zone: '.ac.bw', description: 'Academic & Research', price: 'P100 - P350/year', available: true },
+    { zone: '.gov.bw', description: 'Government Agencies', price: 'Restricted', available: false },
+    { zone: '.edu.bw', description: 'Basic Education', price: 'P100 - P300/year', available: true },
+    { zone: '.shop.bw', description: 'E-commerce & Retail', price: 'P300 - P950/year', available: true },
+    { zone: '.agric.bw', description: 'Agricultural Sector', price: 'P180 - P450/year', available: true },
+    { zone: '.me.bw', description: 'Personal Portfolios', price: 'P150 - P400/year', available: true },
+    { zone: '.health.bw', description: 'Health & Wellness', price: 'P200 - P600/year', available: true },
   ];
 
   const benefits = [

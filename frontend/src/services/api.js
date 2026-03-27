@@ -214,6 +214,29 @@ export const searchGlobal = ({ query = '', page = 1, limit = 10 } = {}) =>
   apiCall(`/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
 
 // =====================
+// USER MANAGEMENT API (Admin)
+// =====================
+
+export const getUsers = () => apiCall('/users');
+
+export const createUser = (userData) =>
+  apiCall('/users', {
+    method: 'POST',
+    body: JSON.stringify(userData),
+  });
+
+export const updateUser = (id, userData) =>
+  apiCall(`/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(userData),
+  });
+
+export const deleteUser = (id) =>
+  apiCall(`/users/${id}`, {
+    method: 'DELETE',
+  });
+
+// =====================
 // ADMIN API
 // =====================
 
@@ -224,6 +247,8 @@ export const getSubmissions = ({ department = '', page = 1, limit = 10 } = {}) =
   query.append('limit', limit);
   return apiCall(`/admin/submissions?${query.toString()}`);
 };
+
+export const getAllSubmissions = (options = { limit: 100 }) => getSubmissions(options);
 
 export const getAdminStats = (department = '') => {
   const query = new URLSearchParams();

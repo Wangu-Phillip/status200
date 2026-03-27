@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
-import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { 
+  PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell 
+} from 'recharts';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -15,127 +17,134 @@ import UserList from '../components/admin/UserList';
 import UserModal from '../components/admin/UserModal';
 import TenderDetailModal from '../components/TenderDetailModal';
 import AdminLicensingView from '../components/admin/AdminLicensingView';
-
-import { 
-  FileText, 
-  Users, 
-  Shield, 
-  Settings as SettingsIcon, 
-  LogOut, 
-  Search, 
-  Bell, 
-  User as UserIcon,
-  Filter,
-  ArrowRight,
-  ChevronDown,
-  Clock,
-  CheckCircle,
-  XCircle,
+import {
+  DEPARTMENTS,
+  DEPARTMENT_LABELS,
+  DEPARTMENT_COLORS,
+} from '../utils/persistence';
+import { qosMetrics } from '../mockData';
+import Analytics from '../components/Analytics';
+import * as adminApi from '../services/api';
+import {
+  FileText,
   AlertCircle,
-  Plus,
-  Edit2,
-  Trash2,
-  Loader2,
-  Menu,
-  X as XIcon,
-  RefreshCcw,
-  LayoutDashboard,
-  CheckCheck,
-  Send,
+  CheckCircle,
+  Clock,
+  Search,
+  Filter,
   Eye,
-  Zap,
-  MessageSquare,
+  CheckCheck,
+  XCircle,
+  Shield,
   BarChart3,
+  MessageSquare,
   Briefcase,
-  ExternalLink,
-  ChevronRight,
-  TrendingUp,
+  Zap,
+  LogOut,
   Hash,
-  Activity as ActivityIcon,
+  Send,
+  ChevronDown,
+  Users,
+  Plus,
+  Settings,
+  ShieldCheck,
+  TrendingUp,
+  LayoutDashboard,
+  Inbox,
   Lock,
   Mail,
-  Smartphone,
-  Globe,
-  Database,
-  ShieldCheck,
-  Download
+  Bell,
+  ChevronRight,
+  Menu,
+  X,
+  CreditCard,
+  Target,
+  Loader2,
+  Trash2,
+  Edit2
 } from 'lucide-react';
 
-import * as adminApi from '../services/api';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
-
-const DEPARTMENTS = {
-  LICENSING: 'licensing',
-  COMPLAINTS: 'complaints',
-  TENDERS: 'tenders',
-  QOS: 'qos'
+const BRAND = {
+  navy: '#010B1D',
+  accent: '#14B8A6',
+  white: '#FFFFFF',
+  slate: '#64748B',
+  border: '#E2E8F0',
+  red: '#F43F5E',
+  yellow: '#F59E0B',
+  emerald: '#10B981',
+  blue: '#3B82F6'
 };
 
-const DEPARTMENT_LABELS = {
-  [DEPARTMENTS.LICENSING]: '🛡️ Licensing & Type Approval',
-  [DEPARTMENTS.COMPLAINTS]: '⚖️ Complaints & Consumer Protection',
-  [DEPARTMENTS.QOS]: '📊 QoS Monitoring',
-  [DEPARTMENTS.TENDERS]: '💼 Tender Management'
-};
+const StatTile = ({ label, value, icon: Icon, accent, helper }) => (
+  <Card className="border-0 shadow-sm rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 group">
+    <CardContent className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="p-3.5 rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-[#14B8A6]/10 group-hover:text-[#14B8A6] transition-colors">
+          <Icon size={22} />
+        </div>
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{helper}</span>
+          <div className="h-1 w-8 rounded-full mt-1" style={{ backgroundColor: accent }}></div>
+        </div>
+      </div>
+      <div>
+        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+        <p className="text-3xl font-black text-slate-900 mt-1">{value}</p>
+      </div>
+    </CardContent>
+  </Card>
+);
 
-const DEPARTMENT_COLORS = {
-  [DEPARTMENTS.LICENSING]: { bg: 'bg-[#003366]', text: 'text-[#003366]', light: 'bg-[#E8F0F9]' },
-  [DEPARTMENTS.COMPLAINTS]: { bg: 'bg-[#B22222]', text: 'text-[#B22222]', light: 'bg-[#F9E8E8]' },
-  [DEPARTMENTS.QOS]: { bg: 'bg-[#006400]', text: 'text-[#006400]', light: 'bg-[#E8F9E8]' },
-  [DEPARTMENTS.TENDERS]: { bg: 'bg-[#DAA520]', text: 'text-[#DAA520]', light: 'bg-[#F9F4E8]' }
-};
+const SurfaceCard = ({ title, children, subtitle, icon: Icon, action }) => (
+  <Card className="border-0 shadow-sm rounded-[2.5rem] overflow-hidden">
+    <CardHeader className="bg-white border-b border-slate-100 p-8 flex flex-row items-center justify-between space-y-0">
+      <div className="flex items-center gap-4">
+        {Icon && <div className="p-3 rounded-2xl bg-teal-50 text-teal-600"><Icon size={20} /></div>}
+        <div>
+          <CardTitle className="text-xl font-black text-slate-900">{title}</CardTitle>
+          {subtitle && <CardDescription className="font-medium text-slate-500">{subtitle}</CardDescription>}
+        </div>
+      </div>
+      {action}
+    </CardHeader>
+    <CardContent className="p-0">
+      {children}
+    </CardContent>
+  </Card>
+);
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [activeView, setActiveView] = useState('dashboard');
   const [user, setUser] = useState(null);
-  const [activeView, setActiveView] = useState('overview'); // 'overview', 'submissions', 'users', 'applications', 'settings', 'licensing'
-  
-  // Dashboard & Stats
-  const [stats, setStats] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Data states
+  const [users, setUsers] = useState([]);
+  const [allApplications, setAllApplications] = useState([]);
+  const [complaints, setComplaints] = useState([]);
+  const [tenders, setTenders] = useState([]);
+  const [tenderPostings, setTenderPostings] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [licensingApps, setLicensingApps] = useState([]);
   const [departmentStats, setDepartmentStats] = useState({
     licensing: { total: 0, pending: 0, approved: 0, rejected: 0 },
     complaints: { total: 0, pending: 0, approved: 0, rejected: 0 },
-    tenders: { total: 0, pending: 0, approved: 0, rejected: 0 },
-    qos: { total: 0, pending: 0, approved: 0, rejected: 0 },
+    tenders: { total: 0, pending: 0, approved: 0, rejected: 0 }
   });
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [allActivities, setAllActivities] = useState([]);
   
-  // Data Loading
-  const [submissionsLoading, setSubmissionsLoading] = useState(false);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [settingsLoading, setSettingsLoading] = useState(false);
-  
-  // Content State
-  const [submissions, setSubmissions] = useState([]);
-  const [complaints, setComplaints] = useState([]);
-  const [tenders, setTenders] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [allApplications, setAllApplications] = useState([]);
-  
-  // UI State
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
-  const [selectedTenderDetail, setSelectedTenderDetail] = useState(null);
-  const [adminNote, setAdminNote] = useState('');
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [viewingUser, setViewingUser] = useState(null);
+  // UI states
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [lastInactivityCheck, setLastInactivityCheck] = useState(Date.now());
-  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(30);
-
-  // Management State
+  const [viewingUser, setViewingUser] = useState(null);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [adminNote, setAdminNote] = useState('');
   const [tenderView, setTenderView] = useState('submissions'); // 'submissions' or 'postings'
-  const [tenderPostings, setTenderPostings] = useState([]);
-  const [tenderPostingsLoading, setTenderPostingsLoading] = useState(false);
   const [showTenderForm, setShowTenderForm] = useState(false);
   const [editingTender, setEditingTender] = useState(null);
-  const [tenderDocumentsLoading, setTenderDocumentsLoading] = useState(false);
-  const [formDocuments, setFormDocuments] = useState([]);
   const [formData, setFormData] = useState({
     tenderNumber: '',
     title: '',
@@ -143,178 +152,104 @@ const AdminDashboard = () => {
     closingDate: '',
     estimatedValue: '',
     location: '',
-    description: '',
+    description: ''
   });
-  const [documentsToDeleteAfterSave, setDocumentsToDeleteAfterSave] = useState([]);
 
-  // System Settings State (for superadmin)
+  // Settings states
   const [settings, setSettings] = useState({
     siteName: 'BOCRA Portal',
-    supportEmail: 'support@bocra.org.bw',
     maintenanceMode: false,
     registrationEnabled: true,
-    twoFactorAuth: false,
+    supportEmail: 'support@bocra.org.bw',
     sessionTimeout: 30,
-    emailNotifications: true,
-    autoBackup: true,
-    darkMode: false,
+    twoFactorAuth: false
   });
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [tenderPostingsLoading, setTenderPostingsLoading] = useState(false);
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('bocra_user');
-    if (!storedUser) {
-      navigate('/login');
+    const authUser = JSON.parse(localStorage.getItem('adminUser'));
+    const token = localStorage.getItem('adminToken');
+
+    if (!authUser || !token) {
+      navigate('/admin/login');
       return;
     }
-    const parsedUser = JSON.parse(storedUser);
-    setUser(parsedUser);
 
-    // Initial data load
-    if (parsedUser.adminLevel === 'superadmin') {
-      loadSystemStats();
-      loadUsers();
-      loadAllApplications();
-      loadActivities();
-      loadSettings();
-    } else {
-      refreshData(parsedUser);
-      loadActivities();
-    }
-
-    // Inactivity listener
-    const resetTimer = () => setLastInactivityCheck(Date.now());
-    window.addEventListener('mousemove', resetTimer);
-    window.addEventListener('keypress', resetTimer);
-
-    return () => {
-      window.removeEventListener('mousemove', resetTimer);
-      window.removeEventListener('keypress', resetTimer);
-    };
+    setUser(authUser);
+    refreshData(authUser);
   }, [navigate]);
 
-  useEffect(() => {
-    const checkTimer = setInterval(() => {
-      const inactiveMinutes = (Date.now() - lastInactivityCheck) / 1000 / 60;
-      if (inactiveMinutes >= sessionTimeoutMinutes) {
-        handleLogout();
-        toast({
-          title: "Session Expired",
-          description: "You have been logged out due to inactivity.",
-          variant: "destructive"
-        });
+  const refreshData = async (currUser) => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        loadUsers(),
+        loadAllApplications(),
+        loadSettings(),
+        loadAllActivities()
+      ]);
+
+      if (currUser.department === 'tenders') {
+        await loadTenderPostings();
       }
-    }, 60000); // Check every minute
-    return () => clearInterval(checkTimer);
-  }, [lastInactivityCheck, sessionTimeoutMinutes]);
-
-  useEffect(() => {
-    if (activeView === 'submissions' && user?.department === 'tenders' && tenderView === 'postings') {
-      loadTenderPostings();
-    }
-  }, [activeView, tenderView, user?.department]);
-
-  const loadSettings = async () => {
-    setSettingsLoading(true);
-    try {
-      const data = await adminApi.getSystemSettings();
-      setSettings(data);
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      console.error('Error refreshing data:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load dashboard data.',
+        variant: 'destructive',
+      });
     } finally {
-      setSettingsLoading(false);
-    }
-  };
-
-  const loadActivities = async () => {
-    try {
-      const data = await adminApi.getActivityLogs({ limit: 5 });
-      setRecentActivities(data.logs || []);
-    } catch (error) {
-      console.error('Failed to load activities:', error);
-    }
-  };
-
-  const loadAllActivities = async () => {
-    try {
-      const data = await adminApi.getActivityLogs({ limit: 50 });
-      setAllActivities(data.logs || []);
-    } catch (error) {
-       console.error('Failed to load all activities:', error);
+      setLoading(false);
     }
   };
 
   const loadUsers = async () => {
     setUsersLoading(true);
-    const token = localStorage.getItem('bocra_token');
     try {
-      const response = await fetch(`${API_URL}/users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      }
-    } catch (error) {
-      console.error('Failed to load users:', error);
+      const data = await adminApi.getUsers();
+      setUsers(data.users || []);
+    } catch (err) {
+      console.error('User fetch failed:', err);
     } finally {
       setUsersLoading(false);
     }
   };
 
-  const loadSystemStats = async () => {
-    try {
-      const licensingStats = await adminApi.getAdminStats('licensing');
-      const complaintsStats = await adminApi.getAdminStats('complaints');
-      const tendersStats = await adminApi.getAdminStats('tenders');
-      const qosStats = await adminApi.getAdminStats('qos');
-
-      setDepartmentStats({
-        licensing: licensingStats,
-        complaints: complaintsStats,
-        tenders: tendersStats,
-        qos: qosStats
-      });
-    } catch (error) {
-      console.error('Failed to load system stats:', error);
-    }
-  };
-
   const loadAllApplications = async () => {
-    setSubmissionsLoading(true);
     try {
-      let allApps = [];
-      const depts = ['licensing', 'complaints', 'tenders'];
-      for (const dept of depts) {
-        const data = await adminApi.getSubmissions({ department: dept, page: 1, limit: 100 });
-        if (data.submissions) allApps = [...allApps, ...data.submissions];
-      }
-      setAllApplications(allApps);
-    } catch (error) {
-      console.error('Failed to load applications:', error);
-    } finally {
-      setSubmissionsLoading(false);
-    }
-  };
-
-  const refreshData = async (currentUser = user) => {
-    if (!currentUser) return;
-    setSubmissionsLoading(true);
-    try {
-      const dept = currentUser.department;
-      if (!dept) return;
-
-      const submissionsData = await adminApi.getSubmissions({ department: dept, page: 1, limit: 100 });
+      const resp = await adminApi.getAllSubmissions();
+      const subs = resp.submissions || [];
+      setAllApplications(subs);
       
-      if (dept === DEPARTMENTS.LICENSING) setSubmissions(submissionsData.submissions || []);
-      else if (dept === DEPARTMENTS.COMPLAINTS) setComplaints(submissionsData.submissions || []);
-      else if (dept === DEPARTMENTS.TENDERS) setTenders(submissionsData.submissions || []);
+      // Filter by department if needed
+      setComplaints(subs.filter(a => a.department === 'complaints'));
+      setTenders(subs.filter(a => a.department === 'tenders'));
+      setLicensingApps(subs.filter(a => a.department === 'licensing'));
       
-      const statsData = await adminApi.getAdminStats(dept);
-      setStats(statsData);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-    } finally {
-      setSubmissionsLoading(false);
+      // Calculate stats
+      const stats = {
+        licensing: { total: 0, pending: 0, approved: 0, rejected: 0 },
+        complaints: { total: 0, pending: 0, approved: 0, rejected: 0 },
+        tenders: { total: 0, pending: 0, approved: 0, rejected: 0 }
+      };
+      
+      subs.forEach(app => {
+        if (stats[app.department]) {
+          stats[app.department].total++;
+          if (app.status === 'pending' || app.status === 'Submitted') stats[app.department].pending++;
+          if (app.status === 'approved' || app.status === 'Approved') stats[app.department].approved++;
+          if (app.status === 'rejected' || app.status === 'Rejected') stats[app.department].rejected++;
+        }
+      });
+      setDepartmentStats(stats);
+    } catch (err) {
+      console.error('Applications fetch failed:', err);
     }
   };
 
@@ -322,206 +257,234 @@ const AdminDashboard = () => {
     setTenderPostingsLoading(true);
     try {
       const data = await adminApi.getTenderPostings();
-      setTenderPostings(data.tenders || []);
-    } catch (error) {
-      console.error('Failed to load tender postings:', error);
+      setTenderPostings(data);
+    } catch (err) {
+      console.error('Tender postings fetch failed:', err);
     } finally {
       setTenderPostingsLoading(false);
     }
   };
 
-  const handleStatusChange = async (token, newStatus) => {
+  const loadSettings = async () => {
     try {
-      setSubmissionsLoading(true);
-      await adminApi.updateSubmissionStatus(token, newStatus);
-      await refreshData();
-      if (user?.adminLevel === 'superadmin') await loadAllApplications();
-      setSelectedSubmission(null);
-      toast({
-        title: "Status Updated",
-        description: `Item ${token} has been moved to ${newStatus}.`,
-      });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
-    } finally {
-      setSubmissionsLoading(false);
+      const data = await adminApi.getSystemSettings();
+      if (data) setSettings(data);
+    } catch (err) {
+      console.error('Settings fetch failed:', err);
     }
   };
 
-  const handleAddNote = async (token) => {
-    if (!adminNote.trim()) return;
+  const loadAllActivities = async () => {
     try {
-      setSubmissionsLoading(true);
-      await adminApi.addSubmissionNotes(token, adminNote);
-      setAdminNote('');
-      await refreshData();
-      if (user?.adminLevel === 'superadmin') await loadAllApplications();
-      setSelectedSubmission(null);
-      toast({
-        title: "Note Added",
-        description: `Internal admin note saved for ${token}.`,
-      });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to add note", variant: "destructive" });
-    } finally {
-      setSubmissionsLoading(false);
+      const data = await adminApi.getActivityLogs();
+      setRecentActivities(data.slice(0, 10));
+    } catch (err) {
+      console.error('Activity logs fetch failed:', err);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('bocra_user');
-    localStorage.removeItem('bocra_token');
-    navigate('/login');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    navigate('/admin/login');
   };
 
-  const handleSettingsChange = (field, value) => {
-    setSettings(prev => ({ ...prev, [field]: value }));
+  const handleStatusChange = async (newStatus) => {
+    if (!selectedSubmission) return;
+    setSubmissionsLoading(true);
+    try {
+      await adminApi.updateSubmissionStatus(selectedSubmission.id, newStatus);
+      toast({
+        title: 'Status Updated',
+        description: `Submission ${selectedSubmission.token || selectedSubmission.id} is now ${newStatus}.`,
+      });
+      loadAllApplications();
+      setSelectedSubmission(null);
+    } catch (error) {
+      toast({
+        title: 'Update Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
+
+  const handleAddNote = async (note) => {
+    if (!selectedSubmission) return;
+    try {
+      await adminApi.addSubmissionNotes(selectedSubmission.id, note);
+      toast({ title: 'Note Added', description: 'Internal note saved successfully.' });
+      loadAllApplications();
+    } catch (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleTenderFormSubmit = async (e) => {
+    e.preventDefault();
+    setTenderPostingsLoading(true);
+    try {
+      if (editingTender) {
+        await adminApi.updateTenderPosting(editingTender.id, formData);
+        toast({ title: 'Tender Updated', description: 'Notice has been updated.' });
+      } else {
+        await adminApi.createTenderPosting(formData);
+        toast({ title: 'Tender Posted', description: 'New procurement notice is now live.' });
+      }
+      setShowTenderForm(false);
+      setEditingTender(null);
+      loadTenderPostings();
+    } catch (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setTenderPostingsLoading(false);
+    }
+  };
+
+  const handleDeleteTenderPosting = async (id) => {
+    if (!window.confirm('Delete this tender notice?')) return;
+    try {
+      await adminApi.deleteTenderPosting(id);
+      toast({ title: 'Deleted', description: 'Notice has been removed.' });
+      loadTenderPostings();
+    } catch (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
   };
 
   const handleSaveSettings = async () => {
     setSettingsLoading(true);
     try {
       await adminApi.updateSystemSettings(settings);
-      toast({ title: "Settings Saved", description: "System configuration updated successfully." });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save settings", variant: "destructive" });
+      toast({ title: 'Settings Saved', description: 'System configuration updated successfully.' });
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to save settings.', variant: 'destructive' });
     } finally {
       setSettingsLoading(false);
     }
   };
 
+  const handleSettingsChange = (field, value) => {
+    setSettings(prev => ({ ...prev, [field]: value }));
+  };
+
   const getStatusBadge = (status) => {
-    const config = {
-      'Approved': { className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', dot: 'bg-emerald-500', icon: CheckCircle },
-      'Under Review': { className: 'bg-blue-500/10 text-blue-500 border-blue-500/20', dot: 'bg-blue-500', icon: Clock },
-      'Pending Review': { className: 'bg-amber-500/10 text-amber-500 border-amber-500/20', dot: 'bg-amber-500', icon: Clock },
-      'Rejected': { className: 'bg-rose-500/10 text-rose-500 border-rose-500/20', dot: 'bg-rose-500', icon: XCircle }
-    };
-    const c = config[status] || config['Pending Review'];
+    switch (status) {
+      case 'approved': return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Approved</Badge>;
+      case 'rejected': return <Badge className="bg-rose-100 text-rose-700 border-rose-200">Rejected</Badge>;
+      case 'pending': return <Badge className="bg-amber-100 text-amber-700 border-amber-200">Under Review</Badge>;
+      default: return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  if (loading) {
     return (
-      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider ${c.className}`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${c.dot} animate-pulse`}></span>
-        {status}
+      <div className="min-h-screen bg-[#0E1525] flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="h-12 w-12 text-[#14B8A6] animate-spin" />
+        <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Initializing Control Panel...</p>
       </div>
     );
+  }
+
+  // Determine which data to show in active data list
+  const activeData = activeView === 'submissions' 
+    ? (user?.department === 'tenders' ? tenders : 
+       user?.department === 'complaints' ? complaints : 
+       user?.department === 'licensing' ? licensingApps : [])
+    : allApplications;
+
+  const stats = {
+    total: allApplications.length,
+    pending: allApplications.filter(a => a.status === 'pending').length,
+    approved: allApplications.filter(a => a.status === 'approved').length,
+    rejected: allApplications.filter(a => a.status === 'rejected').length
   };
-
-  const getActiveData = () => {
-    if (user?.department === 'complaints') return complaints;
-    if (user?.department === 'tenders') return tenders;
-    return submissions;
-  };
-
-  const activeData = getActiveData();
-
-  if (!user) return null;
-
-  const DeptIcon = {
-    [DEPARTMENTS.LICENSING]: Zap,
-    [DEPARTMENTS.COMPLAINTS]: MessageSquare,
-    [DEPARTMENTS.TENDERS]: Briefcase,
-    [DEPARTMENTS.QOS]: BarChart3
-  }[user.department] || Shield;
-
-  const deptColor = DEPARTMENT_COLORS[user.department] || DEPARTMENT_COLORS[DEPARTMENTS.LICENSING];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex font-sans selection:bg-[#003366] selection:text-white overflow-hidden">
+    <div className="flex min-h-screen bg-[#F8FAFC]">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 w-80 bg-slate-950 text-slate-400 z-50 flex flex-col transition-all duration-500 lg:translate-x-0 ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-8 border-b border-white/5 bg-gradient-to-br from-slate-900 to-slate-950">
-          <Link to="/" className="flex items-center gap-4 group">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-2xl shadow-white/10 group-hover:scale-110 transition-transform">
-              <img src="/logo.png" alt="B" className="h-6 w-auto" />
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-72 bg-[#020617] text-white transition-all duration-300 lg:static lg:block
+        ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+       shadow-2xl shadow-black/50`}>
+        <div className="flex flex-col h-full bg-[#020617]">
+          <div className="p-8 pb-4">
+            <div className="flex items-center gap-4 mb-10 group cursor-pointer">
+               <div className="w-12 h-12 bg-[#14B8A6] rounded-2xl flex items-center justify-center shadow-lg shadow-[#14B8A6]/30 group-hover:scale-110 transition-transform">
+                  <Shield size={22} className="text-white" />
+               </div>
+               <div>
+                  <h1 className="text-xl font-black tracking-tighter">BOCRA</h1>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-teal-500">Admin Portal</p>
+               </div>
             </div>
-            <div>
-              <h1 className="text-white font-black tracking-tighter text-xl">BOCRA</h1>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Admin Control</p>
-            </div>
-          </Link>
-        </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
-          <nav className="space-y-1">
-            <button 
-              onClick={() => setActiveView('overview')}
-              className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 ${activeView === 'overview' ? 'bg-[#003366] text-white shadow-xl shadow-[#003366]/20' : 'hover:bg-white/5 hover:text-white'}`}
-            >
-              <LayoutDashboard size={20} />
-              <span className="font-bold text-sm">Dashboard Overview</span>
-            </button>
-
-            {user.adminLevel === 'superadmin' && (
-              <>
-                <button 
-                  onClick={() => setActiveView('licensing')}
-                  className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 ${activeView === 'licensing' ? 'bg-[#003366] text-white shadow-xl shadow-[#003366]/20' : 'hover:bg-white/5 hover:text-white'}`}
+            <nav className="space-y-2">
+              {[
+                { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+                { id: 'submissions', label: user?.department === 'tenders' ? 'Tenders hub' : 'Department Queue', icon: Inbox },
+                { id: 'applications', label: 'All Submissions', icon: FileText, superOnly: true },
+                { id: 'users', label: 'Staff Accounts', icon: Users, superOnly: true },
+                { id: 'licensing', label: 'Licensing Desk', icon: CreditCard, superOnly: true },
+              ].filter(item => !item.superOnly || user?.adminLevel === 'superadmin').map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveView(item.id);
+                    setMobileSidebarOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 relative group
+                    ${activeView === item.id 
+                      ? 'bg-[#14B8A6] text-white shadow-xl shadow-[#14B8A6]/20' 
+                      : 'text-slate-500 hover:text-white hover:bg-white/5'}
+                  `}
                 >
-                  <Zap size={20} />
-                  <span className="font-bold text-sm">Licensing Dept</span>
+                  <item.icon size={20} className={activeView === item.id ? '' : 'group-hover:scale-110 transition-transform'} />
+                  <span className="font-bold text-sm tracking-tight">{item.label}</span>
+                  {activeView === item.id && (
+                    <div className="absolute right-4 w-1.5 h-1.5 bg-white rounded-full"></div>
+                  )}
                 </button>
+              ))}
+
+              {user?.adminLevel === 'superadmin' && (
                 <button 
-                  onClick={() => setActiveView('applications')}
-                  className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 ${activeView === 'applications' ? 'bg-[#003366] text-white shadow-xl shadow-[#003366]/20' : 'hover:bg-white/5 hover:text-white'}`}
+                  onClick={() => setActiveView('settings')}
+                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${activeView === 'settings' ? 'bg-[#14B8A6] text-white shadow-xl' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
                 >
-                  <FileText size={20} />
-                  <span className="font-bold text-sm">All Applications</span>
+                  <Settings size={20} />
+                  <span className="font-bold text-sm tracking-tight">System Settings</span>
                 </button>
-                <button 
-                  onClick={() => setActiveView('users')}
-                  className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 ${activeView === 'users' ? 'bg-[#003366] text-white shadow-xl shadow-[#003366]/20' : 'hover:bg-white/5 hover:text-white'}`}
-                >
-                  <Users size={20} />
-                  <span className="font-bold text-sm">User Management</span>
-                </button>
-              </>
-            )}
-
-            <button 
-              onClick={() => setActiveView('submissions')}
-              className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 ${activeView === 'submissions' ? 'bg-[#003366] text-white shadow-xl shadow-[#003366]/20' : 'hover:bg-white/5 hover:text-white'}`}
-            >
-              <FileText size={20} />
-              <span className="font-bold text-sm">{user.department === 'tenders' ? 'Tenders & Bids' : 'Submissions'}</span>
-            </button>
-
-            {user.adminLevel === 'superadmin' && (
-              <button 
-                onClick={() => {
-                  setActiveView('settings');
-                  loadSettings();
-                }}
-                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 ${activeView === 'settings' ? 'bg-[#003366] text-white shadow-xl shadow-[#003366]/20' : 'hover:bg-white/5 hover:text-white'}`}
-              >
-                <SettingsIcon size={20} />
-                <span className="font-bold text-sm">System Settings</span>
-              </button>
-            )}
-          </nav>
-        </div>
-
-        <div className="p-6 border-t border-white/5 bg-slate-900/50">
-          <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-white/5 mb-4">
-             <div className="w-10 h-10 rounded-full bg-[#003366] flex items-center justify-center text-white font-black">
-                {user.name?.charAt(0)}
-             </div>
-             <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-bold truncate">{user.name}</p>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider truncate">{user.adminLevel}</p>
-             </div>
+              )}
+            </nav>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 text-rose-500 hover:bg-rose-500/10"
-          >
-            <LogOut size={20} />
-            <span className="font-bold text-sm">Sign Out</span>
-          </button>
+
+          <div className="mt-auto p-6 border-t border-white/5 bg-black/20">
+            <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-white/5 mb-4 group cursor-pointer hover:bg-white/10 transition-colors">
+               <div className="w-10 h-10 rounded-full bg-[#14B8A6] flex items-center justify-center text-white font-black group-hover:rotate-12 transition-transform">
+                  {user?.name?.charAt(0)}
+               </div>
+               <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-bold truncate tracking-tight">{user?.name}</p>
+                  <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest truncate">{user?.adminLevel}</p>
+               </div>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10"
+            >
+              <LogOut size={18} />
+              <span className="font-bold text-xs uppercase tracking-widest">Sign Out</span>
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 lg:pl-80 min-h-screen overflow-y-auto overflow-x-hidden">
+      <main className="flex-1 min-h-screen overflow-y-auto">
         {/* Header */}
         <header className="h-24 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 sticky top-0 z-40 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -529,148 +492,333 @@ const AdminDashboard = () => {
               <Menu size={24} />
             </button>
             <div>
-              <h2 className="text-xl font-bold font-heading text-slate-900 capitalize">{activeView.replace('-', ' ')}</h2>
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                <Shield size={14} />
-                <span>BOCRA Administration Portal</span>
+              <h2 className="text-xl font-black text-slate-900 capitalize tracking-tight">{activeView.replace('-', ' ')}</h2>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span>Terminal Session Active</span>
               </div>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-3 bg-slate-100 px-4 py-2.5 rounded-2xl border border-slate-200">
+            <div className="hidden md:flex items-center gap-3 bg-slate-50 px-5 py-2.5 rounded-2xl border border-slate-100">
               <Clock size={16} className="text-slate-400" />
-              <span className="text-sm font-bold text-slate-600">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+              <span className="text-sm font-bold text-slate-600 tracking-tight">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
             </div>
-            <button className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors relative">
-               <Bell size={20} />
-               <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"></span>
+            <button className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors relative shadow-sm">
+               <Bell size={18} />
+               <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-[#14B8A6] border-2 border-white rounded-full"></span>
             </button>
           </div>
         </header>
 
-        <div className="p-8 max-w-7xl mx-auto space-y-8 pb-12">
-          {/* Dashboard Overview */}
-          {activeView === 'overview' && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-               {/* Stats Grid */}
+        <div className="p-8 max-w-[1400px] mx-auto pb-12">
+          {/* Dashboard/Overview View */}
+          {activeView === 'dashboard' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                 {[
-                   { label: 'Total Applications', val: departmentStats.licensing.total + departmentStats.complaints.total + departmentStats.tenders.total, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
-                   { label: 'Pending Review', val: departmentStats.licensing.pending + departmentStats.complaints.pending + departmentStats.tenders.pending, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-                   { label: 'System Health', val: '99.9%', icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                   { label: 'Active Admins', val: users.filter(u => u.adminLevel).length, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' }
-                 ].map((stat, i) => (
-                   <Card key={i} className="border-0 shadow-sm rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300">
-                     <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div className={`w-14 h-14 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center`}>
-                            <stat.icon size={24} />
-                          </div>
-                          <div className="text-right">
-                             <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
-                             <p className="text-3xl font-black text-slate-900 mt-1">{stat.val}</p>
-                          </div>
-                        </div>
-                     </CardContent>
-                   </Card>
-                 ))}
+                  <StatTile label="Current Backlog" value={stats.total} icon={Inbox} accent={BRAND.blue} helper="Active Requests" />
+                  <StatTile label="Pending Review" value={stats.pending} icon={Clock} accent={BRAND.yellow} helper="Action Required" />
+                  <StatTile label="Approvals" value={stats.approved} icon={CheckCircle} accent={BRAND.emerald} helper="YTD Issued" />
+                  <StatTile label="System Health" value="Optimum" icon={Zap} accent={BRAND.accent} helper="Latency < 45ms" />
                </div>
 
-               {/* Charts Row */}
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                 <Card className="border-0 shadow-sm rounded-[2rem] overflow-hidden">
-                    <CardHeader className="bg-slate-50/50 border-b p-8">
-                      <CardTitle className="text-xl font-black text-[#003366] flex items-center gap-3">
-                         <BarChart3 size={24} /> Department Activity
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-8">
-                      <div className="h-80 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={[
-                            { name: 'Licensing', apps: departmentStats.licensing.total },
-                            { name: 'Complaints', apps: departmentStats.complaints.total },
-                            { name: 'Tenders', apps: departmentStats.tenders.total },
-                            { name: 'QoS', apps: 0 }
-                          ]}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                            <XAxis dataKey="name" stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} />
-                            <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                            <Bar dataKey="apps" fill="#003366" radius={[6, 6, 0, 0]} barSize={40} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                 </Card>
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <Card className="lg:col-span-2 border-0 shadow-sm rounded-[2.5rem] overflow-hidden">
+                     <CardHeader className="bg-white border-b border-slate-100 p-8">
+                        <div className="flex items-center justify-between">
+                           <CardTitle className="text-xl font-black text-slate-900">Institutional Throughput</CardTitle>
+                           <Badge variant="outline" className="rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-widest border-slate-200">Real-time Pipeline</Badge>
+                        </div>
+                     </CardHeader>
+                     <CardContent className="p-8">
+                        <div className="h-[400px] w-full">
+                           <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={[
+                                { name: 'Licensing', apps: departmentStats.licensing.total, pending: departmentStats.licensing.pending },
+                                { name: 'Complaints', apps: departmentStats.complaints.total, pending: departmentStats.complaints.pending },
+                                { name: 'Tenders', apps: departmentStats.tenders.total, pending: departmentStats.tenders.pending },
+                                { name: 'QoS', apps: 42, pending: 2 }
+                              ]}>
+                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                                 <XAxis dataKey="name" stroke="#94A3B8" fontSize={11} fontWeight={700} tickLine={false} axisLine={false} dy={10} />
+                                 <YAxis stroke="#94A3B8" fontSize={11} fontWeight={700} tickLine={false} axisLine={false} />
+                                 <Tooltip 
+                                    contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }}
+                                    cursor={{ fill: '#F8FAFC' }}
+                                 />
+                                 <Bar dataKey="apps" fill="#14B8A6" radius={[8, 8, 8, 8]} barSize={32} />
+                              </BarChart>
+                           </ResponsiveContainer>
+                        </div>
+                     </CardContent>
+                  </Card>
 
-                 <Card className="border-0 shadow-sm rounded-[2rem] overflow-hidden">
-                    <CardHeader className="bg-slate-50/50 border-b p-8">
-                      <CardTitle className="text-xl font-black text-[#003366] flex items-center gap-3">
-                         <TrendingUp size={24} /> Overall Distribution
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-8">
-                      <div className="h-80 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={[
-                                { name: 'Approved', value: departmentStats.licensing.approved + departmentStats.complaints.approved + departmentStats.tenders.approved },
-                                { name: 'Pending', value: departmentStats.licensing.pending + departmentStats.complaints.pending + departmentStats.tenders.pending },
-                                { name: 'Rejected', value: departmentStats.licensing.rejected + departmentStats.complaints.rejected + departmentStats.tenders.rejected }
-                              ]}
-                              cx="50%" cy="50%"
-                              innerRadius={60} outerRadius={100} paddingAngle={5}
-                              dataKey="value"
-                            >
-                              {[ '#10B981', '#F59E0B', '#F43F5E' ].map((color, idx) => (
-                                <Cell key={`cell-${idx}`} fill={color} />
-                              ))}
-                            </Pie>
-                            <Tooltip />
-                            <Legend verticalAlign="bottom" height={36} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                 </Card>
+                  <Card className="border-0 shadow-sm rounded-[2.5rem] overflow-hidden">
+                     <CardHeader className="bg-white border-b border-slate-100 p-8">
+                        <CardTitle className="text-xl font-black text-slate-900">Distribution</CardTitle>
+                     </CardHeader>
+                     <CardContent className="p-8 pb-4">
+                        <div className="h-[300px] w-full">
+                           <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                 <Pie
+                                    data={[
+                                       { name: 'Approved', value: stats.approved },
+                                       { name: 'Pending', value: stats.pending },
+                                       { name: 'Rejected', value: stats.rejected }
+                                    ]}
+                                    innerRadius={70} outerRadius={100} paddingAngle={12} dataKey="value" stroke="none"
+                                 >
+                                    <Cell fill="#10B981" />
+                                    <Cell fill="#F59E0B" />
+                                    <Cell fill="#F43F5E" />
+                                 </Pie>
+                                 <Tooltip />
+                              </PieChart>
+                           </ResponsiveContainer>
+                        </div>
+                        <div className="space-y-4 pt-4 border-t border-slate-100 mt-4">
+                           {[
+                              { label: 'Approved', color: 'bg-emerald-500', val: stats.approved },
+                              { label: 'Pending', color: 'bg-amber-500', val: stats.pending },
+                              { label: 'Rejected', color: 'bg-rose-500', val: stats.rejected }
+                           ].map((item, i) => (
+                              <div key={i} className="flex items-center justify-between">
+                                 <div className="flex items-center gap-3">
+                                    <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                                    <span className="text-sm font-bold text-slate-600">{item.label}</span>
+                                 </div>
+                                 <span className="text-sm font-black text-slate-900">{item.val} items</span>
+                              </div>
+                           ))}
+                        </div>
+                     </CardContent>
+                  </Card>
                </div>
             </div>
           )}
 
-          {/* Admin Licensing View */}
-          {activeView === 'licensing' && user?.adminLevel === 'superadmin' && (
-            <AdminLicensingView user={user} />
+          {/* Applications/Submissions View */}
+          {activeView === 'submissions' && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              {user?.department === 'tenders' && (
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit border border-slate-200 shadow-inner mb-6">
+                  <button 
+                    onClick={() => setTenderView('submissions')}
+                    className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${tenderView === 'submissions' ? 'bg-white text-teal-600 shadow-xl shadow-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Bids & Submissions
+                  </button>
+                  <button 
+                    onClick={() => setTenderView('postings')}
+                    className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${tenderView === 'postings' ? 'bg-white text-teal-600 shadow-xl shadow-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Active Notices
+                  </button>
+                </div>
+              )}
+
+              {user?.department === 'tenders' && tenderView === 'postings' ? (
+                showTenderForm ? (
+                  <Card className="border-0 shadow-2xl rounded-[3rem] overflow-hidden animate-in zoom-in duration-300">
+                    <CardHeader className="p-12 border-b bg-slate-50">
+                      <CardTitle className="text-3xl font-black text-slate-900">{editingTender ? 'Edit Tender Notice' : 'Post New Procurement Notice'}</CardTitle>
+                      <CardDescription className="text-base mt-2 font-medium">Provide comprehensive details for the open tender opportunity.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-12">
+                      <form onSubmit={handleTenderFormSubmit} className="space-y-8">
+                        <div className="grid md:grid-cols-2 gap-8">
+                           <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Tender Reference Number</Label>
+                            <Input 
+                              required 
+                              value={formData.tenderNumber} 
+                              onChange={(e) => setFormData({...formData, tenderNumber: e.target.value})}
+                              placeholder="e.g. BOCRA/TEN/2026/01"
+                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Notice Title</Label>
+                            <Input 
+                              required 
+                              value={formData.title} 
+                              onChange={(e) => setFormData({...formData, title: e.target.value})}
+                              placeholder="Official tender title..."
+                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Procurement Category</Label>
+                            <Input 
+                              required 
+                              value={formData.category} 
+                              onChange={(e) => setFormData({...formData, category: e.target.value})}
+                              placeholder="e.g. IT, Infrastructure, Consultancy"
+                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Closing Date & Time</Label>
+                            <Input 
+                              type="datetime-local"
+                              required 
+                              value={formData.closingDate} 
+                              onChange={(e) => setFormData({...formData, closingDate: e.target.value})}
+                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Detailed Scope & Requirements</Label>
+                          <textarea 
+                            required
+                            value={formData.description}
+                            onChange={(e) => setFormData({...formData, description: e.target.value})}
+                            rows={6}
+                            className="w-full p-6 rounded-[2rem] border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-medium leading-relaxed bg-slate-50"
+                            placeholder="Describe the tender requirements, eligibility, and evaluation criteria..."
+                          />
+                        </div>
+                        <div className="flex gap-4 pt-6">
+                          <Button type="button" variant="outline" className="h-16 flex-1 rounded-2xl border-2 border-slate-900 font-bold" onClick={() => setShowTenderForm(false)}>Discard</Button>
+                          <Button type="submit" className="h-16 flex-[2] rounded-2xl bg-[#14B8A6] hover:bg-[#0D9488] text-white font-black shadow-xl shadow-teal-500/20">
+                            {tenderPostingsLoading ? <Loader2 className="animate-spin h-6 w-6" /> : (editingTender ? 'Update Notice' : 'Post Tender Notice')}
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <SurfaceCard 
+                    title="Current Tender Notices" 
+                    subtitle="Manage procurement opportunities published on the public portal."
+                    icon={Briefcase}
+                    action={
+                      <Button className="bg-[#14B8A6] hover:bg-teal-600 h-12 rounded-2xl px-6 font-bold text-white shadow-lg" onClick={() => {
+                        setEditingTender(null);
+                        setFormData({ tenderNumber: '', title: '', category: '', closingDate: '', estimatedValue: '', location: '', description: '' });
+                        setShowTenderForm(true);
+                      }}>
+                        <Plus className="mr-2" /> Publish New Tender
+                      </Button>
+                    }
+                  >
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Reference</th>
+                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Title & Category</th>
+                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Closing Date</th>
+                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {tenderPostings.map((t) => (
+                            <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="px-8 py-6 font-mono text-xs font-bold text-teal-600 leading-none">{t.tenderNumber}</td>
+                              <td className="px-8 py-6">
+                                <p className="text-sm font-bold text-slate-900">{t.title}</p>
+                                <p className="text-xs font-medium text-slate-400">{t.category}</p>
+                              </td>
+                              <td className="px-8 py-6">
+                                <Badge className="bg-amber-100 text-amber-700 border-0 text-[10px] font-black tracking-tight px-3 py-1">
+                                  {new Date(t.closingDate).toLocaleDateString()}
+                                </Badge>
+                              </td>
+                              <td className="px-8 py-6">
+                                <div className="flex gap-2">
+                                  <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 rounded-xl" onClick={() => {
+                                    setEditingTender(t);
+                                    setFormData({ ...t });
+                                    setShowTenderForm(true);
+                                  }}>
+                                    <Edit2 size={16} />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="hover:bg-rose-50 hover:text-rose-600 rounded-xl" onClick={() => handleDeleteTenderPosting(t.id)}>
+                                    <Trash2 size={16} />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </SurfaceCard>
+                )
+              ) : (
+                <SurfaceCard 
+                  title={`${DEPARTMENT_LABELS[user?.department || 'licensing']} Queue`}
+                  subtitle="Actionable repository for incoming departmental requests."
+                  icon={Inbox}
+                >
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Reference Number</th>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Applicant Info</th>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Current State</th>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Operations</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {activeData.map((app) => (
+                          <tr key={app.id} className="hover:bg-slate-50/50 transition-colors group">
+                            <td className="px-8 py-6 font-mono text-xs font-bold text-teal-600">{app.token || app.id.slice(0, 12)}</td>
+                            <td className="px-8 py-6">
+                              <p className="text-sm font-bold text-slate-900">{app.citizenName}</p>
+                              <p className="text-xs font-medium text-slate-400">{app.citizenEmail}</p>
+                            </td>
+                            <td className="px-8 py-6">{getStatusBadge(app.status)}</td>
+                            <td className="px-8 py-6">
+                              <Button 
+                                onClick={() => setSelectedSubmission(app)}
+                                className="bg-slate-900 hover:bg-[#14B8A6] text-white rounded-xl font-black text-[10px] uppercase tracking-widest h-10 px-6 transition-all"
+                              >
+                                {app.status === 'pending' ? 'Decision Required' : 'Review Manifest'}
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </SurfaceCard>
+              )}
+            </div>
           )}
 
-          {/* User Management View */}
-          {activeView === 'users' && user?.adminLevel === 'superadmin' && (
+          {/* Users View */}
+          {activeView === 'users' && (
             <div className="space-y-6 animate-in fade-in duration-500">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900">User Management</h2>
-                  <p className="text-slate-500 font-medium">Create and manage internal staff accounts and access levels.</p>
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">Staff Directory</h2>
+                  <p className="text-slate-500 font-medium">Manage institutional access and departmental privileges.</p>
                 </div>
-                <Button 
-                  onClick={() => {
-                    setEditingUser(null);
-                    setShowUserForm(true);
-                  }}
-                  className="bg-[#003366] hover:bg-[#003366]/90 text-white rounded-2xl h-12 px-6 font-bold"
-                >
-                  <Plus className="mr-2 h-5 w-5" /> Add Staff Member
-                </Button>
+                {!showUserForm && (
+                  <Button className="bg-[#14B8A6] hover:bg-teal-600 text-white rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-widest shadow-lg" onClick={() => setShowUserForm(true)}>
+                    <Plus className="mr-2 h-4 w-4 stroke-[3px]" /> Authenticate New Staff
+                  </Button>
+                )}
               </div>
 
               {showUserForm ? (
-                <Card className="border-0 shadow-xl rounded-[2.5rem] overflow-hidden">
-                  <CardHeader className="p-10 border-b bg-slate-50">
-                    <CardTitle className="text-2xl font-black text-[#003366]">{editingUser ? 'Edit Staff Member' : 'New Staff Account'}</CardTitle>
-                    <CardDescription>Enter details for the new staff member and assign department permissions.</CardDescription>
+                <Card className="border-0 shadow-2xl rounded-[3rem] overflow-hidden">
+                  <CardHeader className="p-12 border-b bg-slate-50 flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl font-black text-slate-900">{editingUser ? 'Policy Modification' : 'Access Provisioning'}</CardTitle>
+                      <CardDescription className="font-medium">Establishing secure credentials for institutional staff.</CardDescription>
+                    </div>
+                    <Button variant="ghost" className="rounded-2xl text-slate-400 hover:text-slate-900" onClick={() => setShowUserForm(false)}>
+                      <X size={24} />
+                    </Button>
                   </CardHeader>
-                  <CardContent className="p-10">
+                  <CardContent className="p-12">
                     <UserForm 
                       initialData={editingUser} 
                       onSubmit={() => {
@@ -685,280 +833,204 @@ const AdminDashboard = () => {
               ) : (
                 <UserList 
                   users={users} 
-                  isLoading={usersLoading} 
-                  onEdit={(u) => {
-                    setEditingUser(u);
-                    setShowUserForm(true);
-                  }}
-                  onDelete={async (u) => {
-                    if (window.confirm(`Delete staff member ${u.name}?`)) {
-                      await adminApi.deleteUser(u.id);
-                      loadUsers();
-                    }
-                  }}
+                  loading={usersLoading} 
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  onEdit={(u) => { setEditingUser(u); setShowUserForm(true); }}
+                  onDelete={async (u) => { if (confirm(`Revoke access for ${u.name}?`)) { await adminApi.deleteUser(u.id); loadUsers(); } }}
                   onView={setViewingUser}
                 />
               )}
             </div>
           )}
 
-          {/* All Applications View */}
-          {activeView === 'applications' && user?.adminLevel === 'superadmin' && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-               <Card className="border-0 shadow-md rounded-[2.5rem] overflow-hidden">
-                 <CardHeader className="p-10 border-b bg-white">
-                    <div className="flex items-center justify-between">
-                       <div>
-                         <CardTitle className="text-2xl font-black text-slate-900 leading-tight">System-Wide Submissions</CardTitle>
-                         <CardDescription className="text-slate-500">A consolidated view of all applications across all departments.</CardDescription>
-                       </div>
-                    </div>
-                 </CardHeader>
-                 <CardContent className="p-0">
-                    {/* Reuse table logic from current file but for ALL apps */}
-                 </CardContent>
-               </Card>
-            </div>
-          )}
-
-          {/* Department Submissions View */}
-          {activeView === 'submissions' && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-               {user.department === 'tenders' && (
-                 <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit">
-                    <button 
-                      onClick={() => setTenderView('submissions')}
-                      className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${tenderView === 'submissions' ? 'bg-white text-[#003366] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                      Bids & Submissions
-                    </button>
-                    <button 
-                      onClick={() => setTenderView('postings')}
-                      className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${tenderView === 'postings' ? 'bg-white text-[#003366] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                      Active Tender Postings
-                    </button>
-                 </div>
-               )}
-
-               <Card className="border-0 shadow-md rounded-[2.5rem] overflow-hidden">
-                 <CardHeader className="p-10 border-b bg-white flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="text-2xl font-black text-slate-900">
-                        {user.department === 'tenders' && tenderView === 'postings' ? 'Current Tender Notices' : DEPARTMENT_LABELS[user.department]}
-                      </CardTitle>
-                      <CardDescription>Manage incoming submissions and track their lifecycle state.</CardDescription>
-                    </div>
-                    {user.department === 'tenders' && tenderView === 'postings' && (
-                      <Button className="bg-[#003366] h-12 rounded-2xl px-6 font-bold" onClick={() => setShowTenderForm(true)}>
-                        <Plus className="mr-2" /> Post New Tender
-                      </Button>
-                    )}
-                 </CardHeader>
-                 <CardContent className="p-8">
-                    {/* Render specific view based on Dept and tenderView */}
-                 </CardContent>
-               </Card>
+          {/* Applications/All Submissions View */}
+          {activeView === 'applications' && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <SurfaceCard 
+                title="Consolidated System Audit" 
+                subtitle="A complete record of every transaction initiated across the BOCRA ecosystem."
+                icon={ShieldCheck}
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Auth Token</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Entity</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Portfolio</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Current State</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Audit</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {allApplications.map((app) => (
+                        <tr key={app.id} className="hover:bg-slate-50/20 transition-colors">
+                          <td className="px-8 py-6 font-mono text-xs font-bold text-teal-600">{app.token || 'MANIFEST_ERR'}</td>
+                          <td className="px-8 py-6">
+                            <p className="text-sm font-bold text-slate-900">{app.citizenName}</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase">{app.citizenEmail}</p>
+                          </td>
+                          <td className="px-8 py-6">
+                            <Badge className={`${DEPARTMENT_COLORS[app.department]?.bg || 'bg-slate-900'} text-white border-0 text-[10px] font-black uppercase tracking-widest px-3 py-1`}>
+                              {app.department}
+                            </Badge>
+                          </td>
+                          <td className="px-8 py-6">{getStatusBadge(app.status)}</td>
+                          <td className="px-8 py-6">
+                            <Button variant="outline" className="rounded-2xl border-2 border-slate-900 font-black text-[10px] uppercase h-10 px-6" onClick={() => setSelectedSubmission(app)}>Inspect</Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </SurfaceCard>
             </div>
           )}
 
           {/* Settings View */}
-          {activeView === 'settings' && user?.adminLevel === 'superadmin' && (
-            <Card className="border-0 shadow-xl rounded-[2.5rem] overflow-hidden animate-in fade-in duration-500 shadow-slate-200">
-              <CardHeader className="p-10 border-b bg-slate-50 flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-3xl font-black text-[#003366]">System Configuration</CardTitle>
-                  <CardDescription className="text-slate-500 text-base mt-2">Manage global portal variables, security policies, and automation.</CardDescription>
-                </div>
-                <Button 
-                  onClick={handleSaveSettings} 
-                  disabled={settingsLoading}
-                  className="bg-[#003366] hover:bg-[#042d54] text-white px-8 h-14 rounded-2xl text-base font-black shadow-lg shadow-[#003366]/20 transition-all active:scale-95"
-                >
-                  {settingsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-3 h-6 w-6" />}
-                  Save All Changes
-                </Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Tabs defaultValue="general" className="w-full">
-                  <div className="px-10 bg-white border-b sticky top-0 z-10">
-                    <TabsList className="h-16 bg-transparent gap-8">
-                      {['general', 'security', 'email', 'display', 'notifications', 'activity'].map((tab) => (
-                        <TabsTrigger 
-                          key={tab}
-                          value={tab} 
-                          className="h-16 rounded-none border-b-2 border-transparent data-[state=active]:border-[#003366] data-[state=active]:bg-transparent px-2 font-black text-xs uppercase tracking-widest text-slate-400 data-[state=active]:text-[#003366] transition-all"
-                        >
-                          {tab}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
+          {activeView === 'settings' && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+               <Card className="border-0 shadow-xl rounded-[2.5rem] overflow-hidden shadow-slate-200">
+                <CardHeader className="p-10 border-b bg-slate-50 flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-3xl font-black text-slate-900 tracking-tight">System Node Configuration</CardTitle>
+                    <CardDescription className="text-slate-500 text-base mt-2 font-medium">Protocol weights, security barriers, and automated dispatch control.</CardDescription>
                   </div>
-
-                  <div className="p-10">
-                    <TabsContent value="general" className="mt-0 space-y-8">
-                      <div className="grid md:grid-cols-2 gap-8">
-                        <div className="space-y-3">
-                          <Label className="text-sm font-black text-slate-700">Portal Name</Label>
-                          <Input 
-                            value={settings.siteName} 
-                            onChange={(e) => handleSettingsChange('siteName', e.target.value)}
-                            className="h-14 rounded-xl border-slate-200 focus:ring-2 focus:ring-[#003366]/20"
-                          />
-                        </div>
-                        <div className="space-y-3">
-                          <Label className="text-sm font-black text-slate-700">Support Contact Email</Label>
-                          <Input 
-                            value={settings.supportEmail} 
-                            onChange={(e) => handleSettingsChange('supportEmail', e.target.value)}
-                            className="h-14 rounded-xl border-slate-200 focus:ring-2 focus:ring-[#003366]/20"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex items-center justify-between">
-                        <div className="flex gap-4">
-                          <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center">
-                            <AlertCircle className="h-6 w-6" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900">Maintenance Mode</p>
-                            <p className="text-sm text-slate-500">Redirect users to a maintenance page while performing updates.</p>
-                          </div>
-                        </div>
-                        <Switch 
-                          checked={settings.maintenanceMode} 
-                          onCheckedChange={(val) => handleSettingsChange('maintenanceMode', val)}
-                        />
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="security" className="mt-0 space-y-8">
-                      <div className="space-y-6">
-                        <div className="flex items-center justify-between p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                          <div className="flex gap-4">
-                            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
-                              <Lock className="h-6 w-6" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-slate-900">Two-Factor Authentication</p>
-                              <p className="text-sm text-slate-500">Enforce 2FA for all administrative accounts.</p>
-                            </div>
-                          </div>
-                          <Switch 
-                            checked={settings.twoFactorAuth} 
-                            onCheckedChange={(val) => handleSettingsChange('twoFactorAuth', val)}
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                          <div className="flex gap-4">
-                            <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center">
-                              <Clock className="h-6 w-6" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-slate-900">Automatic Session Timeout</p>
-                              <p className="text-sm text-slate-500">Log out users after {settings.sessionTimeout} minutes of inactivity.</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Input 
-                              type="number" 
-                              value={settings.sessionTimeout} 
-                              onChange={(e) => handleSettingsChange('sessionTimeout', parseInt(e.target.value))}
-                              className="w-20 h-12 text-center font-bold"
-                            />
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-400">Min</span>
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="email" className="mt-0 space-y-6">
-                       <div className="p-8 border-2 border-dashed border-slate-200 rounded-[2.5rem] text-center">
-                          <Mail className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                          <h3 className="text-lg font-bold text-slate-900">SMTP Configuration</h3>
-                          <p className="text-slate-500 max-w-sm mx-auto mt-2 mb-6 text-sm">Configure your mail server settings to enable system notifications and transactional emails.</p>
-                          <Button variant="outline" className="rounded-xl font-bold">Configure Server</Button>
-                       </div>
-                    </TabsContent>
-
-                    <TabsContent value="display" className="mt-0 space-y-6">
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                          <div>
-                            <p className="font-bold text-slate-900">Dark Mode Policy</p>
-                            <p className="text-xs text-slate-500 mt-1">Force system-wide dark theme.</p>
-                          </div>
-                          <Switch 
-                            checked={settings.darkMode} 
-                            onCheckedChange={(val) => handleSettingsChange('darkMode', val)}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                          <div>
-                            <p className="font-bold text-slate-900">Compact Table View</p>
-                            <p className="text-xs text-slate-500 mt-1">Reduce spacing in data lists.</p>
-                          </div>
-                          <Switch checked={false} />
-                        </div>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="notifications" className="mt-0 space-y-4">
-                      <div className="space-y-4">
-                        {[
-                          { id: 'sub', title: 'New Submissions', desc: 'Notify admins when a new application is received.' },
-                          { id: 'sta', title: 'Status Changes', desc: 'Notify users when their application status is updated.' },
-                          { id: 'usr', title: 'User Registration', desc: 'Alert superadmins when a new account is created.' }
-                        ].map((n) => (
-                          <div key={n.id} className="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-2xl">
-                             <div>
-                               <p className="font-bold text-slate-900">{n.title}</p>
-                               <p className="text-xs text-slate-500">{n.desc}</p>
-                             </div>
-                             <Switch checked={true} />
-                          </div>
+                  <Button 
+                    onClick={handleSaveSettings} 
+                    disabled={settingsLoading}
+                    className="bg-slate-900 hover:bg-[#14B8A6] text-white px-10 h-14 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl transition-all active:scale-95"
+                  >
+                    {settingsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-3 h-5 w-5" />}
+                    Commit System Changes
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0 min-h-[600px]">
+                  <Tabs defaultValue="general" className="w-full">
+                    <div className="px-10 bg-white border-b sticky top-0 z-10">
+                      <TabsList className="h-16 bg-transparent gap-8">
+                        {['general', 'security', 'email', 'automation', 'activity'].map((tab) => (
+                          <TabsTrigger 
+                            key={tab}
+                            value={tab} 
+                            className="h-16 rounded-none border-b-[3px] border-transparent data-[state=active]:border-[#14B8A6] data-[state=active]:bg-transparent px-2 font-black text-[10px] uppercase tracking-widest text-slate-400 data-[state=active]:text-slate-900 transition-all"
+                          >
+                            {tab}
+                          </TabsTrigger>
                         ))}
-                      </div>
-                    </TabsContent>
+                      </TabsList>
+                    </div>
 
-                    <TabsContent value="activity" className="mt-0 pt-4">
-                      <div className="rounded-2xl border border-slate-100 overflow-hidden">
-                        <table className="w-full text-left">
-                          <thead className="bg-slate-50 border-b">
-                            <tr>
-                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Timestamp</th>
-                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Action</th>
-                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">User</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y">
-                            {recentActivities.map((log, i) => (
-                              <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-6 py-4 text-xs text-slate-500 font-mono">{new Date(log.timestamp).toLocaleString()}</td>
-                                <td className="px-6 py-4 text-xs font-bold text-[#003366]">{log.action}</td>
-                                <td className="px-6 py-4 text-xs text-slate-600">{log.userEmail}</td>
+                    <div className="p-12">
+                      <TabsContent value="general" className="mt-0 space-y-10">
+                        <div className="grid md:grid-cols-2 gap-10">
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-teal-600">Portal Instance Name</Label>
+                            <Input value={settings.siteName} onChange={(e) => handleSettingsChange('siteName', e.target.value)} className="h-14 rounded-xl border-slate-200 focus:ring-2 focus:ring-teal-500/20 font-bold" />
+                          </div>
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-teal-600">Emergency Protocol Email</Label>
+                            <Input value={settings.supportEmail} onChange={(e) => handleSettingsChange('supportEmail', e.target.value)} className="h-14 rounded-xl border-slate-200 focus:ring-2 focus:ring-teal-500/20 font-bold" />
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 flex items-center justify-between hover:bg-slate-100/50 transition-colors">
+                          <div className="flex gap-6">
+                            <div className="w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shadow-inner">
+                              <AlertCircle size={24} />
+                            </div>
+                            <div>
+                               <p className="font-black text-slate-900 text-lg leading-tight tracking-tight">Infrastructure Lockdown (Maintenance)</p>
+                               <p className="text-sm text-slate-500 font-medium">Redirect all public ingress to maintenance cluster. Emergency access only.</p>
+                            </div>
+                          </div>
+                          <Switch checked={settings.maintenanceMode} onCheckedChange={(val) => handleSettingsChange('maintenanceMode', val)} />
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="security" className="mt-0 space-y-8">
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                            <div className="flex gap-6">
+                              <div className="w-14 h-14 bg-[#14B8A6]/10 text-teal-600 rounded-2xl flex items-center justify-center"><Lock size={24} /></div>
+                              <div>
+                                <p className="font-black text-slate-900 text-lg leading-tight tracking-tight">Biometric/Two-Factor Enforced</p>
+                                <p className="text-sm text-slate-500 font-medium">Require additional validation layers for all institutional access.</p>
+                              </div>
+                            </div>
+                            <Switch checked={settings.twoFactorAuth} onCheckedChange={(val) => handleSettingsChange('twoFactorAuth', val)} />
+                          </div>
+
+                          <div className="flex items-center justify-between p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                            <div className="flex gap-6">
+                              <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center"><Clock size={24} /></div>
+                              <div>
+                                <p className="font-black text-slate-900 text-lg leading-tight tracking-tight">Automated Terminal Logout</p>
+                                <p className="text-sm text-slate-500 font-medium">Flush sessions after {settings.sessionTimeout} minutes of zero IO activity.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+                              <Input type="number" value={settings.sessionTimeout} onChange={(e) => handleSettingsChange('sessionTimeout', parseInt(e.target.value))} className="w-24 h-12 border-0 text-center font-black text-xl" />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-2">Min</span>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="activity" className="mt-0">
+                        <div className="rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+                          <table className="w-full text-left">
+                            <thead className="bg-slate-50">
+                              <tr>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Vector Timestamp</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Operation Log</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Origin Handle</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <Button variant="ghost" className="w-full mt-4 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600" onClick={loadAllActivities}>
-                        View Full System Log <ChevronRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </TabsContent>
-                  </div>
-                </Tabs>
-              </CardContent>
-            </Card>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {recentActivities.map((log, i) => (
+                                <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="px-8 py-6 text-xs text-slate-500 font-mono">{new Date(log.timestamp).toLocaleString()}</td>
+                                  <td className="px-8 py-6 text-xs font-black text-slate-900 uppercase">{log.action}</td>
+                                  <td className="px-8 py-6 text-xs text-slate-500 font-bold">{log.userEmail || 'SYSTEM_CORE'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </TabsContent>
+                    </div>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Licensing desk view logic */}
+          {activeView === 'licensing' && user?.adminLevel === 'superadmin' && (
+            <div className="animate-in fade-in duration-500">
+              <AdminLicensingView user={user} />
+            </div>
           )}
         </div>
       </main>
 
-      {/* Modals */}
+      {/* Modals & Overlays */}
       {viewingUser && <UserModal user={viewingUser} onClose={() => setViewingUser(null)} />}
-      {selectedTenderDetail && <TenderDetailModal tender={selectedTenderDetail} onClose={() => setSelectedTenderDetail(null)} />}
+      
+      {selectedSubmission && (
+         <TenderDetailModal 
+            tender={selectedSubmission} 
+            onClose={() => setSelectedSubmission(null)}
+            onAddNote={handleAddNote}
+            onStatusChange={handleStatusChange}
+            loading={submissionsLoading}
+            adminNote={adminNote}
+            setAdminNote={setAdminNote}
+         />
+      )}
     </div>
   );
 };
