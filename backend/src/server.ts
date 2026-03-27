@@ -11,6 +11,7 @@ import usersRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
 import settingsRoutes from './routes/settings.js';
 import activitiesRoutes from './routes/activities.js';
+import typeApprovalRoutes from './routes/typeApproval.js';
 // @ts-ignore
 import * as fs from 'fs';
 
@@ -92,6 +93,9 @@ apiRouter.use('/activities', activitiesRoutes);
 
 // Admin routes (admin level users)
 apiRouter.use('/admin', adminRoutes);
+
+// Type Approval routes (public, no authentication required)
+apiRouter.use('/type-approval', typeApprovalRoutes);
 
 // Citizen routes (protected)
 apiRouter.use('/', citizenRoutes);

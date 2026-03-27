@@ -190,6 +190,24 @@ model StatusCheck {
   @@map("status_checks")
 }
 
+model TypeApprovedDevice {
+  id                String   @id @default(uuid())
+  deviceName        String
+  manufacturer      String
+  model             String
+  certificateNumber String   @unique
+  category          String
+  approvalDate      DateTime
+  expiryDate        DateTime
+  standards         String
+  status            String   @default("Active")
+  frequency         String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("type_approved_devices")
+}
+
 model SystemSettings {
   id                          String   @id @default(uuid())
   systemName                  String   @default("BOCRA Portal")
