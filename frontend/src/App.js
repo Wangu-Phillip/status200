@@ -30,6 +30,7 @@ import CyberIncidentReport from './pages/CyberIncidentReport';
 import TenderSubmission from './pages/TenderSubmission';
 import Analytics from './pages/Analytics';
 import Services from './pages/Services';
+import Careers from './pages/Careers';
 
 import Ruby from './components/Chatbot';
 import CookieConsent from './components/CookieConsent';
@@ -85,6 +86,7 @@ function App() {
           <Route path="/cyber-incident" element={<CyberIncidentReport />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/careers" element={<Careers />} />
           <Route path="/tender-submission" element={<ProtectedRoute><TenderSubmission /></ProtectedRoute>} />
         </Routes>
         </Layout>

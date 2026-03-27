@@ -159,6 +159,19 @@ const Navbar = () => {
                 </Button>
               </Link>
 
+              <Link to="/careers">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${
+                    isActive('/careers')
+                      ? 'bg-white/15 text-white'
+                      : 'text-white/80'
+                  } hover:bg-white/10 hover:text-white`}
+                >
+                  Careers
+                </Button>
+              </Link>
+
               <Link to="/contact">
                 <Button
                   variant="ghost"
@@ -254,7 +267,7 @@ const Navbar = () => {
           <div className="heritage-overlay basket-pattern text-white opacity-[0.04]"></div>
 
           <div className="px-6 space-y-4 relative">
-            {['Home', 'Tenders', 'About', 'Documents', 'Contact'].map((item) => (
+            {['Home', 'Tenders', 'About', 'Careers', 'Documents', 'Contact'].map((item) => (
               <Link
                 key={item}
                 to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
