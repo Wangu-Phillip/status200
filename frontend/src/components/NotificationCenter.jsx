@@ -90,7 +90,7 @@ const NotificationCenter = () => {
                       variant="ghost"
                       size="sm"
                       onClick={markAllAsRead}
-                      className="text-xs text-teal-600 hover:text-teal-700"
+                      className="text-xs text-[#003366] hover:text-[#003366]"
                     >
                       Mark all read
                     </Button>
@@ -107,7 +107,7 @@ const NotificationCenter = () => {
                   <div
                     key={notification.id}
                     className={`p-4 border-b hover:bg-gray-50 transition-colors cursor-pointer ${
-                      !notification.read ? 'bg-teal-50/30' : ''
+                      !notification.read ? 'bg-[#E0F4FB]/30' : ''
                     }`}
                     onClick={() => markAsRead(notification.id)}
                   >
@@ -117,7 +117,7 @@ const NotificationCenter = () => {
                         <div className="flex items-start justify-between mb-1">
                           <h4 className="font-semibold text-sm text-gray-900">{notification.title}</h4>
                           {!notification.read && (
-                            <span className="w-2 h-2 bg-teal-600 rounded-full flex-shrink-0 mt-1"></span>
+                            <span className="w-2 h-2 bg-[#003366] rounded-full flex-shrink-0 mt-1"></span>
                           )}
                         </div>
                         <p className="text-sm text-gray-600 mb-1">{notification.message}</p>

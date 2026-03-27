@@ -379,6 +379,15 @@ const AdminDashboard = () => {
     }
   };
 
+  const getStatusBadge = (status) => {
+    const config = {
+      'Approved': { className: 'bg-[#6DC04B] hover:bg-[#4E9933]', icon: CheckCircle },
+      'Under Review': { className: 'bg-[#003366] hover:bg-[#003366]', icon: Clock },
+      'Pending Review': { className: 'bg-amber-500 hover:bg-amber-600', icon: Clock },
+      'Rejected': { className: 'bg-[#B91C1C] hover:bg-[#991b1b]', icon: XCircle },
+    };
+    const c = config[status] || config['Pending Review'];
+    const Icon = c.icon;
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0E1525] flex flex-col items-center justify-center space-y-4">
@@ -486,6 +495,30 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <main className="flex-1 min-h-screen overflow-y-auto">
         {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+              {activeView === 'dashboard' 
+                ? 'System Control Panel' 
+                : activeView === 'users' 
+                ? 'User Management' 
+                : activeView === 'applications' 
+                ? 'All Applications' 
+                : activeView === 'settings'
+                ? 'Settings'
+                : `${DEPARTMENT_LABELS[user.department] || 'Admin'} - Submissions`}
+            </h1>
+            <p className="text-slate-500 mt-1">
+              {activeView === 'dashboard'
+                ? 'Monitor platform activity, manage queues, and process submissions from one operational workspace.'
+                : activeView === 'users'
+                ? 'Manage all system users and permissions.'
+                : activeView === 'applications'
+                ? 'Manage license applications from all departments'
+                : activeView === 'settings'
+                ? 'Configure system-wide settings and preferences'
+                : `Managing ${DEPARTMENT_LABELS[user.department] || 'submissions'} submissions.`}
+            </p>
         <header className="h-24 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 sticky top-0 z-40 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button className="lg:hidden p-2 text-slate-500" onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}>
@@ -510,6 +543,336 @@ const AdminDashboard = () => {
                <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-[#14B8A6] border-2 border-white rounded-full"></span>
             </button>
           </div>
+        </div>
+
+        {/* Stats Grid - Only show during submissions view */}
+        {activeView === 'submissions' && user?.department && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+            <Card className="border-0 shadow-md bg-white">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">Total Submissions</p>
+                    <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total || 0}</p>
+                  </div>
+                <div className={`w-12 h-12 rounded-2xl ${deptColor.light} flex items-center justify-center`}>
+                  <FileText className={`h-6 w-6 ${deptColor.text}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Pending Review</p>
+                  <p className="text-3xl font-bold text-amber-600 mt-1">{stats.pending || 0}</p>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-amber-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">High Priority</p>
+                  <p className="text-3xl font-bold text-red-600 mt-1">{stats.highPriority || 0}</p>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Approved</p>
+                  <p className="text-3xl font-bold text-[#4E9933] mt-1">{stats.approved || 0}</p>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-[#EDF7E8] flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-[#4E9933]" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        )}
+
+        {/* Content based on active view */}
+        {activeView === 'dashboard' && (
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatTile label="Pending Queue" value={stats.pending || 0} icon={Clock} accent={BRAND.yellow} helper="Items awaiting action" />
+              <StatTile label="High Priority" value={stats.highPriority || 0} icon={AlertCircle} accent={BRAND.red} helper="Needs immediate attention" />
+              <StatTile label="Approved" value={stats.approved || 0} icon={CheckCircle} accent={BRAND.green} helper="Resolved or cleared items" />
+              <StatTile
+                label={user?.adminLevel === 'superadmin' ? 'System Users' : 'Department Total'}
+                value={user?.adminLevel === 'superadmin' ? userStats.totalUsers : stats.total || 0}
+                icon={user?.adminLevel === 'superadmin' ? Users : FileText}
+                accent={BRAND.blue}
+                helper={user?.adminLevel === 'superadmin' ? 'Registered platform accounts' : 'Items currently in queue'}
+              />
+            </div>
+
+            <div className="mt-6 grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+              <SurfaceCard>
+                <CardContent className="p-6 sm:p-8">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">
+                        <Shield className="h-3.5 w-3.5" style={{ color: BRAND.blue }} />
+                        Control overview
+                      </div>
+                      <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">Operational queue snapshot</h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
+                        Review live workload, identify urgent cases, and move straight into processing from an admin-first control panel.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setActiveView('submissions');
+                          setSearchTerm('');
+                          setFilterStatus('all');
+                        }}
+                        className="h-11 rounded-xl text-white"
+                        style={{ backgroundColor: BRAND.navy }}
+                      >
+                        <FileText className="mr-2 h-4 w-4" />
+                        Open Queue
+                      </Button>
+                      {user?.adminLevel === 'superadmin' && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setActiveView('users');
+                            setShowUserForm(false);
+                          }}
+                          className="h-11 rounded-xl border-slate-200"
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Manage Users
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white">
+                    <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr] gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr]">
+                      <span>Submission</span>
+                      <span className="hidden sm:block">Applicant</span>
+                      <span>Status</span>
+                      <span>Priority</span>
+                    </div>
+                    <div className="divide-y divide-slate-200">
+                      {activeData.slice(0, 5).map((sub) => (
+                        <div
+                          key={sub.id}
+                          className="grid grid-cols-[1.4fr_0.8fr_0.8fr] gap-4 px-4 py-4 text-sm text-slate-700 sm:grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr]"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-slate-950">{sub.subject || 'Untitled submission'}</p>
+                            <p className="mt-1 truncate text-xs text-slate-500">{sub.id}</p>
+                          </div>
+                          <div className="hidden min-w-0 sm:block">
+                            <p className="truncate">{sub.citizenName || 'Unknown applicant'}</p>
+                            <p className="mt-1 truncate text-xs text-slate-500">{sub.citizenEmail || 'No email'}</p>
+                          </div>
+                          <div className="min-w-0">{getStatusBadge(sub.status)}</div>
+                          <div className="min-w-0">{getPriorityBadge(sub.priority)}</div>
+                        </div>
+                      ))}
+
+                      {activeData.length === 0 && (
+                        <div className="px-4 py-10 text-center">
+                          <BarChart3 className="mx-auto h-10 w-10 text-slate-300" />
+                          <p className="mt-3 font-medium text-slate-900">No live queue items yet</p>
+                          <p className="mt-1 text-sm text-slate-500">
+                            New department submissions will appear here once they are received.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </SurfaceCard>
+
+              <div className="space-y-6">
+                <SurfaceCard>
+                  <CardContent className="p-6 sm:p-8">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Response targets</p>
+                    <div className="mt-5 space-y-4">
+                      <div className="rounded-[1.5rem] border border-slate-200 p-4" style={{ backgroundColor: '#FFF8DF' }}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-950">Pending review</p>
+                            <p className="mt-1 text-sm text-slate-600">Items waiting for the next admin action.</p>
+                          </div>
+                          <span className="text-2xl font-bold text-slate-950">{stats.pending || 0}</span>
+                        </div>
+                      </div>
+
+                      <div className="rounded-[1.5rem] border border-slate-200 p-4" style={{ backgroundColor: '#FBECEC' }}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-950">Flagged priority</p>
+                            <p className="mt-1 text-sm text-slate-600">Cases that may require faster intervention.</p>
+                          </div>
+                          <span className="text-2xl font-bold text-slate-950">{stats.highPriority || 0}</span>
+                        </div>
+                      </div>
+
+                      <div className="rounded-[1.5rem] border border-slate-200 p-4" style={{ backgroundColor: '#EDF8F2' }}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-950">Department focus</p>
+                            <p className="mt-1 text-sm text-slate-600">Current administrative area in view.</p>
+                          </div>
+                          <span className="text-sm font-bold text-slate-950">
+                            {DEPARTMENT_LABELS[user?.department]?.split(' &')[0] || 'General'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </SurfaceCard>
+
+                <SurfaceCard>
+                  <CardContent className="p-6 sm:p-8">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Admin actions</p>
+                    <div className="mt-5 space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveView('submissions');
+                          setSearchTerm('');
+                          setFilterStatus('all');
+                        }}
+                        className="flex w-full items-center justify-between rounded-[1.25rem] border border-slate-200 px-4 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50"
+                      >
+                        <span>
+                          <p className="font-semibold text-slate-950">Review queue</p>
+                          <p className="text-sm text-slate-500">Open the full submissions workspace.</p>
+                        </span>
+                        <FileText className="h-5 w-5 text-slate-400" />
+                      </button>
+
+                      {user?.adminLevel === 'superadmin' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveView('applications');
+                              setSearchTerm('');
+                              setFilterStatus('all');
+                              loadAllApplications();
+                            }}
+                            className="flex w-full items-center justify-between rounded-[1.25rem] border border-slate-200 px-4 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50"
+                          >
+                            <span>
+                              <p className="font-semibold text-slate-950">Cross-department review</p>
+                              <p className="text-sm text-slate-500">Inspect applications across the whole system.</p>
+                            </span>
+                            <Briefcase className="h-5 w-5 text-slate-400" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveView('users');
+                              setShowUserForm(false);
+                            }}
+                            className="flex w-full items-center justify-between rounded-[1.25rem] border border-slate-200 px-4 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50"
+                          >
+                            <span>
+                              <p className="font-semibold text-slate-950">User access control</p>
+                              <p className="text-sm text-slate-500">Create and manage staff or citizen accounts.</p>
+                            </span>
+                            <Users className="h-5 w-5 text-slate-400" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </SurfaceCard>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeView === 'submissions' && user?.department && (
+          <>
+            {/* Search & Filter */}
+            <Card className="border-0 shadow-md mb-6">
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Input
+                      placeholder="Search by name, subject, or reference token..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 border-slate-200"
+                    />
+                  </div>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="flex h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Registered">Registered</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Submissions List */}
+            <div className="space-y-4">
+              {filteredSubmissions.length === 0 ? (
+                <Card className="border-0 shadow-md">
+                  <CardContent className="py-16 text-center">
+                    <DeptIcon className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-700 mb-2">No Submissions Found</h3>
+                    <p className="text-slate-500">
+                      {searchTerm || filterStatus !== 'all'
+                        ? 'Try adjusting your search or filter criteria.'
+                        : 'No submissions have been received for this department yet.'}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredSubmissions.map((sub) => (
+                  <Card key={sub.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-bold text-slate-900">{sub.subject}</h3>
+                            {getPriorityBadge(sub.priority)}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-slate-500">
+                            <span className="flex items-center gap-1.5">
+                              <Hash className="h-3.5 w-3.5" />
+                              <span className="font-mono font-semibold text-[#003366]">{sub.id}</span>
+                            </span>
+                            <span>•</span>
+                            <span>{sub.citizenName} ({sub.citizenEmail})</span>
+                            <span>•</span>
+                            <span>{sub.submittedDate}</span>
+                          </div>
         </header>
 
         <div className="p-8 max-w-[1400px] mx-auto pb-12">
@@ -578,6 +941,95 @@ const AdminDashboard = () => {
                               </PieChart>
                            </ResponsiveContainer>
                         </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                        {selectedSubmission === sub.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <Input
+                              placeholder="Add a note before changing status..."
+                              value={adminNote}
+                              onChange={(e) => setAdminNote(e.target.value)}
+                              disabled={submissionsLoading}
+                              className="flex-1 text-sm h-9"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={submissionsLoading || !adminNote.trim()}
+                              onClick={() => {
+                                handleAddNote(sub.id);
+                              }}
+                              className="text-[#003366]"
+                            >
+                              {submissionsLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={submissionsLoading}
+                              onClick={() => setSelectedSubmission(null)}
+                              className="text-slate-400"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={submissionsLoading}
+                              className="text-slate-600 border-slate-200"
+                              onClick={() => setSelectedSubmission(sub.id)}
+                            >
+                              <Eye className="h-4 w-4 mr-1.5" />
+                              Add Note
+                            </Button>
+                            {sub.status === 'Submitted' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  disabled={submissionsLoading}
+                                  className="bg-[#003366] hover:bg-[#003366] text-white"
+                                  onClick={() => handleStatusChange(sub.id, 'Under Review')}
+                                >
+                                  <Clock className="h-4 w-4 mr-1.5" />
+                                  Start Review
+                                </Button>
+                              </>
+                            )}
+                            {(sub.status === 'Submitted' || sub.status === 'Under Review') && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  disabled={submissionsLoading}
+                                  className="bg-[#6DC04B] hover:bg-[#4E9933] text-white"
+                                  onClick={() => handleStatusChange(sub.id, 'Approved')}
+                                >
+                                  <CheckCheck className="h-4 w-4 mr-1.5" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  disabled={submissionsLoading}
+                                  variant="destructive"
+                                  onClick={() => handleStatusChange(sub.id, 'Rejected')}
+                                >
+                                  <XCircle className="h-4 w-4 mr-1.5" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
                         <div className="space-y-4 pt-4 border-t border-slate-100 mt-4">
                            {[
                               { label: 'Approved', color: 'bg-emerald-500', val: stats.approved },
@@ -681,6 +1133,21 @@ const AdminDashboard = () => {
                             placeholder="Describe the tender requirements, eligibility, and evaluation criteria..."
                           />
                         </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-500 font-medium">Citizen Users</p>
+                          <p className="text-3xl font-bold text-[#003366] mt-1">{userStats.citizenCount}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-lg bg-[#E0F4FB] flex items-center justify-center">
+                          <Users className="h-6 w-6 text-[#003366]" />
+                        </div>
+                      </div>
                         <div className="flex gap-4 pt-6">
                           <Button type="button" variant="outline" className="h-16 flex-1 rounded-2xl border-2 border-slate-900 font-bold" onClick={() => setShowTenderForm(false)}>Discard</Button>
                           <Button type="submit" className="h-16 flex-[2] rounded-2xl bg-[#14B8A6] hover:bg-[#0D9488] text-white font-black shadow-xl shadow-teal-500/20">
@@ -889,6 +1356,48 @@ const AdminDashboard = () => {
             </div>
           )}
 
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Total Applications</p>
+                      <p className="text-3xl font-bold text-slate-900 mt-1">{allApplications.length}</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-[#E8F0F9] flex items-center justify-center">
+                      <FileText className="h-6 w-6 text-[#003366]" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Pending</p>
+                      <p className="text-3xl font-bold text-amber-600 mt-1">
+                        {allApplications.filter(a => a.status === 'Submitted' || a.status === 'Under Review').length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                      <Clock className="h-6 w-6 text-amber-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Approved</p>
+                      <p className="text-3xl font-bold text-[#4E9933] mt-1">
+                        {allApplications.filter(a => a.status === 'Approved').length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-[#EDF7E8] flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-[#4E9933]" />
+                    </div>
           {/* Settings View */}
           {activeView === 'settings' && (
             <div className="space-y-6 animate-in fade-in duration-500">
@@ -976,6 +1485,58 @@ const AdminDashboard = () => {
                               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-2">Min</span>
                             </div>
                           </div>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={submissionsLoading}
+                              className="text-slate-600 border-slate-200"
+                              onClick={() => setSelectedSubmission(app.id)}
+                            >
+                              <Eye className="h-4 w-4 mr-1.5" />
+                              Add Note
+                            </Button>
+                            {app.status === 'Submitted' && (
+                              <Button
+                                size="sm"
+                                disabled={submissionsLoading}
+                                className="bg-[#003366] hover:bg-[#003366] text-white"
+                                onClick={() => handleStatusChange(app.id, 'Under Review')}
+                              >
+                                <Clock className="h-4 w-4 mr-1.5" />
+                                Start Review
+                              </Button>
+                            )}
+                            {(app.status === 'Submitted' || app.status === 'Under Review') && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  disabled={submissionsLoading}
+                                  className="bg-[#6DC04B] hover:bg-[#4E9933] text-white"
+                                  onClick={() => handleStatusChange(app.id, 'Approved')}
+                                >
+                                  <CheckCheck className="h-4 w-4 mr-1.5" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  disabled={submissionsLoading}
+                                  variant="destructive"
+                                  onClick={() => handleStatusChange(app.id, 'Rejected')}
+                                >
+                                  <XCircle className="h-4 w-4 mr-1.5" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
                         </div>
                       </TabsContent>
                       

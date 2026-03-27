@@ -122,7 +122,7 @@ const TypeApproval = () => {
         <Card className="mb-8 border-l-4 border-l-teal-600">
           <CardContent className="pt-6">
             <div className="flex items-start">
-              <CheckCircle className="h-6 w-6 text-teal-600 mr-3 flex-shrink-0 mt-1" />
+              <CheckCircle className="h-6 w-6 text-[#003366] mr-3 flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">About Type Approval</h3>
                 <p className="text-sm text-gray-600">
@@ -200,6 +200,45 @@ const TypeApproval = () => {
           </CardContent>
         </Card>
 
+              {/* Document Upload */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Supporting Documents</h3>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-[#0099CC] transition-colors">
+                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <Label htmlFor="file-upload" className="cursor-pointer">
+                    <span className="text-[#003366] font-semibold hover:text-[#003366]">Click to upload</span>
+                    <span className="text-gray-600"> or drag and drop</span>
+                  </Label>
+                  <p className="text-sm text-gray-500 mt-2">PDF, DOC, DOCX, JPG, PNG (max. 10MB each)</p>
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  />
+                </div>
+                {files.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm text-gray-700">Uploaded Files:</h4>
+                    {files.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                        <div className="flex items-center">
+                          <FileText className="h-5 w-5 text-[#003366] mr-2" />
+                          <span className="text-sm text-gray-700">{file.name}</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
         {/* Results Section */}
         <Card className="shadow-lg">
           <CardHeader>
@@ -223,6 +262,15 @@ const TypeApproval = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Submit Buttons */}
+              <div className="flex justify-end space-x-4 pt-6 border-t">
+                <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-[#003366] hover:bg-[#003366] text-white px-8">
+                  Submit Application
+                </Button>
             )}
             {!searchQuery && !filterCategory ? (
               <div className="text-center py-12">

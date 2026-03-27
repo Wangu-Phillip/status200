@@ -179,6 +179,35 @@ export default function ChatBot({ isOpen: externalOpen, initialMessage }) {
   };
 
   return (
+    <div id="ruby-container" className={`fixed bottom-6 right-6 z-[200] flex flex-col items-start transition-all duration-500 ${isOpen ? 'w-[400px]' : 'w-12'}`}>
+      {/* Mini Aura for Ruby eye */}
+      {!isOpen && (
+        <button
+          id="chatbot-trigger"
+          onClick={() => setIsOpen(true)}
+          className="w-12 h-12 bg-[#003366] rounded-2xl shadow-2xl shadow-[#0099CC]/30 flex items-center justify-center text-white hover:scale-110 transition-transform group overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0099CC] to-blue-600 opacity-20 animate-pulse"></div>
+          <Sparkles className="w-6 h-6 relative animate-in zoom-in spin-in duration-700" />
+        </button>
+      )}
+
+      {/* Main Chat Window */}
+      {isOpen && (
+        <div className="w-full h-[600px] bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] shadow-2xl shadow-black flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-500">
+          <div className="heritage-overlay basket-pattern text-slate-100 opacity-[0.05]"></div>
+          
+          {/* Header */}
+          <div className="relative bg-[#111827] border-b border-[#1e293b] p-6 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-[#003366] rounded-xl flex items-center justify-center text-white shadow-lg">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white tracking-tight">Ruby</h3>
+                <div className="flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 bg-[#6DC04B] rounded-full animate-pulse"></span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Active Assistant</span>
     <>
       {/* Chat Toggle Button */}
       <AnimatePresence>
@@ -247,6 +276,16 @@ export default function ChatBot({ isOpen: externalOpen, initialMessage }) {
               </div>
             </div>
 
+          {/* Messages */}
+          <div className="relative flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
+            {messages.map((m, i) => (
+              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 fade-in duration-300`}>
+                <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed ${
+                  m.role === 'user' 
+                    ? 'bg-[#003366] text-white shadow-lg rounded-tr-none' 
+                    : 'bg-[#1e293b] border border-[#334155] text-slate-200 rounded-tl-none'
+                }`}>
+                  {m.content}
             {/* Speed Alert Banner */}
             {speedContext && speedContext.percentage_of_promised < 50 && !isMinimized && (
               <div className="bg-amber-50 border-b border-amber-200 p-3 flex items-center gap-3">
@@ -257,6 +296,8 @@ export default function ChatBot({ isOpen: externalOpen, initialMessage }) {
                   </p>
                 </div>
                 <Button 
+                  onClick={() => handleLanguageSelect('en')} 
+                  className="w-full bg-slate-800 border border-slate-700 hover:bg-[#003366] hover:border-[#0099CC] rounded-xl py-6 font-bold text-slate-200 transition-all"
                   size="sm" 
                   variant="outline"
                   onClick={handleFileComplaint}
@@ -264,9 +305,67 @@ export default function ChatBot({ isOpen: externalOpen, initialMessage }) {
                 >
                   File Complaint
                 </Button>
+                <Button 
+                  onClick={() => handleLanguageSelect('tn')} 
+                  className="w-full bg-slate-800 border border-slate-700 hover:bg-[#003366] hover:border-[#0099CC] rounded-xl py-6 font-bold text-slate-200 transition-all"
+                >
+                  🇧🇼 Setswana
+                </Button>
+              </div>
+            )}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-[#1e293b] px-5 py-3 rounded-2xl rounded-tl-none flex space-x-1">
+                  <span className="w-1.5 h-1.5 bg-[#0099CC]/50 rounded-full animate-bounce"></span>
+                  <span className="w-1.5 h-1.5 bg-[#0099CC]/50 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                  <span className="w-1.5 h-1.5 bg-[#0099CC]/50 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                </div>
               </div>
             )}
 
+          {/* Suggested */}
+          {language && (
+            <div className="relative px-6 pb-2 flex flex-wrap gap-2">
+              {CHATBOT_KNOWLEDGE[language].suggested.map((s) => (
+                <button 
+                  key={s}
+                  onClick={() => handleSend(s)}
+                  className="px-3 py-1.5 bg-[#111827] border border-[#1e293b] rounded-xl text-[10px] font-bold text-slate-400 hover:text-[#0099CC] hover:border-[#0099CC] transition-all flex items-center"
+                >
+                  <CornerDownRight className="w-3 h-3 mr-1 opacity-50" />
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          {language && (
+            <div className="relative p-6">
+              <div className="flex items-center space-x-2 bg-[#111827] border border-[#1e293b] rounded-2xl p-2 focus-within:ring-1 focus-within:ring-[#0099CC] transition-all">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder={CHATBOT_KNOWLEDGE[language].placeholder}
+                  className="flex-1 bg-transparent border-none focus:ring-0 text-sm px-3 py-2 text-white placeholder:text-slate-600"
+                />
+                <button 
+                  onClick={() => handleSend()}
+                  disabled={!inputValue.trim()}
+                  className="w-11 h-11 bg-[#003366] disabled:opacity-50 rounded-xl flex items-center justify-center text-white"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
             {/* Messages */}
             {!isMinimized && (
               <>

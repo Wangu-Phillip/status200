@@ -21,11 +21,11 @@ const ComplaintTimeline = ({ status }) => {
       {steps.map((step, idx) => (
         <React.Fragment key={step}>
           <div className="flex flex-col items-center flex-1">
-            <div className={`w-3 h-3 rounded-full mb-2 ${idx <= currentStep ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]' : 'bg-slate-800 border border-slate-700'}`}></div>
-            <span className={`text-[10px] font-bold uppercase tracking-tighter ${idx <= currentStep ? 'text-orange-400' : 'text-slate-600'}`}>{step}</span>
+            <div className={`w-3 h-3 rounded-full mb-2 ${idx <= currentStep ? 'bg-[#F47920] shadow-[0_0_8px_rgba(244,121,32,0.5)]' : 'bg-slate-800 border border-slate-700'}`}></div>
+            <span className={`text-[10px] font-bold uppercase tracking-tighter ${idx <= currentStep ? 'text-[#F47920]' : 'text-slate-600'}`}>{step}</span>
           </div>
           {idx < steps.length - 1 && (
-            <div className={`h-[2px] flex-1 mb-5 ${idx < currentStep ? 'bg-orange-500/50' : 'bg-slate-800'}`}></div>
+            <div className={`h-[2px] flex-1 mb-5 ${idx < currentStep ? 'bg-[#F47920]/50' : 'bg-slate-800'}`}></div>
           )}
         </React.Fragment>
       ))}
@@ -146,9 +146,9 @@ const ComplaintsView = () => {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Resolved': return 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10';
+      case 'Resolved': return 'border-[#6DC04B]/30 text-[#6DC04B] bg-[#6DC04B]/10';
       case 'In Progress': return 'border-blue-500/30 text-blue-400 bg-blue-500/10';
-      case 'Acknowledged': return 'border-teal-500/30 text-teal-400 bg-teal-500/10';
+      case 'Acknowledged': return 'border-[#0099CC]/30 text-[#0099CC] bg-[#0099CC]/10';
       case 'Closed': return 'border-red-500/30 text-red-400 bg-red-500/10';
       default: return 'border-amber-500/30 text-amber-400 bg-amber-500/10';
     }
@@ -222,7 +222,7 @@ const ComplaintsView = () => {
               </div>
               <div className="flex gap-4 justify-end pt-6 border-t border-[#1e293b]">
                 <Button variant="outline" onClick={() => setShowNewComplaintForm(false)} className="rounded-xl px-6 py-3">Cancel</Button>
-                <Button className="bg-orange-600 hover:bg-orange-500 rounded-xl px-6 py-3 text-white font-bold" disabled={submitting}>
+                <Button className="bg-orange-600 hover:bg-[#F47920] rounded-xl px-6 py-3 text-white font-bold" disabled={submitting}>
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
                   {submitting ? 'Submitting...' : 'Submit Complaint'}
                 </Button>
@@ -310,7 +310,7 @@ const ComplaintsView = () => {
       {/* Complaints List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#F47920]" />
         </div>
       ) : filteredComplaints.length > 0 ? (
         <div className="grid md:grid-cols-2 gap-8">
@@ -319,11 +319,11 @@ const ComplaintsView = () => {
               key={complaint.id} 
               className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-8 hover:border-orange-500/30 transition-all flex flex-col group relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-orange-500/10 transition-all"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#F47920]/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-[#F47920]/10 transition-all"></div>
               
               <div className="flex items-center justify-between mb-8 relative">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-400 shadow-lg shadow-orange-500/10 group-hover:rotate-6 transition-transform">
+                  <div className="w-12 h-12 bg-[#F47920]/10 rounded-2xl flex items-center justify-center text-[#F47920] shadow-lg shadow-orange-500/10 group-hover:rotate-6 transition-transform">
                     <MessageSquare className="w-6 h-6" />
                   </div>
                   <div>
@@ -352,7 +352,7 @@ const ComplaintsView = () => {
                      <Clock className="w-3.5 h-3.5" />
                      <span>Filed on {new Date(complaint.registeredDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                    </div>
-                   <div className={`flex items-center text-xs font-bold px-2 py-1 rounded-lg ${complaint.priority === 'critical' ? 'bg-red-500/10 text-red-400' : complaint.priority === 'high' ? 'bg-orange-500/10 text-orange-400' : 'bg-slate-500/10 text-slate-400'}`}>
+                   <div className={`flex items-center text-xs font-bold px-2 py-1 rounded-lg ${complaint.priority === 'critical' ? 'bg-red-500/10 text-red-400' : complaint.priority === 'high' ? 'bg-[#F47920]/10 text-[#F47920]' : 'bg-slate-500/10 text-slate-400'}`}>
                       <AlertCircle className="w-3.5 h-3.5 mr-1" />
                       <span className="capitalize">{complaint.priority}</span>
                    </div>
@@ -370,7 +370,7 @@ const ComplaintsView = () => {
                     e.stopPropagation();
                     handleEditComplaint(complaint.id, e);
                   }}
-                  className="flex-1 px-3 py-2.5 bg-slate-800/50 rounded-xl text-slate-500 hover:text-orange-400 hover:bg-orange-500/10 transition-all text-sm font-bold flex items-center justify-center gap-2"
+                  className="flex-1 px-3 py-2.5 bg-slate-800/50 rounded-xl text-slate-500 hover:text-[#F47920] hover:bg-[#F47920]/10 transition-all text-sm font-bold flex items-center justify-center gap-2"
                   title="View details"
                 >
                   <MessageCircle className="w-4 h-4" />
