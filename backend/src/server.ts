@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js';
 import citizenRoutes from './routes/citizen.js';
 import usersRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
+import publicRoutes from './routes/public.js';
 // @ts-ignore
 import * as fs from 'fs';
 
@@ -77,6 +78,9 @@ apiRouter.use('/admin', adminRoutes);
 
 // Citizen routes (protected)
 apiRouter.use('/', citizenRoutes);
+
+// Public routes
+apiRouter.use('/', publicRoutes);
 
 // Create status check
 apiRouter.post('/status', async (req: Request, res: Response) => {

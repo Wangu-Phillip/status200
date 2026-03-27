@@ -152,3 +152,47 @@ model StatusCheck {
 
   @@map("status_checks")
 }
+
+model TenderPosting {
+  id             String                  @id @default(uuid())
+  tenderNumber   String                  @unique
+  title          String
+  category       String
+  description    String
+  closingDate    DateTime
+  location       String
+  estimatedValue String?
+  status         String                  @default("Open") // "Open", "Closed", "Canceled"
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  documents      TenderPostingDocument[]
+
+  @@map("tender_postings")
+}
+
+model TenderPostingDocument {
+  id              String        @id @default(uuid())
+  tenderPostingId String
+  name            String
+  path            String
+  tenderPosting   TenderPosting @relation(fields: [tenderPostingId], references: [id], onDelete: Cascade)
+
+  @@map("tender_posting_documents")
+}
+
+model SystemSettings {
+  id                String   @id @default("default")
+  siteName          String   @default("BOCRA Portal")
+  maintenanceMode   Boolean  @default(false)
+  allowRegistration Boolean  @default(true)
+  sessionTimeout    Int      @default(30) // in minutes
+  twoFactorAuth     Boolean  @default(false)
+  passwordExpiry    Int      @default(90) // in days
+  smtpServer        String?
+  smtpPort          Int?
+  smtpUser          String?
+  supportEmail      String   @default("support@bocra.org.bw")
+  updatedAt         DateTime @updatedAt
+
+  @@map("system_settings")
+}

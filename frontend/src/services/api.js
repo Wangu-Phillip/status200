@@ -235,3 +235,64 @@ export const addTenderNotes = (tenderNumber, notes) =>
     method: 'PUT',
     body: JSON.stringify({ notes }),
   });
+// =====================
+// SYSTEM SETTINGS API
+// =====================
+
+export const getSystemSettings = () => apiCall('/admin/settings');
+
+export const updateSystemSettings = (settings) =>
+  apiCall('/admin/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  });
+
+// =====================
+// ACTIVITY LOGS API
+// =====================
+
+export const getActivityLogs = ({ limit = 25, offset = 0 } = {}) => {
+  const query = new URLSearchParams();
+  query.append('limit', limit);
+  query.append('offset', offset);
+  return apiCall(`/admin/activity-logs?${query.toString()}`);
+};
+
+// =====================
+// TENDER POSTINGS API
+// =====================
+
+export const getTenderPostings = ({ page = 1, limit = 10 } = {}) => {
+  const query = new URLSearchParams();
+  query.append('page', page);
+  query.append('limit', limit);
+  return apiCall(`/admin/tender-postings?${query.toString()}`);
+};
+
+export const createTenderPosting = (data) =>
+  apiCall('/admin/tender-postings', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const updateTenderPosting = (id, data) =>
+  apiCall(`/admin/tender-postings/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+export const deleteTenderPosting = (id) =>
+  apiCall(`/admin/tender-postings/${id}`, {
+    method: 'DELETE',
+  });
+
+export const uploadTenderPostingDocument = (postingId, docData) =>
+  apiCall(`/admin/tender-postings/${postingId}/documents`, {
+    method: 'POST',
+    body: JSON.stringify(docData),
+  });
+
+export const deleteTenderDocument = (docId) =>
+  apiCall(`/admin/tender-postings/documents/${docId}`, {
+    method: 'DELETE',
+  });

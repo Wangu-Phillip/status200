@@ -1,232 +1,297 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
+import React, { useState, useEffect } from 'react';
 import { 
   Briefcase, 
-  ArrowLeft, 
+  Clock, 
+  MapPin, 
+  FileText, 
+  Search, 
+  Filter, 
+  Download,
+  AlertCircle,
   Calendar,
-  DollarSign,
-  Clock,
-  ArrowRight,
-  Filter,
-  LogIn
-} from "lucide-react";
-import { motion } from "framer-motion";
-import axios from "axios";
+  ShieldCheck,
+  ChevronRight,
+  Loader
+} from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import TenderSpecsModal from '../components/TenderSpecsModal';
 
-const API = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../hooks/use-toast';
 
-const categoryIcons = {
-  it_software: "💻",
-  infrastructure: "🏗️",
-  consulting: "📊",
-  equipment: "📡",
-  maintenance: "🔧"
-};
-
-export default function TenderHub() {
-  const { isAuthenticated } = useAuth();
+const Tenders = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [tenders, setTenders] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [error, setError] = useState(null);
+  const [categories, setCategories] = useState(['All']);
+  const [selectedTender, setSelectedTender] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
+  // Fetch tender postings on mount
   useEffect(() => {
-    fetchData();
+    fetchTenderPostings();
   }, []);
 
-  const fetchData = async () => {
+  const fetchTenderPostings = async () => {
     try {
-      const [tendersRes, categoriesRes] = await Promise.all([
-        axios.get(`${API}/tenders`),
-        axios.get(`${API}/tenders/categories`)
-      ]);
-      setTenders(tendersRes.data);
-      setCategories(categoriesRes.data);
-    } catch (error) {
-      console.error("Error fetching tenders:", error);
-      toast.error("Failed to load tenders");
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`${API_URL}/tender-postings/available?limit=20`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch tender postings');
+      }
+      
+      const data = await response.json();
+      const postings = data.postings || [];
+      
+      // Transform API data to match component structure
+      const transformedTenders = postings.map((posting) => ({
+        id: posting.tenderNumber,
+        title: posting.title,
+        category: posting.category || 'General',
+        status: posting.status,
+        closingDate: posting.closingDate ? new Date(posting.closingDate).toISOString().split('T')[0] : 'N/A',
+        location: posting.location || 'Not specified',
+        description: posting.description,
+        type: 'Public Tender',
+        estimatedValue: posting.estimatedValue,
+        tenderNumber: posting.tenderNumber,
+        documents: posting.documents || []
+      }));
+      
+      setTenders(transformedTenders);
+      
+      // Extract unique categories
+      const uniqueCategories = ['All', ...new Set(transformedTenders.map(t => t.category))];
+      setCategories(uniqueCategories);
+    } catch (err) {
+      console.error('Error fetching tenders:', err);
+      setError(err.message);
+      toast({
+        title: "Error",
+        description: "Failed to load tenders. Please try again later.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredTenders = tenders.filter(t => 
-    filterCategory === "all" || t.category === filterCategory
+  const filteredTenders = tenders.filter((t) => 
+    (activeCategory === 'All' || t.category === activeCategory) &&
+    (t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.id.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const getDaysRemaining = (deadline) => {
-    const days = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
-    return days;
+  const handleTenderAction = (tender) => {
+    setSelectedTender(tender);
+    setModalOpen(true);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50" data-testid="tender-hub">
-      {/* Header */}
-      <header className="bg-[#0A192F] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" asChild className="text-white hover:bg-white/10 rounded-sm">
-                <Link to="/">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Home
-                </Link>
-              </Button>
-              <div className="h-6 w-px bg-white/20" />
-              <h1 className="font-heading font-bold text-lg">Tender Hub</h1>
-            </div>
-            {!isAuthenticated && (
-              <Button asChild variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/10 rounded-sm">
-                <Link to="/login">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Sign In to Apply
-                </Link>
-              </Button>
-            )}
+    <div className="min-h-screen bg-[#020617] text-slate-100 pb-20 pt-28">
+      {/* Hero Section */}
+      <section className="relative h-[400px] flex items-center overflow-hidden mb-12">
+        <div className="absolute inset-0 z-0 scale-110">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/80 to-transparent z-10"></div>
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-40"></div>
+          <div className="absolute inset-0 basket-pattern opacity-[0.03] text-teal-500 z-10"></div>
+        </div>
+        
+        <div className="container mx-auto px-6 lg:px-20 relative z-20">
+          <div className="max-w-2xl animate-in fade-in slide-in-from-left-8 duration-700">
+            <Badge className="mb-6 bg-teal-600/20 text-teal-400 border-teal-500/30 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-[0.2em]">
+              Procurement Portal
+            </Badge>
+            <h1 className="text-5xl lg:text-7xl font-black tracking-tighter text-white mb-6 leading-[0.9]">
+              Tenders & <br />
+              Contracts<span className="text-teal-500">.</span>
+            </h1>
+            <p className="text-slate-400 text-lg lg:text-xl font-medium max-w-xl leading-relaxed">
+              Explore strategic procurement opportunities with BOCRA. We are committed to transparency, competition, and excellence in all regulatory ventures.
+            </p>
           </div>
         </div>
-      </header>
+      </section>
 
-      {/* Hero */}
-      <div className="bg-[#0A192F] text-white pb-12 pt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <p className="text-[#75B2DD] text-xs uppercase tracking-[0.2em] font-semibold mb-2">
-              BOCRA Procurement
-            </p>
-            <h2 className="font-heading font-bold text-3xl mb-4">
-              Open Tender Opportunities
-            </h2>
-            <p className="text-slate-300 max-w-2xl">
-              Browse current tender opportunities from BOCRA. Register and submit your proposals 
-              to participate in Botswana's telecommunications regulatory projects.
-            </p>
-          </motion.div>
+      <div className="container mx-auto px-6 lg:px-20">
+        {/* Filters & Search */}
+        <div className="bg-[#0a0f1e]/50 backdrop-blur-xl border border-white/5 p-8 rounded-[3rem] mb-12 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div className="flex items-center space-x-3 bg-slate-900/50 p-2 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar max-w-full">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                  activeCategory === cat 
+                    ? 'bg-[#00897B] text-white shadow-lg shadow-teal-900/40' 
+                    : 'text-slate-500 hover:text-slate-100 hover:bg-white/5'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative w-full lg:w-96 group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-teal-400 transition-colors" />
+            <input 
+              type="text" 
+              placeholder="Search tender reference..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-900/50 border border-white/5 rounded-2xl pl-14 pr-6 py-4 text-sm font-bold placeholder:text-slate-700 focus:ring-2 focus:ring-[#00897B] outline-none transition-all text-white"
+            />
+          </div>
+        </div>
+
+        {/* Tenders Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {loading ? (
+            <div className="lg:col-span-2 py-20 text-center">
+              <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-400 animate-spin">
+                <Loader className="w-10 h-10" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-2 tracking-tighter">Loading Tenders</h3>
+              <p className="text-slate-500 font-medium tracking-tight">Fetching the latest procurement opportunities...</p>
+            </div>
+          ) : error ? (
+            <div className="lg:col-span-2 py-20 text-center">
+              <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 text-red-400">
+                <AlertCircle className="w-10 h-10" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-2 tracking-tighter">Error Loading Tenders</h3>
+              <p className="text-slate-500 font-medium tracking-tight">{error}</p>
+              <Button 
+                onClick={fetchTenderPostings}
+                className="mt-6 bg-[#00897B] hover:bg-[#4DB6AC] text-white rounded-2xl px-8 py-2 font-black uppercase tracking-widest text-[10px]"
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : filteredTenders.length > 0 ? (
+            filteredTenders.map((tender, i) => (
+              <div 
+                key={tender.id} 
+                className="bg-[#0a0f1e] border border-white/5 p-10 rounded-[3rem] group hover:border-[#00897B]/50 hover:shadow-2xl transition-all duration-500 relative overflow-hidden animate-in fade-in slide-in-from-bottom-8"
+                style={{ animationDelay: `${i * 100}ms` }}
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-teal-500/10 transition-all"></div>
+                
+                <div className="flex justify-between items-start mb-8 relative">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#00897B] mb-2">{tender.id}</span>
+                    <h3 className="text-2xl font-black tracking-tight text-white group-hover:text-[#4DB6AC] transition-colors leading-tight max-w-md">
+                      {tender.title}
+                    </h3>
+                  </div>
+                  <Badge className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-none ${
+                    tender.status === 'Open' ? 'bg-[#2E7D32]/20 text-[#2E7D32]' : 'bg-slate-800/50 text-slate-500'
+                  }`}>
+                    {tender.status}
+                  </Badge>
+                </div>
+
+                <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8 max-w-lg">
+                  {tender.description}
+                </p>
+
+                <div className="grid grid-cols-2 gap-6 mb-10">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-slate-500 group-hover:bg-teal-900/30 group-hover:text-teal-400 transition-all">
+                      <Calendar className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 block">Closing Date</p>
+                      <p className="text-sm font-bold text-slate-300">{tender.closingDate}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-slate-500 group-hover:bg-blue-900/30 group-hover:text-blue-400 transition-all">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 block">Location</p>
+                      <p className="text-sm font-bold text-slate-300">{tender.location}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-8 border-t border-white/5 relative">
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="outline" className="text-[9px] font-black uppercase tracking-tighter border-white/10 text-slate-500">
+                      {tender.type}
+                    </Badge>
+                  </div>
+                  <Button 
+                    onClick={() => handleTenderAction(tender)}
+                    className="bg-[#00897B] hover:bg-[#4DB6AC] text-white rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-teal-900/20 group-hover:scale-105 transition-all"
+                  >
+                    View Specs
+                    <ChevronRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="lg:col-span-2 py-20 text-center">
+              <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-700">
+                <Search className="w-10 h-10" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-2 tracking-tighter">No Tenders Found</h3>
+              <p className="text-slate-500 font-medium tracking-tight">Try adjusting your search or filters to see more results.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Support Section */}
+        <div className="mt-20 bg-[#00695C]/10 border border-[#00695C]/30 p-12 rounded-[3.5rem] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#00695C]/20 blur-[100px] -mr-32 -mt-32"></div>
+          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10 text-center lg:text-left">
+            <div className="max-w-xl">
+              <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-white mb-4">
+                Need Procurement Assistance?
+              </h2>
+              <p className="text-slate-400 font-medium">
+                Our procurement team is available to assist you with system registration, document submission, and technical inquiries.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <Button 
+                variant="outline" 
+                onClick={() => toast({ title: "Portal Guide", description: "Downloading Tender Submission Guide v2.4 (PDF)..." })}
+                className="h-16 px-10 rounded-[1.25rem] border-white/10 bg-transparent text-white font-black uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all"
+              >
+                Download Guide
+              </Button>
+              <Button 
+                onClick={() => window.location.href = 'mailto:procurement@bocra.org.bw?subject=Tender Inquiry'}
+                className="h-16 px-10 rounded-[1.25rem] bg-[#00897B] text-white font-black uppercase tracking-widest text-[10px] hover:bg-[#4DB6AC] shadow-2xl shadow-teal-900/40 transition-all"
+              >
+                Contact Unit
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-6">
-        {/* Filter */}
-        <Card className="border border-slate-200 rounded-sm shadow-none mb-6">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              <Filter className="w-5 h-5 text-slate-400" />
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[200px] rounded-sm" data-testid="category-filter">
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map(cat => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {categoryIcons[cat.id]} {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <span className="text-sm text-slate-500">
-                {filteredTenders.length} tender{filteredTenders.length !== 1 ? "s" : ""} found
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tenders List */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-[#0A192F] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-500">Loading tenders...</p>
-          </div>
-        ) : filteredTenders.length === 0 ? (
-          <Card className="border border-slate-200 rounded-sm shadow-none">
-            <CardContent className="p-12 text-center">
-              <Briefcase className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="font-heading font-bold text-xl text-[#0A192F] mb-2">
-                No Open Tenders
-              </h3>
-              <p className="text-slate-500">
-                There are no tenders matching your criteria. Check back soon for new opportunities.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {filteredTenders.map((tender, index) => {
-              const daysRemaining = getDaysRemaining(tender.deadline);
-              const isUrgent = daysRemaining <= 7;
-              
-              return (
-                <motion.div
-                  key={tender.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="border border-slate-200 rounded-sm shadow-none h-full card-hover">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <Badge className="mb-2 bg-slate-100 text-slate-700 rounded-sm">
-                            {categoryIcons[tender.category]} {categories.find(c => c.id === tender.category)?.name || tender.category}
-                          </Badge>
-                          <CardTitle className="font-heading text-lg text-[#0A192F] leading-tight">
-                            {tender.title}
-                          </CardTitle>
-                        </div>
-                        {isUrgent && (
-                          <Badge className="bg-red-100 text-red-800 rounded-sm whitespace-nowrap">
-                            {daysRemaining} days left
-                          </Badge>
-                        )}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-sm text-slate-600 line-clamp-2">
-                        {tender.description}
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-4 text-sm">
-                        {tender.budget_range && (
-                          <div className="flex items-center gap-1 text-slate-500">
-                            <DollarSign className="w-4 h-4" />
-                            <span>{tender.budget_range}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1 text-slate-500">
-                          <Calendar className="w-4 h-4" />
-                          <span>Deadline: {new Date(tender.deadline).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="pt-2">
-                        <Button 
-                          asChild
-                          className="w-full bg-[#0A192F] hover:bg-slate-800 text-white rounded-sm"
-                          data-testid={`view-tender-${tender.id}`}
-                        >
-                          <Link to={`/tenders/${tender.id}`}>
-                            View Details
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                          </Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </main>
+      {/* Tender Specs Modal */}
+      <TenderSpecsModal 
+        tender={selectedTender} 
+        isOpen={modalOpen} 
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedTender(null);
+        }} 
+      />
     </div>
   );
-}
+};
+
+export default Tenders;
