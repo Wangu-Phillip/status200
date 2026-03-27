@@ -344,8 +344,8 @@ export default function CareersPage() {
           <div className="mt-16 text-center">
              <p className="text-slate-400 mb-6">Don't see a role that fits? We're always looking for talent.</p>
              <Button 
-                variant="outline" 
-                className="border-white/20 text-white hover:bg-white/5 rounded-sm"
+                size="lg"
+                className="bg-[#75B2DD] hover:bg-[#5a9ac9] text-[#0A192F] font-bold rounded-sm px-8"
                 onClick={() => navigate('/careers/apply/general', { state: { job: { id: 'GENERAL', title: 'General Application', department: 'Unspecified' } } })}
              >
                 Submit General Application
@@ -355,10 +355,27 @@ export default function CareersPage() {
       </section>
 
       {/* FAQ / Process Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-slate-50">
          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-heading font-black text-3xl text-[#0A192F] text-center mb-16">The Journey to Joining Us</h2>
-            <div className="space-y-12">
+            <div className="text-center mb-16">
+               <motion.p
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  className="text-[#75B2DD] text-xs uppercase tracking-[0.3em] font-bold mb-4"
+               >
+                  How It Works
+               </motion.p>
+               <motion.h2 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="font-heading font-black text-4xl lg:text-5xl text-[#0A192F]"
+               >
+                  The Journey to Joining Us
+               </motion.h2>
+            </div>
+            <div className="space-y-8">
                <ProcessStep 
                   number="01" 
                   title="Apply Online" 
@@ -403,9 +420,6 @@ export default function CareersPage() {
                    >
                       Join Talent Pool
                    </Button>
-                  <Button variant="outline" size="lg" className="border-white/20 text-white hover:bg-white/10 rounded-sm px-10">
-                     Internal Staff Portal
-                  </Button>
                </div>
             </motion.div>
          </div>
@@ -510,17 +524,23 @@ function JobCard({ id, title, department, location, type, experience, descriptio
 
 function ProcessStep({ number, title, text }) {
    return (
-      <div className="flex gap-8 group">
+      <motion.div
+         initial={{ opacity: 0, y: 20 }}
+         whileInView={{ opacity: 1, y: 0 }}
+         viewport={{ once: true }}
+         className="flex gap-6 p-6 bg-white rounded-lg border border-slate-200 hover:shadow-lg transition-all duration-300 group"
+      >
          <div className="flex-shrink-0">
-            <span className="font-heading font-black text-4xl text-slate-100 group-hover:text-[#75B2DD] transition-colors">{number}</span>
+            <div className="w-12 h-12 rounded-full bg-[#75B2DD]/20 flex items-center justify-center">
+               <span className="font-heading font-black text-lg text-[#75B2DD]">{number}</span>
+            </div>
          </div>
-         <div className="space-y-2">
-            <h4 className="text-[#0A192F] font-black text-xl flex items-center gap-3">
+         <div className="flex-1">
+            <h4 className="text-[#0A192F] font-heading font-bold text-lg mb-2 group-hover:text-[#75B2DD] transition-colors">
                {title}
-               <div className="w-8 h-px bg-slate-200 group-hover:w-16 transition-all duration-500" />
             </h4>
-            <p className="text-slate-500 leading-relaxed font-medium">{text}</p>
+            <p className="text-slate-600 leading-relaxed">{text}</p>
          </div>
-      </div>
+      </motion.div>
    );
 }
