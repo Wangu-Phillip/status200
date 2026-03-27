@@ -57,6 +57,19 @@ status200/
 
 ---
 
+## Live Demo
+
+The application is hosted at **https://status200-9e93f.web.app**
+
+### Sample Login Credentials
+
+| Role | Email | Password |
+|---|---|---|
+| Citizen | `citizen@example.com` | `password123` |
+| Super Admin | `superadmin@bocra.org.bw` | `SuperAdmin123!` |
+
+---
+
 ## Getting Started
 
 ### Prerequisites
