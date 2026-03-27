@@ -396,3 +396,46 @@ export const deleteTenderDocument = (docId) =>
   apiCall(`/admin/tender-postings/documents/${docId}`, {
     method: 'DELETE',
   });
+
+// =====================
+// ADMIN JOBS API
+// =====================
+
+export const getAdminJobs = ({ page = 1, limit = 10 } = {}) => {
+  const query = new URLSearchParams();
+  query.append('page', page);
+  query.append('limit', limit);
+  return apiCall(`/admin/jobs?${query.toString()}`);
+};
+
+export const createJob = (data) =>
+  apiCall('/admin/jobs', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const updateJob = (id, data) =>
+  apiCall(`/admin/jobs/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+export const deleteJob = (id) =>
+  apiCall(`/admin/jobs/${id}`, {
+    method: 'DELETE',
+  });
+
+export const getJobApplications = ({ page = 1, limit = 20, jobId = null } = {}) => {
+  const query = new URLSearchParams();
+  query.append('page', page);
+  query.append('limit', limit);
+  if (jobId) query.append('jobId', jobId);
+  return apiCall(`/admin/job-applications?${query.toString()}`);
+};
+
+export const updateJobApplicationStatus = (id, status) =>
+  apiCall(`/admin/job-applications/${id}/status`, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
+  });
+

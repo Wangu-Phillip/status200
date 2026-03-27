@@ -163,14 +163,14 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
+    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end pointer-events-none">
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 100, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.8 }}
-            className={`bg-white border-none shadow-2xl overflow-hidden mb-6 flex flex-col transition-all duration-300 ${isExpanded ? 'w-[450px] h-[700px]' : 'w-[380px] h-[550px]'} rounded-sm`}
+            className={`bg-white border-none shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden mb-6 flex flex-col transition-all duration-300 pointer-events-auto ${isExpanded ? 'w-[450px] h-[700px]' : 'w-[380px] h-[580px]'} rounded-[2.5rem]`}
           >
             {/* Header */}
             <div className={`p-4 bg-gradient-to-r from-[#0A192F] to-[#01142F] text-white flex items-center justify-between`}>
@@ -291,9 +291,9 @@ const Chatbot = () => {
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-16 h-16 bg-[#0A192F] shadow-2xl flex items-center justify-center rounded-sm group relative"
+        className="w-16 h-16 bg-[#0A192F] shadow-2xl flex items-center justify-center rounded-full group relative pointer-events-auto"
       >
-        <div className="absolute -inset-1 bg-gradient-to-r from-[#75B2DD] to-[#0A192F] rounded-sm blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+        <div className="absolute -inset-1 bg-gradient-to-r from-[#75B2DD] to-[#0A192F] rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
         {isOpen ? <X className="text-[#75B2DD] z-10" /> : <MessageCircle className="text-[#75B2DD] z-10" />}
         {!isOpen && (
            <span className="absolute -top-1 -right-1 flex h-4 w-4">

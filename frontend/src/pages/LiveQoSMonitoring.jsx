@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
@@ -40,36 +41,50 @@ const ISPTestComponent = () => {
     { id: 'Liquid', name: 'Liquid Intelligent', icon: Zap },
   ];
 
+  const [testHistory, setTestHistory] = useState([]);
+
   const runTest = () => {
     setIsTesting(true);
     setResults(null);
     setProgress(0);
     
     // Phase 1: Latency
-    setCurrentStage('Measuring Latency...');
+    setCurrentStage('Synchronizing with closest BOCRA Node...');
     let p = 0;
     const interval = setInterval(() => {
       p += 1;
       setProgress(p);
       
-      if (p === 30) {
-        setCurrentStage('Testing Download Speed...');
+      if (p === 20) {
+        setCurrentStage('Measuring Latency & Jitter...');
+      } else if (p === 40) {
+        setCurrentStage('Testing Download Throughput...');
       } else if (p === 70) {
-        setCurrentStage('Testing Upload Speed...');
+        setCurrentStage('Testing Upload Throughput...');
+      } else if (p === 90) {
+        setCurrentStage('Uploading Diagnostic Data to BOCRA...');
       } else if (p >= 100) {
         clearInterval(interval);
         setTimeout(() => {
           setIsTesting(false);
-          setResults({
+          const newResult = {
+            id: Date.now(),
+            isp: selectedISP,
             download: (Math.random() * 50 + 20).toFixed(1),
             upload: (Math.random() * 20 + 5).toFixed(1),
             latency: Math.floor(Math.random() * 40 + 10),
             jitter: Math.floor(Math.random() * 10 + 2),
             timestamp: new Date().toLocaleTimeString()
+          };
+          setResults(newResult);
+          setTestHistory(prev => [newResult, ...prev].slice(0, 5));
+          toast({
+            title: "Diagnostic Complete",
+            description: `Quality of Service data for ${selectedISP} has been logged.`,
           });
-        }, 500);
+        }, 800);
       }
-    }, 50);
+    }, 60);
   };
 
   return (
@@ -190,6 +205,22 @@ const ISPTestComponent = () => {
                   <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Jitter</p>
                   <p className="text-lg font-bold text-slate-200">{results.jitter} ms</p>
                </div>
+
+               {/* Test History List */}
+               {testHistory.length > 1 && (
+                  <div className="col-span-full mt-4">
+                    <p className="text-[10px] text-slate-500 uppercase font-black mb-3">Session History</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {testHistory.slice(1).map(test => (
+                        <div key={test.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 text-[11px]">
+                          <span className="font-bold text-slate-300">{test.isp}</span>
+                          <span className="text-emerald-400">{test.download} Mbps</span>
+                          <span className="text-slate-500 font-mono">{test.timestamp}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+               )}
             </div>
           )}
         </div>

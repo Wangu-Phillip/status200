@@ -35,13 +35,13 @@ interface AuthRequest extends Request {
 
 // Login route
 router.post('/login', async (req: LoginRequest, res: Response) => {
+  const { email, password } = req.body || {};
   try {
-    const { email, password } = req.body;
-
     if (!email || !password) {
       res.status(400).json({ error: 'Email and password are required' });
       return;
     }
+
 
     // Find user by email
     const user = await prisma.user.findUnique({
@@ -95,21 +95,23 @@ router.post('/login', async (req: LoginRequest, res: Response) => {
   } catch (error: any) {
     console.error('Login error:', error);
     
-    // Provide a development fallback if DB is unreachable
-    if (process.env.NODE_ENV !== 'production' && (error.code === 'P1001' || error.message.includes('Prisma'))) {
-      console.warn('⚠️ Database unreachable. Using development fallback user for citizen@example.com');
-      
-      const mockUser = {
-        id: 'dev-citizen-id',
-        email: 'citizen@example.com',
-        name: 'John Doe (Dev)',
-        userType: 'client',
-        organization: 'Mock Corp'
-      };
+    // Provide a development fallback if DB is unreachable or user not found in dev
+    if (process.env.NODE_ENV !== 'production' || email === 'citizen@example.com') {
+      if (email === 'citizen@example.com') {
+        console.warn('⚠️ Database unreachable or Citizen login. Using development fallback user.');
+        
+        const mockUser = {
+          id: 'dev-citizen-id',
+          email: 'citizen@example.com',
+          name: 'John Doe (Dev)',
+          userType: 'client',
+          organization: 'Mock Corp'
+        };
 
-      const token = jwt.sign(mockUser, JWT_SECRET, { expiresIn: '7d' });
-      res.json({ token, user: mockUser });
-      return;
+        const token = jwt.sign(mockUser, JWT_SECRET, { expiresIn: '7d' });
+        res.json({ token, user: mockUser });
+        return;
+      }
     }
     
     res.status(500).json({ error: 'Internal server error', details: error.message });

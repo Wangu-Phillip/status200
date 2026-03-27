@@ -37,7 +37,7 @@ router.get('/tender-postings/available', async (req: Request, res: Response) => 
 /**
  * Get available job openings for public view
  */
-router.get('/jobs', async (req: Request, res: Response) => {
+router.get('/jobs', async (_req: Request, res: Response) => {
   try {
     const jobs = await prisma.jobPosting.findMany({
       where: {

@@ -407,7 +407,7 @@ router.get(
   '/settings',
   authenticateToken,
   authorizeAdmin,
-  async (req: AuthRequest, res: Response) => {
+  async (_req: AuthRequest, res: Response) => {
     try {
       let settings = await prisma.systemSettings.findFirst({
         where: { id: 'default' },
@@ -712,115 +712,15 @@ router.post(
     }
   }
 );
-
 // =====================
-// SYSTEM SETTINGS API
+// JOBS & CAREERS API
 // =====================
 
 /**
- * Get system settings
+ * Get all job postings
  */
 router.get(
-  '/settings',
-  authenticateToken,
-  authorizeAdmin,
-  async (req: AuthRequest, res: Response) => {
-    try {
-      let settings = await prisma.systemSettings.findUnique({
-        where: { id: 'default' },
-      });
-
-      if (!settings) {
-        // Create default settings if they don't exist
-        settings = await prisma.systemSettings.create({
-          data: { id: 'default' },
-        });
-      }
-
-      res.json(settings);
-    } catch (error) {
-      console.error('Get settings error:', error);
-      res.status(500).json({ error: 'Failed to fetch settings' });
-    }
-  }
-);
-
-/**
- * Update system settings
- */
-router.put(
-  '/settings',
-  authenticateToken,
-  authorizeAdmin,
-  async (req: AuthRequest, res: Response) => {
-    try {
-      if (req.user?.adminLevel !== 'superadmin') {
-        res.status(403).json({ error: 'Only superadmin can update settings' });
-        return;
-      }
-
-      const settingsData = req.body;
-      const updated = await prisma.systemSettings.upsert({
-        where: { id: 'default' },
-        update: settingsData,
-        create: { ...settingsData, id: 'default' },
-      });
-
-      res.json({ message: 'Settings updated successfully', settings: updated });
-    } catch (error) {
-      console.error('Update settings error:', error);
-      res.status(500).json({ error: 'Failed to update settings' });
-    }
-  }
-);
-
-// =====================
-// ACTIVITY LOGS API
-// =====================
-
-/**
- * Get system-wide activity logs
- */
-router.get(
-  '/activity-logs',
-  authenticateToken,
-  authorizeAdmin,
-  async (req: AuthRequest, res: Response) => {
-    try {
-      if (req.user?.adminLevel !== 'superadmin') {
-        res.status(403).json({ error: 'Only superadmin can view activity logs' });
-        return;
-      }
-
-      const limit = Number(req.query.limit) || 25;
-      const offset = Number(req.query.offset) || 0;
-
-      const logs = await prisma.activityLog.findMany({
-        include: { user: { select: { email: true, name: true } } },
-        orderBy: { timestamp: 'desc' },
-        take: limit,
-        skip: offset,
-      });
-
-      const total = await prisma.activityLog.count();
-
-      res.json({ logs, pagination: { total, limit, offset } });
-    } catch (error) {
-      console.error('Get activity logs error:', error);
-      res.status(500).json({ error: 'Failed to fetch activity logs' });
-    }
-  }
-);
-
-// =====================
-// TENDER POSTINGS API
-// =====================
-
-/**
- * Get all tender postings (admin view)
- */
-router.get(
-  '/tender-postings',
+  '/jobs',
   authenticateToken,
   authorizeAdmin,
   async (req: AuthRequest, res: Response) => {
@@ -829,147 +729,159 @@ router.get(
       const limit = Number(req.query.limit) || 10;
       const skip = (page - 1) * limit;
 
-      const postings = await prisma.tenderPosting.findMany({
-        include: { documents: true },
+      const jobs = await prisma.jobPosting.findMany({
+        include: { _count: { select: { applications: true } } },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       });
 
-      const total = await prisma.tenderPosting.count();
+      const total = await prisma.jobPosting.count();
 
-      res.json({ postings, pagination: { page, limit, total } });
+      res.json({ jobs, pagination: { page, limit, total } });
     } catch (error) {
-      console.error('Get tender postings error:', error);
-      res.status(500).json({ error: 'Failed to fetch tender postings' });
+      console.error('Get admin jobs error:', error);
+      res.status(500).json({ error: 'Failed to fetch jobs' });
     }
   }
 );
 
 /**
- * Create new tender posting
+ * Create a new job posting
  */
 router.post(
-  '/tender-postings',
+  '/jobs',
   authenticateToken,
   authorizeAdmin,
   async (req: AuthRequest, res: Response) => {
     try {
       const data = req.body;
-      const posting = await prisma.tenderPosting.create({
+      const job = await prisma.jobPosting.create({
         data: {
-          tenderNumber: data.tenderNumber,
           title: data.title,
-          category: data.category,
+          department: data.department,
+          location: data.location || 'Gaborone',
+          type: data.type || 'Full-time',
+          experience: data.experience,
           description: data.description,
+          requirements: data.requirements,
           closingDate: new Date(data.closingDate),
-          location: data.location,
-          estimatedValue: data.estimatedValue,
-          status: data.status || 'Open',
+          status: 'Open',
         },
       });
 
-      res.status(201).json(posting);
+      res.status(201).json(job);
     } catch (error) {
-      console.error('Create tender posting error:', error);
-      res.status(500).json({ error: 'Failed to create tender posting' });
+      console.error('Create job error:', error);
+      res.status(500).json({ error: 'Failed to create job posting' });
     }
   }
 );
 
 /**
- * Update tender posting
+ * Update a job posting
  */
 router.put(
-  '/tender-postings/:id',
+  '/jobs/:id',
   authenticateToken,
   authorizeAdmin,
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
       const data = req.body;
-
-      // Handle date conversion if present
+      
       const updateData = { ...data };
       if (updateData.closingDate) {
         updateData.closingDate = new Date(updateData.closingDate);
       }
 
-      const updated = await prisma.tenderPosting.update({
+      const updated = await prisma.jobPosting.update({
         where: { id },
         data: updateData,
       });
 
       res.json(updated);
     } catch (error) {
-      console.error('Update tender posting error:', error);
-      res.status(500).json({ error: 'Failed to update tender posting' });
+      console.error('Update job error:', error);
+      res.status(500).json({ error: 'Failed to update job posting' });
     }
   }
 );
 
 /**
- * Delete tender posting
+ * Delete a job posting
  */
 router.delete(
-  '/tender-postings/:id',
+  '/jobs/:id',
   authenticateToken,
   authorizeAdmin,
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
-      await prisma.tenderPosting.delete({ where: { id } });
-      res.json({ message: 'Tender posting deleted successfully' });
+      await prisma.jobPosting.delete({ where: { id } });
+      res.json({ message: 'Job posting deleted successfully' });
     } catch (error) {
-      console.error('Delete tender posting error:', error);
-      res.status(500).json({ error: 'Failed to delete tender posting' });
+      console.error('Delete job error:', error);
+      res.status(500).json({ error: 'Failed to delete job posting' });
     }
   }
 );
 
 /**
- * Add document to tender posting
+ * Get all job applications
  */
-router.post(
-  '/tender-postings/:id/documents',
+router.get(
+  '/job-applications',
   authenticateToken,
   authorizeAdmin,
   async (req: AuthRequest, res: Response) => {
     try {
-      const { id } = req.params;
-      const { name, path } = req.body;
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 20;
+      const skip = (page - 1) * limit;
+      const jobId = req.query.jobId as string;
 
-      const document = await prisma.tenderPostingDocument.create({
-        data: {
-          tenderPostingId: id,
-          name,
-          path,
-        },
+      const where = jobId ? { jobId } : {};
+
+      const applications = await prisma.jobApplication.findMany({
+        where,
+        include: { job: { select: { title: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
       });
 
-      res.status(201).json(document);
+      const total = await prisma.jobApplication.count({ where });
+
+      res.json({ applications, pagination: { page, limit, total } });
     } catch (error) {
-      console.error('Add tender document error:', error);
-      res.status(500).json({ error: 'Failed to add document' });
+      console.error('Get job applications error:', error);
+      res.status(500).json({ error: 'Failed to fetch job applications' });
     }
   }
 );
 
 /**
- * Delete tender document
+ * Update job application status
  */
-router.delete(
-  '/tender-postings/documents/:id',
+router.put(
+  '/job-applications/:id/status',
   authenticateToken,
   authorizeAdmin,
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
-      await prisma.tenderPostingDocument.delete({ where: { id } });
-      res.json({ message: 'Document deleted successfully' });
+      const { status } = req.body;
+
+      const updated = await prisma.jobApplication.update({
+        where: { id },
+        data: { status },
+      });
+
+      res.json(updated);
     } catch (error) {
-      console.error('Delete tender document error:', error);
-      res.status(500).json({ error: 'Failed to delete document' });
+      console.error('Update job app status error:', error);
+      res.status(500).json({ error: 'Failed to update application status' });
     }
   }
 );

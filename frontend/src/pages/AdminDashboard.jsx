@@ -117,6 +117,26 @@ const AdminDashboard = () => {
   });
   const [systemStatsLoading, setSystemStatsLoading] = useState(false);
 
+  // Career/Job management state (for superadmin/HR)
+  const [jobs, setJobs] = useState([]);
+  const [jobApplications, setJobApplications] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+  const [jobApplicationsLoading, setJobApplicationsLoading] = useState(false);
+  const [careerView, setCareerView] = useState('postings'); // 'postings' or 'applications'
+  const [showJobForm, setShowJobForm] = useState(false);
+  const [editingJob, setEditingJob] = useState(null);
+  const [jobFormData, setJobFormData] = useState({
+    title: '',
+    department: '',
+    location: 'Gaborone',
+    type: 'Full-time',
+    experience: '',
+    description: '',
+    requirements: '',
+    closingDate: '',
+  });
+
+
   // Settings state (for superadmin)
   const [settings, setSettings] = useState({
     // General Settings
@@ -541,6 +561,108 @@ const AdminDashboard = () => {
       });
     } finally {
       setTenderPostingsLoading(false);
+    }
+  };
+
+  // Career/Job management functions
+  const loadJobs = async () => {
+    setJobsLoading(true);
+    try {
+      const data = await adminApi.getAdminJobs({ page: 1, limit: 100 });
+      setJobs(data.jobs || []);
+    } catch (error) {
+      console.error('Failed to load jobs:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load job postings',
+        variant: 'destructive',
+      });
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
+  const loadJobApplications = async (jobId = null) => {
+    setJobApplicationsLoading(true);
+    try {
+      const data = await adminApi.getJobApplications({ page: 1, limit: 100, jobId });
+      setJobApplications(data.applications || []);
+    } catch (error) {
+      console.error('Failed to load job applications:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load job applications',
+        variant: 'destructive',
+      });
+    } finally {
+      setJobApplicationsLoading(false);
+    }
+  };
+
+  const handleCreateJob = async (e) => {
+    e.preventDefault();
+    setJobsLoading(true);
+    try {
+      if (editingJob) {
+        await adminApi.updateJob(editingJob.id, jobFormData);
+        toast({ title: 'Success', description: 'Job posting updated successfully' });
+      } else {
+        await adminApi.createJob(jobFormData);
+        toast({ title: 'Success', description: 'Job posting created successfully' });
+      }
+      setShowJobForm(false);
+      setEditingJob(null);
+      setJobFormData({
+        title: '',
+        department: '',
+        location: 'Gaborone',
+        type: 'Full-time',
+        experience: '',
+        description: '',
+        requirements: '',
+        closingDate: '',
+      });
+      loadJobs();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
+  const handleDeleteJob = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this job posting?')) return;
+    setJobsLoading(true);
+    try {
+      await adminApi.deleteJob(id);
+      toast({ title: 'Success', description: 'Job posting deleted successfully' });
+      loadJobs();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
+  const handleUpdateJobAppStatus = async (id, status) => {
+    try {
+      await adminApi.updateJobApplicationStatus(id, status);
+      toast({ title: 'Success', description: `Application status updated to ${status}` });
+      loadJobApplications();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -1089,11 +1211,11 @@ const AdminDashboard = () => {
                   const updatedUser = { ...user, department: DEPARTMENTS.QOS };
                   localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
                   setUser(updatedUser);
-                  setActiveView('submissions');
-                  toast({ title: 'Quality of Service', description: 'Switched to QoS Department.' }); 
+                  setActiveView('qos_dashboard');
+                  toast({ title: 'Quality of Service', description: 'Viewing Live QoS Dashboard.' }); 
                 }} 
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  activeView === 'submissions' && user?.department === DEPARTMENTS.QOS 
+                  activeView === 'qos_dashboard' 
                     ? 'bg-slate-800 text-white' 
                     : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
@@ -1117,6 +1239,24 @@ const AdminDashboard = () => {
               >
                 <Briefcase className="h-4 w-4" />
                 Tenders
+              </button>
+
+              <button 
+                onClick={() => { 
+                  setActiveView('careers');
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                  loadJobs();
+                  toast({ title: 'Careers', description: 'Manage job postings and applications.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'careers' 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                Careers
               </button>
 
               <p className="px-3 text-xs text-slate-500 uppercase tracking-wider font-semibold mt-6 mb-3">System</p>
@@ -2146,6 +2286,411 @@ const AdminDashboard = () => {
               </>
             )}
           </>
+        )}
+
+        {/* Careers View - Only for superadmins or HR Admins */}
+        {activeView === 'careers' && (
+          <>
+            <div className="mb-6 flex gap-2">
+              <Button
+                onClick={() => {
+                  setCareerView('postings');
+                  loadJobs();
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                }}
+                variant={careerView === 'postings' ? 'default' : 'outline'}
+                className={`gap-2 ${
+                  careerView === 'postings'
+                    ? 'bg-[#003366] text-white hover:bg-[#0A4D8C]'
+                    : 'border-slate-200'
+                }`}
+              >
+                <Briefcase className="h-4 w-4" />
+                Job Postings
+              </Button>
+              <Button
+                onClick={() => {
+                  setCareerView('applications');
+                  loadJobApplications();
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                }}
+                variant={careerView === 'applications' ? 'default' : 'outline'}
+                className={`gap-2 ${
+                  careerView === 'applications'
+                    ? 'bg-[#003366] text-white hover:bg-[#0A4D8C]'
+                    : 'border-slate-200'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                Job Applications
+              </Button>
+            </div>
+
+            {careerView === 'postings' ? (
+              <>
+                {/* Postings View */}
+                {!showJobForm && (
+                  <div className="mb-6">
+                    <Button
+                      onClick={() => {
+                        setEditingJob(null);
+                        setJobFormData({
+                          title: '',
+                          department: '',
+                          location: 'Gaborone',
+                          type: 'Full-time',
+                          experience: '',
+                          description: '',
+                          requirements: '',
+                          closingDate: '',
+                        });
+                        setShowJobForm(true);
+                      }}
+                      className="bg-[#003366] hover:bg-[#0A4D8C] text-white gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Post New Job
+                    </Button>
+                  </div>
+                )}
+
+                {showJobForm && (
+                  <Card className="border-0 shadow-md mb-6 bg-slate-50">
+                    <CardHeader>
+                      <CardTitle>{editingJob ? 'Edit Job Posting' : 'Post New Job'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleCreateJob} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-slate-700 mb-1 block">Job Title *</label>
+                            <Input
+                              required
+                              placeholder="e.g., Network Engineer"
+                              value={jobFormData.title}
+                              onChange={(e) => setJobFormData({...jobFormData, title: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-slate-700 mb-1 block">Department *</label>
+                            <Input
+                              required
+                              placeholder="e.g., Technical Services"
+                              value={jobFormData.department}
+                              onChange={(e) => setJobFormData({...jobFormData, department: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-slate-700 mb-1 block">Location</label>
+                            <Input
+                              placeholder="Gaborone, Botswana"
+                              value={jobFormData.location}
+                              onChange={(e) => setJobFormData({...jobFormData, location: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-slate-700 mb-1 block">Closing Date *</label>
+                            <Input
+                              required
+                              type="date"
+                              value={jobFormData.closingDate}
+                              onChange={(e) => setJobFormData({...jobFormData, closingDate: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-slate-700 mb-1 block">Job Type</label>
+                            <select
+                              className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                              value={jobFormData.type}
+                              onChange={(e) => setJobFormData({...jobFormData, type: e.target.value})}
+                            >
+                              <option value="Full-time">Full-time</option>
+                              <option value="Contract">Contract</option>
+                              <option value="Part-time">Part-time</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-slate-700 mb-1 block">Experience Level</label>
+                            <Input
+                              placeholder="e.g., 5+ Years"
+                              value={jobFormData.experience}
+                              onChange={(e) => setJobFormData({...jobFormData, experience: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Job Description *</label>
+                          <textarea
+                            required
+                            className="w-full h-32 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                            value={jobFormData.description}
+                            onChange={(e) => setJobFormData({...jobFormData, description: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Requirements</label>
+                          <textarea
+                            className="w-full h-32 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                            value={jobFormData.requirements}
+                            onChange={(e) => setJobFormData({...jobFormData, requirements: e.target.value})}
+                            placeholder="Bullet points of requirements..."
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => { setShowJobForm(false); setEditingJob(null); }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type="submit" disabled={jobsLoading} className="bg-[#003366] hover:bg-[#0A4D8C] text-white">
+                            {jobsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (editingJob ? 'Update Job' : 'Post Job')}
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <div className="grid grid-cols-1 gap-4">
+                  {jobsLoading && !showJobForm ? (
+                    <div className="py-12 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" /></div>
+                  ) : jobs.length === 0 ? (
+                    <Card className="border-0 shadow-sm py-12 text-center text-slate-500">No job postings found.</Card>
+                  ) : (
+                    jobs.map(job => (
+                      <Card key={job.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                        <CardContent className="pt-6">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-lg font-bold text-slate-900">{job.title}</h3>
+                              <p className="text-sm text-slate-500">{job.department} • {job.location}</p>
+                              <div className="flex gap-2 mt-2">
+                                <Badge variant="outline">{job.type}</Badge>
+                                <Badge className={job.status === 'Open' ? 'bg-green-500' : 'bg-slate-500'}>{job.status}</Badge>
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100">
+                                  {job._count?.applications || 0} Applications
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setEditingJob(job);
+                                  setJobFormData({
+                                    title: job.title,
+                                    department: job.department,
+                                    location: job.location,
+                                    type: job.type,
+                                    experience: job.experience || '',
+                                    description: job.description,
+                                    requirements: job.requirements || '',
+                                    closingDate: job.closingDate?.split('T')[0] || '',
+                                  });
+                                  setShowJobForm(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => handleDeleteJob(job.id)}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              /* Applications View */
+              <div className="space-y-4">
+                {jobApplicationsLoading ? (
+                  <div className="py-12 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" /></div>
+                ) : jobApplications.length === 0 ? (
+                  <Card className="border-0 shadow-sm py-12 text-center text-slate-500">No job applications received.</Card>
+                ) : (
+                  jobApplications.map(app => (
+                    <Card key={app.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                      <CardContent className="pt-6">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="flex items-center gap-3">
+                              <h3 className="text-lg font-bold text-slate-900">{app.fullName}</h3>
+                              <Badge className={
+                                app.status === 'Received' ? 'bg-blue-500' :
+                                app.status === 'Under Review' ? 'bg-amber-500' :
+                                app.status === 'Interviewing' ? 'bg-purple-500' :
+                                app.status === 'Offered' ? 'bg-emerald-500' :
+                                'bg-slate-500'
+                              }>{app.status}</Badge>
+                            </div>
+                            <p className="text-sm text-slate-600 font-medium mt-1">
+                              Applied for: <span className="text-[#003366]">{app.job?.title}</span>
+                            </p>
+                            <div className="flex flex-wrap gap-4 mt-3 text-sm text-slate-500">
+                              <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{app.email}</span>
+                              <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{app.phone}</span>
+                              <span className="flex items-center gap-1"><Hash className="h-3.5 w-3.5" />{app.trackingId}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <select
+                              className="text-xs border rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-[#003366]"
+                              value={app.status}
+                              onChange={(e) => handleUpdateJobAppStatus(app.id, e.target.value)}
+                            >
+                              <option value="Received">Received</option>
+                              <option value="Under Review">Under Review</option>
+                              <option value="Interviewing">Interviewing</option>
+                              <option value="Offered">Offered</option>
+                              <option value="Rejected">Rejected</option>
+                            </select>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => {
+                                const url = `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/${app.cvPath}`;
+                                window.open(url, '_blank');
+                              }}
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              View CV
+                            </Button>
+                          </div>
+                        </div>
+                        {app.coverLetter && (
+                          <div className="mt-4 p-3 bg-slate-50 rounded text-sm text-slate-600 italic">
+                            "{app.coverLetter.length > 200 ? app.coverLetter.substring(0, 200) + '...' : app.coverLetter}"
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* QoS Dashboard View */}
+        {activeView === 'qos_dashboard' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Quality of Service Dashboard</h2>
+                <p className="text-slate-500">Real-time network performance monitoring across Botswana</p>
+              </div>
+              <div className="flex gap-2">
+                <Badge className="bg-emerald-500">System Healthy</Badge>
+                <Badge variant="outline">Last Updated: {new Date().toLocaleTimeString()}</Badge>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <Card className="border-0 shadow-md">
+                <CardContent className="pt-6">
+                  <p className="text-xs font-black uppercase text-slate-400 tracking-widest">Global Latency</p>
+                  <p className="text-3xl font-black text-[#003366] mt-2">24ms</p>
+                  <p className="text-xs text-emerald-500 font-bold mt-1 flex items-center gap-1">
+                    <TrendingDown className="h-3 w-3" /> -12% vs last hour
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md">
+                <CardContent className="pt-6">
+                  <p className="text-xs font-black uppercase text-slate-400 tracking-widest">Avg Download</p>
+                  <p className="text-3xl font-black text-[#003366] mt-2">42.8 Mbps</p>
+                  <p className="text-xs text-emerald-500 font-bold mt-1 flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3" /> +5.4% vs last hour
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md">
+                <CardContent className="pt-6">
+                  <p className="text-xs font-black uppercase text-slate-400 tracking-widest">Active Nodes</p>
+                  <p className="text-3xl font-black text-[#003366] mt-2">1,248</p>
+                  <p className="text-xs text-slate-500 font-bold mt-1">SADC Region</p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md">
+                <CardContent className="pt-6">
+                  <p className="text-xs font-black uppercase text-slate-400 tracking-widest">Compliance</p>
+                  <p className="text-3xl font-black text-[#003366] mt-2">98.5%</p>
+                  <p className="text-xs text-emerald-500 font-bold mt-1">Regulatory Target: 95%</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+               <Card className="col-span-1 border-0 shadow-md">
+                 <CardHeader>
+                   <CardTitle className="text-lg">Operator Performance</CardTitle>
+                   <CardDescription>Real-time reliability metrics per licensed operator</CardDescription>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="space-y-6">
+                     {[
+                       { name: 'BTC', availability: 99.8, throughput: 45.2, status: 'Compliant' },
+                       { name: 'Mascom', availability: 99.5, throughput: 42.1, status: 'Compliant' },
+                       { name: 'Orange', availability: 98.9, throughput: 38.5, status: 'Compliant' }
+                     ].map(op => (
+                       <div key={op.name} className="flex flex-col gap-2">
+                         <div className="flex justify-between items-center">
+                           <span className="font-bold text-slate-900">{op.name}</span>
+                           <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100">{op.status}</Badge>
+                         </div>
+                         <div className="flex justify-between text-xs text-slate-500">
+                            <span>Availability: {op.availability}%</span>
+                            <span>Throughput: {op.throughput} Mbps</span>
+                         </div>
+                         <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                           <div className="h-full bg-[#003366]" style={{ width: `${op.availability}%` }}></div>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 </CardContent>
+               </Card>
+
+               <Card className="col-span-1 border-0 shadow-md">
+                 <CardHeader>
+                   <CardTitle className="text-lg">Spectral Efficiency</CardTitle>
+                   <CardDescription>Live utilization across frequency bands</CardDescription>
+                 </CardHeader>
+                 <CardContent>
+                    <div className="h-64 flex items-end justify-between gap-1">
+                       {[65, 88, 70, 95, 80, 55, 60, 48, 77, 92, 85, 66].map((h, i) => (
+                         <div key={i} className="flex-1 bg-slate-50 rounded-t group cursor-pointer relative border border-slate-100">
+                            <div 
+                              className="w-full bg-[#003366]/80 rounded-t transition-all group-hover:bg-[#003366] shadow-[0_0_10px_rgba(0,51,102,0.2)]" 
+                              style={{ height: `${h}%` }}
+                            ></div>
+                         </div>
+                       ))}
+                    </div>
+                    <div className="flex justify-between mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                      <span>LTE-800</span>
+                      <span>GSM-900</span>
+                      <span>5G-3500</span>
+                    </div>
+                 </CardContent>
+               </Card>
+            </div>
+          </div>
         )}
 
         {/* User Management View - Only for Superadmins */}
