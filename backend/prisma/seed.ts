@@ -7,14 +7,18 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seed...');
 
-  // Clear existing data
+  // Clear existing data in correct order to avoid FK issues
   await prisma.activityLog.deleteMany();
   await prisma.document.deleteMany();
   await prisma.complaint.deleteMany();
+  await prisma.tender.deleteMany();
   await prisma.application.deleteMany();
+  await prisma.tenderPostingDocument.deleteMany();
+  await prisma.tenderPosting.deleteMany();
   await prisma.user.deleteMany();
   await prisma.statusCheck.deleteMany();
   await prisma.typeApprovedDevice.deleteMany();
+  await prisma.systemSettings.deleteMany();
 
   console.log('🗑️  Cleared existing data');
 
@@ -261,6 +265,64 @@ async function main() {
 
   console.log('✅ Created 4 department-scoped admin users');
 
+  // Create Tender Postings (Public view)
+  const tenderPostings = [
+    {
+      tenderNumber: 'BOCRA/T/001/2025',
+      title: 'Provision of Quality of Service (QoS) Regional Monitoring Systems',
+      description: 'Supply, installation and commissioning of terrestrial QoS monitoring nodes for SADC regional integration.',
+      status: 'Open',
+      category: 'IT Infrastructure',
+      estimatedValue: 1200000.00,
+      location: 'Gaborone (Headquarters)',
+      closingDate: new Date('2025-06-30'),
+    },
+    {
+      tenderNumber: 'BOCRA/T/002/2025',
+      title: 'Spectrum Management Software Upgrade',
+      description: 'Consultancy services for the comprehensive upgrade of national spectrum monitoring software.',
+      status: 'Open',
+      category: 'Professional Services',
+      estimatedValue: 450000.00,
+      location: 'National Deployment',
+      closingDate: new Date('2025-05-15'),
+    },
+    {
+      tenderNumber: 'BOCRA/T/045/2024',
+      title: 'Cybersecurity Awareness Campaign 2024/25',
+      description: 'Implementation of a national digital literacy and cybersecurity safety campaign for SMEs.',
+      status: 'Awarded',
+      category: 'Marketing & Communication',
+      estimatedValue: 280000.00,
+      location: 'All Regions',
+      closingDate: new Date('2024-12-10'),
+    }
+  ];
+
+  for (const posting of tenderPostings) {
+    const p = await prisma.tenderPosting.create({
+      data: {
+        id: uuidv4(),
+        ...posting,
+      },
+    });
+
+    // Add a document for the open tenders
+    if (posting.status === 'Open') {
+      await prisma.tenderPostingDocument.create({
+        data: {
+          id: uuidv4(),
+          tenderPostingId: p.id,
+          name: 'Technical_Specifications_v1.pdf',
+          path: '/uploads/tender_specs.pdf',
+          fileType: 'application/pdf',
+        }
+      });
+    }
+  }
+
+  console.log('✅ Created 3 public tender postings');
+
   // Create test status checks
   await prisma.statusCheck.create({
     data: {
@@ -275,101 +337,53 @@ async function main() {
   // Create type-approved devices
   const typeApprovedDevices = [
     {
-      deviceName: 'Wireless Router XR-500',
-      manufacturer: 'Tech Corp Ltd',
-      model: 'XR500-2025',
+      deviceName: 'Gaborone Fiber Gateway G1',
+      manufacturer: 'BOCRA-Tech Solutions',
+      model: 'GW-BW-500',
       certificateNumber: 'TA-BW-2025-001',
-      category: 'Radio Communication',
+      category: 'Broadband CPE',
       approvalDate: new Date('2025-01-15'),
       expiryDate: new Date('2028-01-15'),
-      standards: 'ITU-R, FCC Part 15',
+      standards: 'ITU-T Y.1564, IEEE 802.3',
       status: 'Active',
-      frequency: '2.4 GHz, 5 GHz',
+      frequency: 'Ethernet / GPON',
     },
     {
-      deviceName: 'Mobile Phone Base Station',
-      manufacturer: 'TeleCom Solutions',
-      model: 'BS-3000-NG',
+      deviceName: 'Mascom Multi-Band Router',
+      manufacturer: 'Wireless Global',
+      model: 'M-4G-5G-PRO',
       certificateNumber: 'TA-BW-2025-002',
-      category: 'Telecommunications',
+      category: 'Cellular Equipment',
       approvalDate: new Date('2024-11-20'),
       expiryDate: new Date('2027-11-20'),
-      standards: 'ETSI, 3GPP',
+      standards: '3GPP Release 16',
       status: 'Active',
-      frequency: '800 MHz, 1800 MHz, 2100 MHz',
+      frequency: '700MHz, 2100MHz, 3500MHz (5G)',
     },
     {
-      deviceName: 'FM Broadcast Transmitter',
-      manufacturer: 'BroadcastTech Inc',
-      model: 'FMT-500W',
+      deviceName: 'Orange Konnect Outdoor Unit',
+      manufacturer: 'Satellite-Link',
+      model: 'OK-SAT-2025',
       certificateNumber: 'TA-BW-2025-003',
-      category: 'Broadcasting Equipment',
+      category: 'Satellite Terminal',
       approvalDate: new Date('2025-02-10'),
       expiryDate: new Date('2028-02-10'),
-      standards: 'ITU-R BS.1064',
+      standards: 'DVB-S2X',
       status: 'Active',
-      frequency: '88-108 MHz',
+      frequency: 'Ka-Band (26-40 GHz)',
     },
     {
-      deviceName: 'WiFi 6 Access Point',
-      manufacturer: 'NetCore Systems',
-      model: 'NC-AP-6E',
+      deviceName: 'Enterprise WiFi 7 Access Point',
+      manufacturer: 'OmniSignal Ltd',
+      model: 'AP-W7-ENT',
       certificateNumber: 'TA-BW-2024-045',
-      category: 'Wireless Devices',
+      category: 'WLAN Access Point',
       approvalDate: new Date('2024-09-05'),
       expiryDate: new Date('2027-09-05'),
-      standards: 'IEEE 802.11ax, FCC',
+      standards: 'IEEE 802.11be',
       status: 'Active',
-      frequency: '2.4 GHz, 5 GHz, 6 GHz',
-    },
-    {
-      deviceName: 'VSAT Terminal',
-      manufacturer: 'Satellite Networks Ltd',
-      model: 'SNL-VSAT-KU',
-      certificateNumber: 'TA-BW-2025-004',
-      category: 'Satellite Equipment',
-      approvalDate: new Date('2025-01-20'),
-      expiryDate: new Date('2028-01-20'),
-      standards: 'ITU-R S.580, IFRB',
-      status: 'Active',
-      frequency: '12-14 GHz (Ku-band)',
-    },
-    {
-      deviceName: 'Two-Way Radio Transceiver',
-      manufacturer: 'CommuniTech Ltd',
-      model: 'CT-R100',
-      certificateNumber: 'TA-BW-2024-042',
-      category: 'Radio Communication',
-      approvalDate: new Date('2024-08-15'),
-      expiryDate: new Date('2027-08-15'),
-      standards: 'ITU-R, ETSI EN 300',
-      status: 'Active',
-      frequency: '400-470 MHz',
-    },
-    {
-      deviceName: 'Mobile Phone - Smartphone',
-      manufacturer: 'GlobalPhone Corp',
-      model: 'GP-S24 Ultra',
-      certificateNumber: 'TA-BW-2025-005',
-      category: 'Wireless Devices',
-      approvalDate: new Date('2025-03-01'),
-      expiryDate: new Date('2028-03-01'),
-      standards: '3GPP, FCC, CE',
-      status: 'Active',
-      frequency: 'Multi-band (2G-5G)',
-    },
-    {
-      deviceName: 'Microwave Oven',
-      manufacturer: 'Home Appliances Ltd',
-      model: 'HA-MW-2000',
-      certificateNumber: 'TA-BW-2024-040',
-      category: 'Other',
-      approvalDate: new Date('2024-07-10'),
-      expiryDate: new Date('2027-07-10'),
-      standards: 'IEC 61000, FCC Part 18',
-      status: 'Active',
-      frequency: '2.45 GHz (ISM)',
-    },
+      frequency: '2.4GHz, 5GHz, 6GHz',
+    }
   ];
 
   for (const device of typeApprovedDevices) {
@@ -381,7 +395,7 @@ async function main() {
     });
   }
 
-  console.log('✅ Created 8 type-approved devices');
+  console.log('✅ Created 4 refined type-approved devices');
 
   console.log('\n✨ Database seed completed successfully!\n');
   console.log('📋 Test Credentials:');
@@ -398,9 +412,11 @@ async function main() {
   console.log('   - 1 superadmin user created');
   console.log('   - 4 department-scoped admin users created');
   console.log('   - 2 applications created');
+  console.log('   - 3 public tender postings created');
   console.log('   - 2 complaints created');
   console.log('   - 2 documents created');
   console.log('   - 4 activity logs created');
+  console.log('   - 4 refined registry devices created');
 }
 
 main()

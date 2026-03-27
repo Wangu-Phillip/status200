@@ -97,7 +97,7 @@ const Dashboard = () => {
   const onTourComplete = () => {
     setShowTour(false);
     localStorage.setItem('bocra_tour_seen', 'true');
-    setChatGreeting("You’re all set! What would you like to do first?");
+    setChatGreeting(`You’re all set, ${user?.name?.split(' ')[0] || 'Citizen'}! What would you like to do first?`);
     setOpenChat(true);
   };
 

@@ -147,7 +147,7 @@ export const uploadTenderDocument = (tenderId, documentData) =>
   });
 
 // Get available tender postings for citizens to browse and apply to
-export const getAvailableTenderPostings = ({ page = 1, limit = 10, status = 'Open', category = null } = {}) => {
+export const getAvailableTenderPostings = ({ page = 1, limit = 20, status = 'Open', category = null } = {}) => {
   const query = new URLSearchParams();
   query.append('page', page);
   query.append('limit', limit);
@@ -214,6 +214,29 @@ export const searchGlobal = ({ query = '', page = 1, limit = 10 } = {}) =>
   apiCall(`/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
 
 // =====================
+// USER MANAGEMENT API (Admin)
+// =====================
+
+export const getUsers = () => apiCall('/users');
+
+export const createUser = (userData) =>
+  apiCall('/users', {
+    method: 'POST',
+    body: JSON.stringify(userData),
+  });
+
+export const updateUser = (id, userData) =>
+  apiCall(`/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(userData),
+  });
+
+export const deleteUser = (id) =>
+  apiCall(`/users/${id}`, {
+    method: 'DELETE',
+  });
+
+// =====================
 // ADMIN API
 // =====================
 
@@ -224,6 +247,8 @@ export const getSubmissions = ({ department = '', page = 1, limit = 10 } = {}) =
   query.append('limit', limit);
   return apiCall(`/admin/submissions?${query.toString()}`);
 };
+
+export const getAllSubmissions = (options = { limit: 100 }) => getSubmissions(options);
 
 export const getAdminStats = (department = '') => {
   const query = new URLSearchParams();
@@ -290,7 +315,30 @@ export const addTenderNotes = (tenderNumber, notes) =>
   });
 
 // =====================
-// TENDER POSTINGS API (Admin-created tenders)
+// SYSTEM SETTINGS API
+// =====================
+
+export const getSystemSettings = () => apiCall('/admin/settings');
+
+export const updateSystemSettings = (settings) =>
+  apiCall('/admin/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  });
+
+// =====================
+// ACTIVITY LOGS API
+// =====================
+
+export const getActivityLogs = ({ limit = 25, offset = 0 } = {}) => {
+  const query = new URLSearchParams();
+  query.append('limit', limit);
+  query.append('offset', offset);
+  return apiCall(`/admin/activity-logs?${query.toString()}`);
+};
+
+// =====================
+// TENDER POSTINGS API
 // =====================
 
 export const getTenderPostings = ({ page = 1, limit = 10, status = null } = {}) => {
@@ -318,53 +366,13 @@ export const deleteTenderPosting = (id) =>
     method: 'DELETE',
   });
 
-export const getTenderDocuments = (tenderPostingId) =>
-  apiCall(`/admin/tender-postings/${tenderPostingId}/documents`);
-
-export const uploadTenderPostingDocument = (tenderPostingId, data) =>
-  apiCall(`/admin/tender-postings/${tenderPostingId}/documents`, {
+export const uploadTenderPostingDocument = (postingId, docData) =>
+  apiCall(`/admin/tender-postings/${postingId}/documents`, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify(docData),
   });
 
-export const deleteTenderDocument = (documentId) =>
-  apiCall(`/admin/tender-documents/${documentId}`, {
+export const deleteTenderDocument = (docId) =>
+  apiCall(`/admin/tender-postings/documents/${docId}`, {
     method: 'DELETE',
-  });
-
-// =====================
-// SYSTEM SETTINGS API (Superadmin only)
-// =====================
-
-export const getSystemSettings = () =>
-  apiCall('/settings', {
-    method: 'GET',
-  });
-
-export const updateSystemSettings = (settings) =>
-  apiCall('/settings', {
-    method: 'PUT',
-    body: JSON.stringify(settings),
-  });
-
-// =====================
-// ACTIVITY LOG API (Superadmin only)
-// =====================
-
-export const getActivityLogs = ({ limit = 20, offset = 0 } = {}) => {
-  const query = new URLSearchParams();
-  query.append('limit', limit);
-  query.append('offset', offset);
-  return apiCall(`/activities?${query.toString()}`);
-};
-
-export const getActivityLogsByType = (actionType, { limit = 20 } = {}) => {
-  const query = new URLSearchParams();
-  query.append('limit', limit);
-  return apiCall(`/activities/type/${actionType}?${query.toString()}`);
-};
-
-export const getActivityStats = () =>
-  apiCall('/activities/stats', {
-    method: 'GET',
   });

@@ -111,36 +111,39 @@ model TenderPosting {
   tenderNumber    String     @unique
   title           String
   description     String
-  status          String     @default("Open")  // "Open", "Closed", "Awarded"
+  status          String     @default("Open")  // "Open", "Closed", "Awarded", "Canceled"
   category        String     // Type of tender
   estimatedValue  Float?
+  estimatedValueStr String?  // String representation if float is not enough
+  location        String?
   openingDate     DateTime   @default(now())
   closingDate     DateTime
-  location        String?
-  createdBy       String
+  createdBy       String?
   lastUpdatedBy   String?
   adminNotes      String?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
-  documents       TenderDocument[]
+  documents       TenderPostingDocument[]
 
   @@map("tender_postings")
 }
 
-model TenderDocument {
-  id              String     @id @default(uuid())
+model TenderPostingDocument {
+  id              String        @id @default(uuid())
   tenderPostingId String
-  filename        String
-  fileType        String
-  filePath        String
-  fileSize        Int
-  uploadedBy      String
-  uploadedDate    DateTime   @default(now())
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  name            String
+  path            String
+  filename        String?
+  fileType        String?
+  filePath        String?
+  fileSize        Int?
+  uploadedBy      String?
+  uploadedDate    DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   tenderPosting   TenderPosting @relation(fields: [tenderPostingId], references: [id], onDelete: Cascade)
 
-  @@map("tender_documents")
+  @@map("tender_posting_documents")
 }
 
 model Document {
@@ -209,15 +212,24 @@ model TypeApprovedDevice {
 }
 
 model SystemSettings {
-  id                          String   @id @default(uuid())
+  id                          String   @id @default("default")
+  siteName                    String   @default("BOCRA Portal")
   systemName                  String   @default("BOCRA Portal")
   systemDescription           String   @default("Botswana Communications Regulatory Authority Portal")
   maintenanceMode             Boolean  @default(false)
+  allowRegistration           Boolean  @default(true)
+  sessionTimeout              Int      @default(30) // in minutes
+  sessionTimeoutMinutes       Int      @default(30)
+  twoFactorAuth               Boolean  @default(false)
+  enableTwoFactor             Boolean  @default(false)
+  passwordExpiry              Int      @default(90) // in days
+  passwordExpireDays          Int      @default(90)
   passwordMinLength           Int      @default(8)
   passwordRequireSpecial      Boolean  @default(true)
-  passwordExpireDays          Int      @default(90)
-  sessionTimeoutMinutes       Int      @default(30)
-  enableTwoFactor             Boolean  @default(false)
+  smtpServer                  String?
+  smtpPort                    Int?
+  smtpUser                    String?
+  supportEmail                String   @default("support@bocra.org.bw")
   emailNotificationsEnabled   Boolean  @default(true)
   emailOnNewSubmission        Boolean  @default(true)
   emailOnStatusChange         Boolean  @default(true)

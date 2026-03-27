@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"path": "../../Status-200"
+		},
+		{
+			"path": "../.git"
+		},
+		{
+			"path": "../backend"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../memory"
+		},
+		{
+			"path": "../test_reports"
+		},
+		{
+			"path": "../tests"
+		}
+	],
+	"settings": {}
+}

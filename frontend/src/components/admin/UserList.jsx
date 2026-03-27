@@ -46,7 +46,7 @@ const UserList = ({
     const depts = {
       licensing: { label: '🛡️ Licensing', color: 'bg-slate-100 text-slate-800' },
       complaints: { label: '⚖️ Complaints', color: 'bg-orange-100 text-orange-800' },
-      qos: { label: '📊 QoS', color: 'bg-teal-100 text-teal-800' },
+      qos: { label: '📊 QoS', color: 'bg-[#E0F4FB] text-[#001F40]' },
       tenders: { label: '💼 Tenders', color: 'bg-purple-100 text-purple-800' },
     };
 
