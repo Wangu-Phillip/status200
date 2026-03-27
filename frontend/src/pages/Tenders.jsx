@@ -31,7 +31,7 @@ const Tenders = () => {
   const [categories, setCategories] = useState(['All']);
   const [selectedTender, setSelectedTender] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const API_URL = '/api';
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
   // Fetch tender postings on mount
   useEffect(() => {

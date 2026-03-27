@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
 import { Button } from './ui/button';
+import { useTheme } from '../context/ThemeProvider';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, ChevronDown, Globe, BarChart3, ShieldCheck } from 'lucide-react';
+import { Menu, X, ChevronDown, Globe, BarChart3, Search, Bell, Sun, Moon, ShieldCheck, Zap, MessageSquare, Briefcase } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import NotificationCenter from './NotificationCenter';
 import {
@@ -19,6 +20,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, loading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -144,19 +146,6 @@ const Navbar = () => {
                 </Button>
               </Link>
 
-              <Link to="/careers">
-                <Button
-                  variant="ghost"
-                  className={`rounded-xl px-4 ${
-                    isActive('/careers')
-                      ? 'bg-white/15 text-white'
-                      : 'text-white/80'
-                  } hover:bg-white/10 hover:text-white`}
-                >
-                  Careers
-                </Button>
-              </Link>
-
               <Link to="/documents">
                 <Button
                   variant="ghost"
@@ -167,6 +156,19 @@ const Navbar = () => {
                   } hover:bg-white/10 hover:text-white`}
                 >
                   Resources
+                </Button>
+              </Link>
+
+              <Link to="/careers">
+                <Button
+                  variant="ghost"
+                  className={`rounded-xl px-4 ${
+                    isActive('/careers')
+                      ? 'bg-white/15 text-white'
+                      : 'text-white/80'
+                  } hover:bg-white/10 hover:text-white`}
+                >
+                  Careers
                 </Button>
               </Link>
 
@@ -186,6 +188,18 @@ const Navbar = () => {
 
             <div className="flex items-center space-x-4">
               <div className="hidden sm:flex items-center space-x-2 mr-2">
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                  aria-label="Toggle Theme"
+                >
+                  {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                </button>
+
+                <button onClick={() => toast({title: "Search functionality", description: "Global search will be integrated soon."})} className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all">
+                  <Search className="h-5 w-5" />
+                </button>
+
                 {user && (
                   <button onClick={() => toast({title: "Notifications", description: "You have 0 new notifications."})} className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all relative">
                     <Bell className="h-5 w-5" />
@@ -202,7 +216,7 @@ const Navbar = () => {
                         variant="cta"
                         className="rounded-[1.25rem] px-8 font-extrabold tracking-wide shadow-lg shadow-[#F47920]/20"
                       >
-                        Admin Portal
+                        Enter Admin Portal
                       </Button>
                     </Link>
                   ) : (
@@ -210,7 +224,7 @@ const Navbar = () => {
                       <Button
                         className="rounded-[1.25rem] px-8 font-extrabold tracking-wide"
                       >
-                        User Portal
+                        Enter Citizen Portal
                       </Button>
                     </Link>
                   )
@@ -221,7 +235,7 @@ const Navbar = () => {
                         variant="ghost"
                         className="rounded-xl text-white/85 hover:bg-white/10 hover:text-white font-bold px-6"
                       >
-                        Staff Login
+                        BOCRA Staff
                       </Button>
                     </Link>
                     <Link to="/login">
@@ -229,7 +243,7 @@ const Navbar = () => {
                         variant="cta"
                         className="rounded-[1.25rem] px-8 shadow-lg shadow-[#F47920]/20 font-extrabold tracking-wide"
                       >
-                        Public Portal
+                        Citizen Portal
                       </Button>
                     </Link>
                   </>
@@ -280,7 +294,30 @@ const Navbar = () => {
               ))}
             </div>
 
-            <div className="pt-4 pb-8 flex flex-col gap-3 mt-8 pt-6 border-t border-white/10">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/10">
+              <span className="text-sm font-bold text-white/60 uppercase tracking-widest">
+                Theme Preference
+              </span>
+              <button
+                onClick={toggleTheme}
+                className="flex items-center space-x-2 p-3 bg-white/10 text-white rounded-xl hover:bg-white/15 transition-all"
+                aria-label="Toggle Theme"
+              >
+                {theme === 'light' ? (
+                  <>
+                    <Moon className="h-5 w-5" />
+                    <span className="font-semibold text-sm">Switch to Dark</span>
+                  </>
+                ) : (
+                  <>
+                    <Sun className="h-5 w-5" />
+                    <span className="font-semibold text-sm">Switch to Light</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="pt-4 pb-8 flex flex-col gap-3">
               {user ? (
                 <>
                   {user.userType === 'admin' ? (
@@ -289,7 +326,7 @@ const Navbar = () => {
                         variant="cta"
                         className="w-full h-12 rounded-[1.25rem] font-bold text-lg"
                       >
-                        Admin Portal
+                        Enter Admin Portal
                       </Button>
                     </Link>
                   ) : (
@@ -297,7 +334,7 @@ const Navbar = () => {
                       <Button
                         className="w-full h-12 rounded-[1.25rem] font-bold text-lg"
                       >
-                        User Portal
+                        Enter Citizen Portal
                       </Button>
                     </Link>
                   )}
@@ -317,7 +354,7 @@ const Navbar = () => {
                       variant="outline"
                       className="w-full h-12 rounded-[1.25rem] border-white/20 bg-transparent text-white hover:bg-white/10 font-bold text-lg"
                     >
-                      Staff Login
+                      BOCRA Staff Login
                     </Button>
                   </Link>
                   <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
@@ -325,7 +362,7 @@ const Navbar = () => {
                       variant="cta"
                       className="w-full h-12 rounded-[1.25rem] font-bold text-lg"
                     >
-                      Public Portal
+                      Citizen Portal
                     </Button>
                   </Link>
                 </>

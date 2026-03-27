@@ -182,11 +182,11 @@ const Login = () => {
                     type="checkbox" 
                     id="registrationConsent" 
                     name="registrationConsent" 
-                    className="mt-1 w-4 h-4 text-teal-600 rounded" 
+                    className="mt-1 w-4 h-4 text-[#003366] rounded" 
                     required 
                   />
                   <Label htmlFor="registrationConsent" className="text-xs font-normal text-slate-600 leading-relaxed">
-                    I consent to the collection and processing of my personal data for registration purposes. I understand my rights to access, correct, or delete my data as outlined in the <Link to="/privacy-policy" className="text-teal-600 underline">Privacy Policy</Link>.
+                    I consent to the collection and processing of my personal data for registration purposes. I understand my rights to access, correct, or delete my data as outlined in the <Link to="/privacy-policy" className="text-[#003366] underline">Privacy Policy</Link>.
                   </Label>
                 </div>
               )}
@@ -199,7 +199,7 @@ const Login = () => {
               )}
               <Button 
                 type="submit" 
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                className="w-full bg-[#003366] hover:bg-[#003366] text-white"
                 disabled={isSubmitting || authLoading}
               >
                 {isSubmitting || authLoading ? (

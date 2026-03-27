@@ -104,6 +104,9 @@ apiRouter.use('/', publicRoutes);
 // Citizen routes (protected)
 apiRouter.use('/', citizenRoutes);
 
+// Public routes
+apiRouter.use('/', publicRoutes);
+
 // Create status check
 apiRouter.post('/status', async (req: Request, res: Response) => {
   try {

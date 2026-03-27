@@ -106,46 +106,6 @@ model Tender {
   @@map("tenders")
 }
 
-model TenderPosting {
-  id              String     @id @default(uuid())
-  tenderNumber    String     @unique
-  title           String
-  description     String
-  status          String     @default("Open")  // "Open", "Closed", "Awarded", "Canceled"
-  category        String     // Type of tender
-  estimatedValue  Float?
-  estimatedValueStr String?  // String representation if float is not enough
-  location        String?
-  openingDate     DateTime   @default(now())
-  closingDate     DateTime
-  createdBy       String?
-  lastUpdatedBy   String?
-  adminNotes      String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  documents       TenderPostingDocument[]
-
-  @@map("tender_postings")
-}
-
-model TenderPostingDocument {
-  id              String        @id @default(uuid())
-  tenderPostingId String
-  name            String
-  path            String
-  filename        String?
-  fileType        String?
-  filePath        String?
-  fileSize        Int?
-  uploadedBy      String?
-  uploadedDate    DateTime      @default(now())
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  tenderPosting   TenderPosting @relation(fields: [tenderPostingId], references: [id], onDelete: Cascade)
-
-  @@map("tender_posting_documents")
-}
-
 model Document {
   id            String       @id @default(uuid())
   applicationId String?
@@ -211,37 +171,115 @@ model TypeApprovedDevice {
   @@map("type_approved_devices")
 }
 
+model TenderPosting {
+  id                String                  @id @default(uuid())
+  tenderNumber      String                  @unique
+  title             String
+  description       String
+  status            String                  @default("Open") // "Open", "Closed", "Awarded", "Canceled"
+  category          String // Type of tender
+  estimatedValue    Float?
+  estimatedValueStr String? // String representation if float is not enough
+  location          String?
+  openingDate       DateTime                @default(now())
+  closingDate       DateTime
+  createdBy         String?
+  lastUpdatedBy     String?
+  adminNotes        String?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  documents         TenderPostingDocument[]
+
+  @@map("tender_postings")
+}
+
+model TenderPostingDocument {
+  id              String        @id @default(uuid())
+  tenderPostingId String
+  name            String
+  path            String
+  filename        String?
+  fileType        String?
+  filePath        String?
+  fileSize        Int?
+  uploadedBy      String?
+  uploadedDate    DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  tenderPosting   TenderPosting @relation(fields: [tenderPostingId], references: [id], onDelete: Cascade)
+
+  @@map("tender_posting_documents")
+}
+
+model JobPosting {
+  id           String           @id @default(uuid())
+  title        String
+  department   String
+  location     String
+  type         String // "Full-time" | "Contract" | "Part-time"
+  experience   String? // e.g. "5+ Years"
+  description  String
+  requirements String?
+  closingDate  DateTime
+  status       String           @default("Open") // "Open" | "Closed"
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  applications JobApplication[]
+
+  @@map("job_postings")
+}
+
+model JobApplication {
+  id              String   @id @default(uuid())
+  jobId           String
+  fullName        String
+  email           String
+  phone           String
+  currentRole     String?
+  linkedinUrl     String?
+  coverLetter     String?
+  cvPath          String
+  additionalPaths String[] @default([])
+  status          String   @default("Received") // "Received" | "Under Review" | "Interviewing" | "Offered" | "Rejected"
+  trackingId      String   @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  job             JobPosting @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_applications")
+}
+
 model SystemSettings {
-  id                          String   @id @default("default")
-  siteName                    String   @default("BOCRA Portal")
-  systemName                  String   @default("BOCRA Portal")
-  systemDescription           String   @default("Botswana Communications Regulatory Authority Portal")
-  maintenanceMode             Boolean  @default(false)
-  allowRegistration           Boolean  @default(true)
-  sessionTimeout              Int      @default(30) // in minutes
-  sessionTimeoutMinutes       Int      @default(30)
-  twoFactorAuth               Boolean  @default(false)
-  enableTwoFactor             Boolean  @default(false)
-  passwordExpiry              Int      @default(90) // in days
-  passwordExpireDays          Int      @default(90)
-  passwordMinLength           Int      @default(8)
-  passwordRequireSpecial      Boolean  @default(true)
-  smtpServer                  String?
-  smtpPort                    Int?
-  smtpUser                    String?
-  supportEmail                String   @default("support@bocra.org.bw")
-  emailNotificationsEnabled   Boolean  @default(true)
-  emailOnNewSubmission        Boolean  @default(true)
-  emailOnStatusChange         Boolean  @default(true)
-  emailOnUserCreation         Boolean  @default(true)
-  darkMode                    Boolean  @default(false)
-  displayDensity              String   @default("normal")
-  itemsPerPage                Int      @default(10)
-  notificationsEnabled        Boolean  @default(true)
-  enableBrowserNotifications  Boolean  @default(false)
-  notificationSound           Boolean  @default(true)
-  createdAt                   DateTime @default(now())
-  updatedAt                   DateTime @updatedAt
+  id                         String   @id @default("default")
+  siteName                   String   @default("BOCRA Portal")
+  systemName                 String   @default("BOCRA Portal")
+  systemDescription          String   @default("Botswana Communications Regulatory Authority Portal")
+  maintenanceMode            Boolean  @default(false)
+  allowRegistration          Boolean  @default(true)
+  sessionTimeout             Int      @default(30) // in minutes
+  sessionTimeoutMinutes      Int      @default(30)
+  twoFactorAuth              Boolean  @default(false)
+  enableTwoFactor            Boolean  @default(false)
+  passwordExpiry             Int      @default(90) // in days
+  passwordExpireDays         Int      @default(90)
+  passwordMinLength          Int      @default(8)
+  passwordRequireSpecial     Boolean  @default(true)
+  smtpServer                 String?
+  smtpPort                   Int?
+  smtpUser                   String?
+  supportEmail               String   @default("support@bocra.org.bw")
+  emailNotificationsEnabled  Boolean  @default(true)
+  emailOnNewSubmission       Boolean  @default(true)
+  emailOnStatusChange        Boolean  @default(true)
+  emailOnUserCreation        Boolean  @default(true)
+  darkMode                   Boolean  @default(false)
+  displayDensity             String   @default("normal")
+  itemsPerPage               Int      @default(10)
+  notificationsEnabled       Boolean  @default(true)
+  enableBrowserNotifications Boolean  @default(false)
+  notificationSound          Boolean  @default(true)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
 
   @@map("system_settings")
 }

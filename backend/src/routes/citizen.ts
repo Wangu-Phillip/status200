@@ -1403,4 +1403,84 @@ router.get('/tender-postings/:id', async (req: Request, res: Response) => {
   }
 });
 
+// =====================
+// JOBS API
+// =====================
+
+/**
+ * Submit job application
+ */
+router.post('/jobs/apply', authenticateToken, upload.fields([
+  { name: 'cv', maxCount: 1 },
+  { name: 'documents', maxCount: 10 }
+]), async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { 
+      jobId, 
+      fullName, 
+      email, 
+      phone, 
+      currentRole, 
+      linkedinUrl, 
+      coverLetter 
+    } = req.body;
+
+    if (!jobId || !fullName) {
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
+    }
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    if (!files || !files['cv'] || files['cv'].length === 0) {
+      res.status(400).json({ error: 'CV document is required' });
+      return;
+    }
+
+    const cvFile = files['cv'][0];
+    const additionalFiles = files['documents'] || [];
+
+    const trackingId = `JOB-${uuidv4().substring(0, 8).toUpperCase()}`;
+
+    const application = await prisma.jobApplication.create({
+      data: {
+        id: uuidv4(),
+        jobId,
+        fullName,
+        email,
+        phone,
+        currentRole: currentRole || null,
+        linkedinUrl: linkedinUrl || null,
+        coverLetter: coverLetter || null,
+        cvPath: `/uploads/${cvFile.filename}`,
+        additionalPaths: additionalFiles.map(f => `/uploads/${f.filename}`),
+        trackingId,
+        status: 'Received'
+      }
+    });
+
+    // Log activity
+    await prisma.activityLog.create({
+      data: {
+        id: uuidv4(),
+        userId: userId!,
+        action: 'job_application_submitted',
+        actionType: 'career',
+        description: `Applied for job: ${jobId}`,
+        entityId: application.id,
+        status: 'successful',
+      },
+    });
+
+    res.status(201).json({ 
+      message: 'Application submitted successfully',
+      trackingId,
+      application 
+    });
+  } catch (error) {
+    console.error('Submit job application error:', error);
+    res.status(500).json({ error: 'Failed to submit application' });
+  }
+});
+
 export default router;

@@ -107,7 +107,7 @@ const PortalTour = ({ onComplete }) => {
           boxShadow: '0 0 0 4px rgba(20, 184, 166, 0.5), 0 0 20px rgba(20, 184, 166, 0.3)',
         }}
       >
-        <div className="absolute inset-0 rounded-2xl animate-ping border-2 border-teal-500 opacity-50"></div>
+        <div className="absolute inset-0 rounded-2xl animate-ping border-2 border-[#0099CC] opacity-50"></div>
       </div>
 
       {/* Tooltip */}
@@ -123,7 +123,7 @@ const PortalTour = ({ onComplete }) => {
         }}
       >
         <div className="flex items-center space-x-2 mb-3">
-          <div className="w-8 h-8 bg-teal-600 rounded-xl flex items-center justify-center text-white shrink-0">
+          <div className="w-8 h-8 bg-[#003366] rounded-xl flex items-center justify-center text-white shrink-0">
             <Sparkles className="w-4 h-4" />
           </div>
           <h4 className="font-black text-xs uppercase tracking-widest text-[#E8F0F9] truncate">{steps[currentStep].title}</h4>
@@ -138,7 +138,7 @@ const PortalTour = ({ onComplete }) => {
             {steps.map((_, i) => (
               <div 
                 key={i} 
-                className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentStep ? 'w-4 bg-teal-500' : 'bg-slate-700'}`}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentStep ? 'w-4 bg-[#0099CC]' : 'bg-slate-700'}`}
               />
             ))}
           </div>
@@ -154,7 +154,7 @@ const PortalTour = ({ onComplete }) => {
             </Button>
             <Button 
               onClick={handleNext}
-              className="flex-1 bg-teal-600 hover:bg-teal-700 h-9 px-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 group inline-flex items-center justify-center gap-1"
+              className="flex-1 bg-[#003366] hover:bg-[#003366] h-9 px-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-[#0099CC]/20 group inline-flex items-center justify-center gap-1"
             >
               {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
               <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />

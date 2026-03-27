@@ -67,7 +67,7 @@ const DocumentsView = () => {
   const getFileIcon = (type) => {
     const iconClass = 'w-6 h-6';
     if (type?.toLowerCase().includes('pdf')) return <FileIcon className={`${iconClass} text-rose-400`} />;
-    if (type?.toLowerCase().includes('xlsx') || type?.toLowerCase().includes('excel')) return <FileSpreadsheet className={`${iconClass} text-emerald-400`} />;
+    if (type?.toLowerCase().includes('xlsx') || type?.toLowerCase().includes('excel')) return <FileSpreadsheet className={`${iconClass} text-[#6DC04B]`} />;
     if (type?.toLowerCase().includes('zip')) return <FileArchive className={`${iconClass} text-amber-400`} />;
     if (type?.toLowerCase().includes('png') || type?.toLowerCase().includes('jpg') || type?.toLowerCase().includes('image')) return <Files className={`${iconClass} text-blue-400`} />;
     return <Files className={`${iconClass} text-slate-400`} />;
@@ -92,7 +92,7 @@ const DocumentsView = () => {
       </div>
 
       <div id="docs-filters" className="grid md:grid-cols-4 gap-4 p-8 bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-teal-500/[0.03] rounded-full blur-3xl -mr-24 -mt-24"></div>
+        <div className="absolute top-0 right-0 w-48 h-48 bg-[#0099CC]/[0.03] rounded-full blur-3xl -mr-24 -mt-24"></div>
         
         <div className="md:col-span-2 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -101,11 +101,11 @@ const DocumentsView = () => {
             placeholder="Search documents by name or category..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#111827] border border-[#1e293b] rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-200 outline-none focus:ring-1 focus:ring-teal-500 transition-all placeholder:text-slate-700 shadow-inner"
+            className="w-full bg-[#111827] border border-[#1e293b] rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-200 outline-none focus:ring-1 focus:ring-[#0099CC] transition-all placeholder:text-slate-700 shadow-inner"
           />
         </div>
         
-        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="bg-[#111827] border border-[#1e293b] rounded-2xl px-4 py-3 text-sm text-slate-200 outline-none focus:ring-1 focus:ring-teal-500 shadow-inner appearance-none cursor-pointer">
+        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="bg-[#111827] border border-[#1e293b] rounded-2xl px-4 py-3 text-sm text-slate-200 outline-none focus:ring-1 focus:ring-[#0099CC] shadow-inner appearance-none cursor-pointer">
           <option value="all">All Categories</option>
           <option value="application">Application</option>
           <option value="complaint">Complaint</option>
@@ -120,13 +120,13 @@ const DocumentsView = () => {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-teal-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#0099CC]" />
         </div>
       ) : filteredDocuments.length > 0 ? (
         <div className="grid lg:grid-cols-2 gap-6">
           {filteredDocuments.map((doc) => (
-            <div key={doc.id} className="bg-[#0a0f1e] border border-[#1e293b] p-8 rounded-[2.5rem] hover:border-teal-500/30 transition-all group cursor-pointer relative overflow-hidden shadow-2xl active:scale-[0.98]">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-teal-500/10 transition-all"></div>
+            <div key={doc.id} className="bg-[#0a0f1e] border border-[#1e293b] p-8 rounded-[2.5rem] hover:border-[#0099CC]/30 transition-all group cursor-pointer relative overflow-hidden shadow-2xl active:scale-[0.98]">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#0099CC]/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-[#0099CC]/10 transition-all"></div>
               
               <div className="flex items-center justify-between mb-8 relative">
                 <div className="flex items-center space-x-5">
@@ -134,7 +134,7 @@ const DocumentsView = () => {
                     {getFileIcon(doc.documentType)}
                   </div>
                   <div className="max-w-[200px]">
-                    <p className="font-bold text-slate-100 group-hover:text-teal-400 transition-colors truncate">{doc.filename}</p>
+                    <p className="font-bold text-slate-100 group-hover:text-[#0099CC] transition-colors truncate">{doc.filename}</p>
                     <div className="flex items-center space-x-2 mt-1">
                       <Badge variant="outline" className="border-slate-800 text-slate-500 text-[9px] uppercase font-bold tracking-widest capitalize">{doc.category}</Badge>
                       <span className="text-slate-600 text-[10px] uppercase font-bold tracking-tighter">• {doc.status}</span>
@@ -145,7 +145,7 @@ const DocumentsView = () => {
                   <button 
                     onClick={() => handleDownload(doc.id, doc.filename)}
                     disabled={downloading === doc.id}
-                    className="p-3 bg-slate-900 border border-slate-700/50 rounded-xl text-slate-500 hover:text-teal-400 hover:bg-teal-500/10 transition-all shadow-lg active:scale-90 disabled:opacity-50"
+                    className="p-3 bg-slate-900 border border-slate-700/50 rounded-xl text-slate-500 hover:text-[#0099CC] hover:bg-[#0099CC]/10 transition-all shadow-lg active:scale-90 disabled:opacity-50"
                   >
                     {downloading === doc.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
                   </button>
@@ -162,7 +162,7 @@ const DocumentsView = () => {
               <div className="flex items-center justify-between pt-6 border-t border-[#1e293b]">
                  <div className="flex items-center space-x-4">
                     {doc.status === 'verified' && (
-                      <div className="flex items-center text-emerald-400 text-[10px] font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-lg">
+                      <div className="flex items-center text-[#6DC04B] text-[10px] font-bold uppercase tracking-widest bg-[#6DC04B]/10 px-2 py-1 rounded-lg">
                         <CheckCircle className="w-3.5 h-3.5 mr-1" />
                         Verified
                       </div>

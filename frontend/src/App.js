@@ -10,7 +10,6 @@ import { AuthProvider } from './context/AuthContext';
 import { seedDemoData } from './utils/persistence';
 import Home from './pages/Home';
 import About from './pages/About';
-import Careers from './pages/Careers';
 import Mandate from './pages/Mandate';
 import Projects from './pages/Projects';
 import Documents from './pages/Documents';
@@ -31,6 +30,8 @@ import CyberIncidentReport from './pages/CyberIncidentReport';
 import TenderSubmission from './pages/TenderSubmission';
 import Analytics from './pages/Analytics';
 import Services from './pages/Services';
+import Careers from './pages/Careers';
+import JobApplicationForm from './pages/JobApplicationForm';
 
 import Ruby from './components/Chatbot';
 import CookieConsent from './components/CookieConsent';
@@ -67,7 +68,6 @@ function App() {
             <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
-            <Route path="/careers" element={<Careers />} />
             <Route path="/mandate" element={<Mandate />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/documents" element={<Documents />} />
@@ -87,6 +87,8 @@ function App() {
           <Route path="/cyber-incident" element={<CyberIncidentReport />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/careers" element={<Careers />} />
+          <Route path="/careers/apply/:jobId" element={<JobApplicationForm />} />
           <Route path="/tender-submission" element={<ProtectedRoute><TenderSubmission /></ProtectedRoute>} />
         </Routes>
         </Layout>

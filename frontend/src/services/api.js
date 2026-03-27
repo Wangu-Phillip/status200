@@ -161,6 +161,26 @@ export const getTenderPosting = (id) =>
   apiCall(`/tender-postings/${id}`);
 
 // =====================
+// JOBS API
+// =====================
+
+export const getJobs = () => apiCall('/jobs');
+
+export const submitJobApplication = (data) => {
+  const options = {
+    method: 'POST',
+  };
+  
+  if (data instanceof FormData) {
+    options.body = data;
+  } else {
+    options.body = data;
+  }
+  
+  return apiCall('/jobs/apply', options);
+};
+
+// =====================
 // DOCUMENTS API
 // =====================
 

@@ -35,6 +35,29 @@ router.get('/tender-postings/available', async (req: Request, res: Response) => 
 });
 
 /**
+ * Get available job openings for public view
+ */
+router.get('/jobs', async (req: Request, res: Response) => {
+  try {
+    const jobs = await prisma.jobPosting.findMany({
+      where: {
+        status: 'Open',
+        closingDate: {
+          gt: new Date(),
+        },
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    res.json({ jobs });
+  } catch (error) {
+    console.error('Get public jobs error:', error);
+    res.status(500).json({ error: 'Failed to fetch job openings' });
+  }
+});
+
+/**
  * Get available ISPs for QoS testing
  */
 router.get('/isps', (_req: Request, res: Response) => {

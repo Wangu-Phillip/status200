@@ -128,8 +128,8 @@ const ApplicationDetail = ({ applicationId, mode = 'view', onClose, onUpdate, on
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Approved': return 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10';
-      case 'Under Review': return 'border-teal-500/30 text-teal-400 bg-teal-500/10';
+      case 'Approved': return 'border-[#6DC04B]/30 text-[#6DC04B] bg-[#6DC04B]/10';
+      case 'Under Review': return 'border-[#0099CC]/30 text-[#0099CC] bg-[#0099CC]/10';
       case 'Pending Review': return 'border-amber-500/30 text-amber-400 bg-amber-500/10';
       case 'Pending Documents': return 'border-amber-500/30 text-amber-400 bg-amber-500/10';
       case 'Submitted': return 'border-blue-500/30 text-blue-400 bg-blue-500/10';
@@ -145,7 +145,7 @@ const ApplicationDetail = ({ applicationId, mode = 'view', onClose, onUpdate, on
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
         <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-lg p-8">
-          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#F47920]" />
           <p className="text-slate-400 mt-4">Loading application details...</p>
         </div>
       </div>
@@ -261,6 +261,21 @@ const ApplicationDetail = ({ applicationId, mode = 'view', onClose, onUpdate, on
             </div>
 
             {/* Documents */}
+            {application.documents && application.documents.length > 0 && (
+              <div>
+                <p className="text-slate-400 text-sm font-medium mb-3">Attached Documents</p>
+                <div className="space-y-2">
+                  {application.documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between bg-[#0f1419] p-3 rounded border border-[#1e293b]">
+                      <div className="flex-1">
+                        <p className="text-white text-sm">{doc.filename}</p>
+                        <p className="text-slate-500 text-xs">{new Date(doc.uploadedDate).toLocaleDateString()}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => api.downloadDocument(doc.id)}
+                        className="text-[#F47920] hover:text-[#F47920]"
             <div>
               <p className="text-slate-400 text-sm font-medium mb-3">Attached Documents</p>
               

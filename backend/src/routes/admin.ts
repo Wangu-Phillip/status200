@@ -713,4 +713,265 @@ router.post(
   }
 );
 
+// =====================
+// SYSTEM SETTINGS API
+// =====================
+
+/**
+ * Get system settings
+ */
+router.get(
+  '/settings',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      let settings = await prisma.systemSettings.findUnique({
+        where: { id: 'default' },
+      });
+
+      if (!settings) {
+        // Create default settings if they don't exist
+        settings = await prisma.systemSettings.create({
+          data: { id: 'default' },
+        });
+      }
+
+      res.json(settings);
+    } catch (error) {
+      console.error('Get settings error:', error);
+      res.status(500).json({ error: 'Failed to fetch settings' });
+    }
+  }
+);
+
+/**
+ * Update system settings
+ */
+router.put(
+  '/settings',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (req.user?.adminLevel !== 'superadmin') {
+        res.status(403).json({ error: 'Only superadmin can update settings' });
+        return;
+      }
+
+      const settingsData = req.body;
+      const updated = await prisma.systemSettings.upsert({
+        where: { id: 'default' },
+        update: settingsData,
+        create: { ...settingsData, id: 'default' },
+      });
+
+      res.json({ message: 'Settings updated successfully', settings: updated });
+    } catch (error) {
+      console.error('Update settings error:', error);
+      res.status(500).json({ error: 'Failed to update settings' });
+    }
+  }
+);
+
+// =====================
+// ACTIVITY LOGS API
+// =====================
+
+/**
+ * Get system-wide activity logs
+ */
+router.get(
+  '/activity-logs',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (req.user?.adminLevel !== 'superadmin') {
+        res.status(403).json({ error: 'Only superadmin can view activity logs' });
+        return;
+      }
+
+      const limit = Number(req.query.limit) || 25;
+      const offset = Number(req.query.offset) || 0;
+
+      const logs = await prisma.activityLog.findMany({
+        include: { user: { select: { email: true, name: true } } },
+        orderBy: { timestamp: 'desc' },
+        take: limit,
+        skip: offset,
+      });
+
+      const total = await prisma.activityLog.count();
+
+      res.json({ logs, pagination: { total, limit, offset } });
+    } catch (error) {
+      console.error('Get activity logs error:', error);
+      res.status(500).json({ error: 'Failed to fetch activity logs' });
+    }
+  }
+);
+
+// =====================
+// TENDER POSTINGS API
+// =====================
+
+/**
+ * Get all tender postings (admin view)
+ */
+router.get(
+  '/tender-postings',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const postings = await prisma.tenderPosting.findMany({
+        include: { documents: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      });
+
+      const total = await prisma.tenderPosting.count();
+
+      res.json({ postings, pagination: { page, limit, total } });
+    } catch (error) {
+      console.error('Get tender postings error:', error);
+      res.status(500).json({ error: 'Failed to fetch tender postings' });
+    }
+  }
+);
+
+/**
+ * Create new tender posting
+ */
+router.post(
+  '/tender-postings',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const data = req.body;
+      const posting = await prisma.tenderPosting.create({
+        data: {
+          tenderNumber: data.tenderNumber,
+          title: data.title,
+          category: data.category,
+          description: data.description,
+          closingDate: new Date(data.closingDate),
+          location: data.location,
+          estimatedValue: data.estimatedValue,
+          status: data.status || 'Open',
+        },
+      });
+
+      res.status(201).json(posting);
+    } catch (error) {
+      console.error('Create tender posting error:', error);
+      res.status(500).json({ error: 'Failed to create tender posting' });
+    }
+  }
+);
+
+/**
+ * Update tender posting
+ */
+router.put(
+  '/tender-postings/:id',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const data = req.body;
+
+      // Handle date conversion if present
+      const updateData = { ...data };
+      if (updateData.closingDate) {
+        updateData.closingDate = new Date(updateData.closingDate);
+      }
+
+      const updated = await prisma.tenderPosting.update({
+        where: { id },
+        data: updateData,
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error('Update tender posting error:', error);
+      res.status(500).json({ error: 'Failed to update tender posting' });
+    }
+  }
+);
+
+/**
+ * Delete tender posting
+ */
+router.delete(
+  '/tender-postings/:id',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      await prisma.tenderPosting.delete({ where: { id } });
+      res.json({ message: 'Tender posting deleted successfully' });
+    } catch (error) {
+      console.error('Delete tender posting error:', error);
+      res.status(500).json({ error: 'Failed to delete tender posting' });
+    }
+  }
+);
+
+/**
+ * Add document to tender posting
+ */
+router.post(
+  '/tender-postings/:id/documents',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { name, path } = req.body;
+
+      const document = await prisma.tenderPostingDocument.create({
+        data: {
+          tenderPostingId: id,
+          name,
+          path,
+        },
+      });
+
+      res.status(201).json(document);
+    } catch (error) {
+      console.error('Add tender document error:', error);
+      res.status(500).json({ error: 'Failed to add document' });
+    }
+  }
+);
+
+/**
+ * Delete tender document
+ */
+router.delete(
+  '/tender-postings/documents/:id',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      await prisma.tenderPostingDocument.delete({ where: { id } });
+      res.json({ message: 'Document deleted successfully' });
+    } catch (error) {
+      console.error('Delete tender document error:', error);
+      res.status(500).json({ error: 'Failed to delete document' });
+    }
+  }
+);
+
 export default router;

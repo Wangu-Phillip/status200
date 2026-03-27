@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
-import { 
-  PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell 
-} from 'recharts';
+import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -47,104 +45,47 @@ import {
   Users,
   Plus,
   Settings,
-  ShieldCheck,
-  TrendingUp,
-  LayoutDashboard,
-  Inbox,
-  Lock,
-  Mail,
-  Bell,
-  ChevronRight,
-  Menu,
-  X,
-  CreditCard,
-  Target,
   Loader2,
-  Trash2,
-  Edit2
+  Upload,
+  Check,
+  Bell,
+  Lock,
+  Eye as EyeIcon,
+  EyeOff,
+  Database,
+  Activity,
+  Sliders,
+  Palette,
+  Mail,
+  Info,
+  Save,
 } from 'lucide-react';
 
-const BRAND = {
-  navy: '#010B1D',
-  accent: '#14B8A6',
-  white: '#FFFFFF',
-  slate: '#64748B',
-  border: '#E2E8F0',
-  red: '#F43F5E',
-  yellow: '#F59E0B',
-  emerald: '#10B981',
-  blue: '#3B82F6'
-};
-
-const StatTile = ({ label, value, icon: Icon, accent, helper }) => (
-  <Card className="border-0 shadow-sm rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 group">
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-3.5 rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-[#14B8A6]/10 group-hover:text-[#14B8A6] transition-colors">
-          <Icon size={22} />
-        </div>
-        <div className="flex flex-col items-end">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{helper}</span>
-          <div className="h-1 w-8 rounded-full mt-1" style={{ backgroundColor: accent }}></div>
-        </div>
-      </div>
-      <div>
-        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">{label}</p>
-        <p className="text-3xl font-black text-slate-900 mt-1">{value}</p>
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const SurfaceCard = ({ title, children, subtitle, icon: Icon, action }) => (
-  <Card className="border-0 shadow-sm rounded-[2.5rem] overflow-hidden">
-    <CardHeader className="bg-white border-b border-slate-100 p-8 flex flex-row items-center justify-between space-y-0">
-      <div className="flex items-center gap-4">
-        {Icon && <div className="p-3 rounded-2xl bg-teal-50 text-teal-600"><Icon size={20} /></div>}
-        <div>
-          <CardTitle className="text-xl font-black text-slate-900">{title}</CardTitle>
-          {subtitle && <CardDescription className="font-medium text-slate-500">{subtitle}</CardDescription>}
-        </div>
-      </div>
-      {action}
-    </CardHeader>
-    <CardContent className="p-0">
-      {children}
-    </CardContent>
-  </Card>
-);
+import { Menu, X as XIcon } from 'lucide-react';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [activeView, setActiveView] = useState('dashboard');
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
-  // Data states
-  const [users, setUsers] = useState([]);
-  const [allApplications, setAllApplications] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [submissions, setSubmissions] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [tenders, setTenders] = useState([]);
-  const [tenderPostings, setTenderPostings] = useState([]);
-  const [submissions, setSubmissions] = useState([]);
-  const [licensingApps, setLicensingApps] = useState([]);
-  const [departmentStats, setDepartmentStats] = useState({
-    licensing: { total: 0, pending: 0, approved: 0, rejected: 0 },
-    complaints: { total: 0, pending: 0, approved: 0, rejected: 0 },
-    tenders: { total: 0, pending: 0, approved: 0, rejected: 0 }
-  });
-  
-  // UI states
-  const [showUserForm, setShowUserForm] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [viewingUser, setViewingUser] = useState(null);
+  const [allApplications, setAllApplications] = useState([]);
+  const [stats, setStats] = useState({});
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [adminNote, setAdminNote] = useState('');
+  const [selectedTenderDetail, setSelectedTenderDetail] = useState(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'submissions', 'users', 'applications', 'licensing', or 'settings'
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [tenderView, setTenderView] = useState('submissions'); // 'submissions' or 'postings'
+  const [tenderPostings, setTenderPostings] = useState([]);
+  const [tenderPostingsLoading, setTenderPostingsLoading] = useState(false);
   const [showTenderForm, setShowTenderForm] = useState(false);
   const [editingTender, setEditingTender] = useState(null);
+  const [tenderDocumentsLoading, setTenderDocumentsLoading] = useState(false);
+  const [formDocuments, setFormDocuments] = useState([]); // Files to upload with tender
   const [formData, setFormData] = useState({
     tenderNumber: '',
     title: '',
@@ -152,158 +93,433 @@ const AdminDashboard = () => {
     closingDate: '',
     estimatedValue: '',
     location: '',
-    description: ''
+    description: '',
   });
+  const [documentsToDeleteAfterSave, setDocumentsToDeleteAfterSave] = useState([]);
+  
+  // User management state (for superadmin)
+  const [users, setUsers] = useState([]);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [userLoading, setUserLoading] = useState(false);
+  const [showUserForm, setShowUserForm] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [viewingUser, setViewingUser] = useState(null);
+  const [userStats, setUserStats] = useState({
+    totalUsers: 0,
+    adminCount: 0,
+    citizenCount: 0,
+  });
+  const [departmentStats, setDepartmentStats] = useState({
+    licensing: { total: 0, pending: 0, approved: 0, rejected: 0 },
+    complaints: { total: 0, pending: 0, approved: 0, rejected: 0 },
+    tenders: { total: 0, pending: 0, approved: 0, rejected: 0 },
+    qos: { total: 0, pending: 0, approved: 0, rejected: 0 },
+  });
+  const [systemStatsLoading, setSystemStatsLoading] = useState(false);
 
-  // Settings states
+  // Settings state (for superadmin)
   const [settings, setSettings] = useState({
-    siteName: 'BOCRA Portal',
+    // General Settings
+    systemName: 'BOCRA Portal',
+    systemDescription: 'Botswana Communications Regulatory Authority Portal',
     maintenanceMode: false,
-    registrationEnabled: true,
-    supportEmail: 'support@bocra.org.bw',
-    sessionTimeout: 30,
-    twoFactorAuth: false
+    // Security Settings
+    passwordMinLength: 8,
+    passwordRequireSpecial: true,
+    passwordExpireDays: 90,
+    sessionTimeoutMinutes: 30,
+    enableTwoFactor: false,
+    // Email Settings
+    emailNotificationsEnabled: true,
+    emailOnNewSubmission: true,
+    emailOnStatusChange: true,
+    emailOnUserCreation: true,
+    // Display Settings
+    darkMode: false,
+    displayDensity: 'normal', // 'compact', 'normal', 'spacious'
+    itemsPerPage: 10,
+    // Notification Settings
+    notificationsEnabled: true,
+    enableBrowserNotifications: false,
+    notificationSound: true,
   });
+  const [settingsSaved, setSettingsSaved] = useState(true);
   const [settingsLoading, setSettingsLoading] = useState(false);
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [tenderPostingsLoading, setTenderPostingsLoading] = useState(false);
-  const [submissionsLoading, setSubmissionsLoading] = useState(false);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [recentActivities, setRecentActivities] = useState([
+    { id: 1, action: 'User created', user: 'admin.new@bocra.org.bw', timestamp: new Date(), type: 'create' },
+    { id: 2, action: 'Application status updated', reference: 'APP-2026-001', timestamp: new Date(Date.now() - 3600000), type: 'update' },
+    { id: 3, action: 'Tender posted', tender: 'TENDER-2026-005', timestamp: new Date(Date.now() - 7200000), type: 'create' },
+  ]);
+  const [showAllActivities, setShowAllActivities] = useState(false);
+  const [allActivities, setAllActivities] = useState([]);
+  const [allActivitiesLoading, setAllActivitiesLoading] = useState(false);
+  
+  const { toast } = useToast();
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
   useEffect(() => {
-    const authUser = JSON.parse(localStorage.getItem('adminUser'));
-    const token = localStorage.getItem('adminToken');
-
-    if (!authUser || !token) {
-      navigate('/admin/login');
+    const userData = localStorage.getItem('bocra_user');
+    if (!userData) {
+      navigate('/login');
       return;
     }
-
-    setUser(authUser);
-    refreshData(authUser);
+    const parsedUser = JSON.parse(userData);
+    if (parsedUser.userType !== 'admin') {
+      navigate('/dashboard');
+      return;
+    }
+    setUser(parsedUser);
   }, [navigate]);
 
-  const refreshData = async (currUser) => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        loadUsers(),
-        loadAllApplications(),
-        loadSettings(),
-        loadAllActivities()
-      ]);
-
-      if (currUser.department === 'tenders') {
-        await loadTenderPostings();
-      }
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load dashboard data.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+  // Load department-specific data
+  useEffect(() => {
+    if (!user) return;
+    // For non-superadmin, department must be set
+    if (user.adminLevel === 'admin' && !user.department) {
+      navigate('/login');
+      return;
     }
-  };
-
-  const loadUsers = async () => {
-    setUsersLoading(true);
-    try {
-      const data = await adminApi.getUsers();
-      setUsers(data.users || []);
-    } catch (err) {
-      console.error('User fetch failed:', err);
-    } finally {
-      setUsersLoading(false);
+    refreshData();
+    // Load users and system stats if superadmin
+    if (user.adminLevel === 'superadmin') {
+      loadUsers();
+      loadSystemStats();
     }
-  };
+  }, [user, navigate]);
 
-  const loadAllApplications = async () => {
-    try {
-      const resp = await adminApi.getAllSubmissions();
-      const subs = resp.submissions || [];
-      setAllApplications(subs);
-      
-      // Filter by department if needed
-      setComplaints(subs.filter(a => a.department === 'complaints'));
-      setTenders(subs.filter(a => a.department === 'tenders'));
-      setLicensingApps(subs.filter(a => a.department === 'licensing'));
-      
-      // Calculate stats
-      const stats = {
-        licensing: { total: 0, pending: 0, approved: 0, rejected: 0 },
-        complaints: { total: 0, pending: 0, approved: 0, rejected: 0 },
-        tenders: { total: 0, pending: 0, approved: 0, rejected: 0 }
-      };
-      
-      subs.forEach(app => {
-        if (stats[app.department]) {
-          stats[app.department].total++;
-          if (app.status === 'pending' || app.status === 'Submitted') stats[app.department].pending++;
-          if (app.status === 'approved' || app.status === 'Approved') stats[app.department].approved++;
-          if (app.status === 'rejected' || app.status === 'Rejected') stats[app.department].rejected++;
+  // Load settings and activities when settings view is opened
+  useEffect(() => {
+    if (activeView === 'settings' && user?.adminLevel === 'superadmin') {
+      loadSettings();
+      loadActivities();
+    }
+  }, [activeView, user?.adminLevel]);
+
+  // Session timeout functionality
+  useEffect(() => {
+    if (!user || !settings.sessionTimeoutMinutes) return;
+
+    let sessionTimeoutMinutes = settings.sessionTimeoutMinutes || 30;
+    let timeoutId = null;
+    let warningTimeoutId = null;
+
+    const resetTimeout = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (warningTimeoutId) clearTimeout(warningTimeoutId);
+
+      // Show warning 2 minutes before timeout
+      warningTimeoutId = setTimeout(() => {
+        if (sessionTimeoutMinutes > 2) {
+          toast({
+            title: 'Session Expiring Soon',
+            description: `Your session will expire in 2 minutes due to inactivity.`,
+          });
         }
-      });
-      setDepartmentStats(stats);
-    } catch (err) {
-      console.error('Applications fetch failed:', err);
-    }
-  };
+      }, (sessionTimeoutMinutes - 2) * 60 * 1000);
 
-  const loadTenderPostings = async () => {
-    setTenderPostingsLoading(true);
-    try {
-      const data = await adminApi.getTenderPostings();
-      setTenderPostings(data);
-    } catch (err) {
-      console.error('Tender postings fetch failed:', err);
-    } finally {
-      setTenderPostingsLoading(false);
-    }
-  };
+      // Logout on timeout
+      timeoutId = setTimeout(() => {
+        localStorage.removeItem('bocra_user');
+        localStorage.removeItem('bocra_token');
+        navigate('/login');
+        toast({
+          title: 'Session Expired',
+          description: 'Your session has expired due to inactivity. Please login again.',
+        });
+      }, sessionTimeoutMinutes * 60 * 1000);
+    };
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const handleActivity = () => resetTimeout();
+
+    events.forEach(event => document.addEventListener(event, handleActivity));
+    resetTimeout();
+
+    return () => {
+      events.forEach(event => document.removeEventListener(event, handleActivity));
+      if (timeoutId) clearTimeout(timeoutId);
+      if (warningTimeoutId) clearTimeout(warningTimeoutId);
+    };
+  }, [user, settings.sessionTimeoutMinutes, navigate, toast]);
 
   const loadSettings = async () => {
     try {
       const data = await adminApi.getSystemSettings();
-      if (data) setSettings(data);
-    } catch (err) {
-      console.error('Settings fetch failed:', err);
+      setSettings(data);
+      setSettingsSaved(true);
+      // Also cache in localStorage
+      localStorage.setItem('bocra_settings', JSON.stringify(data));
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load system settings',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const loadActivities = async () => {
+    try {
+      const data = await adminApi.getActivityLogs({ limit: 25, offset: 0 });
+      const formattedActivities = data.activities.map((activity) => ({
+        id: activity.id,
+        action: activity.action,
+        actionType: activity.actionType,
+        user: activity.user,
+        userName: activity.userName,
+        timestamp: new Date(activity.timestamp),
+        type: activity.actionType.includes('CREATE') ? 'create'
+          : activity.actionType.includes('DELETE') ? 'delete'
+          : 'update',
+      }));
+      setRecentActivities(formattedActivities);
+    } catch (error) {
+      console.error('Failed to load activities:', error);
     }
   };
 
   const loadAllActivities = async () => {
+    setAllActivitiesLoading(true);
     try {
-      const data = await adminApi.getActivityLogs();
-      setRecentActivities(data.slice(0, 10));
-    } catch (err) {
-      console.error('Activity logs fetch failed:', err);
+      const data = await adminApi.getActivityLogs({ limit: 100, offset: 0 });
+      const formattedActivities = data.activities.map((activity) => ({
+        id: activity.id,
+        action: activity.action,
+        actionType: activity.actionType,
+        user: activity.user,
+        userName: activity.userName,
+        timestamp: new Date(activity.timestamp),
+        type: activity.actionType.includes('CREATE') ? 'create'
+          : activity.actionType.includes('DELETE') ? 'delete'
+          : 'update',
+      }));
+      setAllActivities(formattedActivities);
+      setShowAllActivities(true);
+    } catch (error) {
+      console.error('Failed to load all activities:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load activity log',
+        variant: 'destructive',
+      });
+    } finally {
+      setAllActivitiesLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
-    navigate('/admin/login');
-  };
-
-  const handleStatusChange = async (newStatus) => {
-    if (!selectedSubmission) return;
-    setSubmissionsLoading(true);
+  const loadUsers = async () => {
+    setUserLoading(true);
+    const token = localStorage.getItem('bocra_token');
     try {
-      await adminApi.updateSubmissionStatus(selectedSubmission.id, newStatus);
-      toast({
-        title: 'Status Updated',
-        description: `Submission ${selectedSubmission.token || selectedSubmission.id} is now ${newStatus}.`,
+      const response = await fetch(`${API_URL}/users`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
-      loadAllApplications();
-      setSelectedSubmission(null);
+
+      if (!response.ok) {
+        throw new Error('Failed to load users');
+      }
+
+      const data = await response.json();
+      setUsers(data.users || []);
+
+      // Calculate stats
+      const adminCount = (data.users || []).filter((u) => u.userType === 'admin').length;
+      const citizenCount = (data.users || []).filter((u) => u.userType === 'client').length;
+
+      setUserStats({
+        totalUsers: data.users?.length || 0,
+        adminCount,
+        citizenCount,
+      });
     } catch (error) {
       toast({
-        title: 'Update Failed',
+        title: 'Error',
+        description: 'Failed to load users',
+        variant: 'destructive',
+      });
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  const loadSystemStats = async () => {
+    setSystemStatsLoading(true);
+    try {
+      const depts = ['licensing', 'complaints', 'tenders', 'qos'];
+      const statsData = {};
+
+      for (const dept of depts) {
+        try {
+          console.log(`Fetching stats for department: ${dept}`);
+          const data = await adminApi.getAdminStats(dept);
+          console.log(`✓ ${dept} stats:`, data);
+          
+          statsData[dept] = {
+            total: data.total || 0,
+            pending: (data.pending || 0) + (data.underReview || 0),
+            approved: data.approved || 0,
+            rejected: data.rejected || 0,
+          };
+        } catch (error) {
+          console.error(`✗ Failed to load ${dept} stats:`, error.message);
+          statsData[dept] = { total: 0, pending: 0, approved: 0, rejected: 0 };
+        }
+      }
+
+      console.log('Final system stats:', statsData);
+      setDepartmentStats(statsData);
+    } catch (error) {
+      console.error('Failed to load system stats:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load system statistics',
+        variant: 'destructive',
+      });
+    } finally {
+      setSystemStatsLoading(false);
+    }
+  };
+
+  const handleUserSubmit = async (formData) => {
+    setUserLoading(true);
+    const token = localStorage.getItem('bocra_token');
+
+    try {
+      const method = editingUser ? 'PUT' : 'POST';
+      const endpoint = editingUser ? `${API_URL}/users/${editingUser.id}` : `${API_URL}/users`;
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save user');
+      }
+
+      toast({
+        title: 'Success',
+        description: editingUser ? 'User updated successfully' : 'User created successfully',
+      });
+
+      setShowUserForm(false);
+      setEditingUser(null);
+      loadUsers();
+    } catch (error) {
+      toast({
+        title: 'Error',
         description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userToDelete) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${userToDelete.name}? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setUserLoading(true);
+    const token = localStorage.getItem('bocra_token');
+
+    try {
+      const response = await fetch(`${API_URL}/users/${userToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete user');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'User deleted successfully',
+      });
+
+      loadUsers();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  const loadAllApplications = async () => {
+    setSubmissionsLoading(true);
+    try {
+      let allApps = [];
+
+      // Load licensing applications
+      try {
+        const licensingData = await adminApi.getSubmissions({
+          department: 'licensing',
+          page: 1,
+          limit: 100,
+        });
+        if (licensingData.submissions) {
+          allApps = [...allApps, ...licensingData.submissions];
+        }
+      } catch (error) {
+        console.error('Failed to load licensing applications:', error);
+      }
+
+      // Load complaints
+      try {
+        const complaintsData = await adminApi.getAdminComplaints({
+          page: 1,
+          limit: 100,
+        });
+        if (complaintsData.complaints) {
+          allApps = [...allApps, ...complaintsData.complaints];
+        }
+      } catch (error) {
+        console.error('Failed to load complaints:', error);
+      }
+
+      // Load tenders
+      try {
+        const tendersData = await adminApi.getAdminTenders({
+          page: 1,
+          limit: 100,
+        });
+        if (tendersData.tenders) {
+          allApps = [...allApps, ...tendersData.tenders];
+        }
+      } catch (error) {
+        console.error('Failed to load tenders:', error);
+      }
+
+      setAllApplications(allApps);
+    } catch (error) {
+      console.error('Failed to load applications:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load applications',
         variant: 'destructive',
       });
     } finally {
@@ -311,726 +527,2561 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleAddNote = async (note) => {
-    if (!selectedSubmission) return;
+  const loadTenderPostings = async () => {
+    setTenderPostingsLoading(true);
     try {
-      await adminApi.addSubmissionNotes(selectedSubmission.id, note);
-      toast({ title: 'Note Added', description: 'Internal note saved successfully.' });
-      loadAllApplications();
+      const data = await adminApi.getTenderPostings({ page: 1, limit: 100 });
+      setTenderPostings(data.postings || []);
     } catch (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      console.error('Failed to load tender postings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load tender postings',
+        variant: 'destructive',
+      });
+    } finally {
+      setTenderPostingsLoading(false);
     }
   };
 
-  const handleTenderFormSubmit = async (e) => {
-    e.preventDefault();
+  const handleCreateTenderPosting = async (submitFormData) => {
     setTenderPostingsLoading(true);
     try {
-      if (editingTender) {
-        await adminApi.updateTenderPosting(editingTender.id, formData);
-        toast({ title: 'Tender Updated', description: 'Notice has been updated.' });
-      } else {
-        await adminApi.createTenderPosting(formData);
-        toast({ title: 'Tender Posted', description: 'New procurement notice is now live.' });
+      const response = await adminApi.createTenderPosting(submitFormData);
+      const newTenderId = response.posting?.id;
+
+      // Upload documents if any
+      if (formDocuments.length > 0 && newTenderId) {
+        for (const file of formDocuments) {
+          const docData = {
+            filename: file.name,
+            fileType: file.type,
+            filePath: `tenders/${newTenderId}/${file.name}`,
+            fileSize: file.size,
+          };
+          await adminApi.uploadTenderPostingDocument(newTenderId, docData);
+        }
       }
-      setShowTenderForm(false);
-      setEditingTender(null);
+
+      toast({
+        title: 'Success',
+        description: formDocuments.length > 0 
+          ? `Tender posting created with ${formDocuments.length} document(s)` 
+          : 'Tender posting created successfully',
+      });
+      handleFormReset();
       loadTenderPostings();
     } catch (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
     } finally {
       setTenderPostingsLoading(false);
     }
   };
 
   const handleDeleteTenderPosting = async (id) => {
-    if (!window.confirm('Delete this tender notice?')) return;
+    if (!window.confirm('Are you sure you want to delete this tender posting?')) {
+      return;
+    }
+    setTenderPostingsLoading(true);
     try {
       await adminApi.deleteTenderPosting(id);
-      toast({ title: 'Deleted', description: 'Notice has been removed.' });
+      toast({
+        title: 'Success',
+        description: 'Tender posting deleted successfully',
+      });
       loadTenderPostings();
     } catch (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setTenderPostingsLoading(false);
     }
+  };
+
+  const handleEditTender = (tender) => {
+    setFormData({
+      tenderNumber: tender.tenderNumber,
+      title: tender.title,
+      category: tender.category,
+      closingDate: tender.closingDate,
+      estimatedValue: tender.estimatedValue || '',
+      location: tender.location || '',
+      description: tender.description,
+    });
+    setEditingTender(tender);
+    setShowTenderForm(true);
+    setFormDocuments([]);
+    setDocumentsToDeleteAfterSave([]);
+  };
+
+  const handleUpdateTenderPosting = async (formDataToUpdate) => {
+    setTenderPostingsLoading(true);
+    try {
+      // Update the tender posting
+      await adminApi.updateTenderPosting(editingTender.id, formDataToUpdate);
+      
+      // Delete marked documents
+      for (const docId of documentsToDeleteAfterSave) {
+        await adminApi.deleteTenderDocument(docId);
+      }
+      
+      // Upload new documents
+      for (const file of formDocuments) {
+        const docData = {
+          filename: file.name,
+          fileType: file.type,
+          filePath: `tenders/${editingTender.id}/${file.name}`,
+          fileSize: file.size,
+        };
+        await adminApi.uploadTenderPostingDocument(editingTender.id, docData);
+      }
+      
+      toast({
+        title: 'Success',
+        description: 'Tender posting updated successfully',
+      });
+      setShowTenderForm(false);
+      setEditingTender(null);
+      setFormDocuments([]);
+      setDocumentsToDeleteAfterSave([]);
+      loadTenderPostings();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setTenderPostingsLoading(false);
+    }
+  };
+
+  const handleFormReset = () => {
+    setFormData({
+      tenderNumber: '',
+      title: '',
+      category: '',
+      closingDate: '',
+      estimatedValue: '',
+      location: '',
+      description: '',
+    });
+    setFormDocuments([]);
+    setDocumentsToDeleteAfterSave([]);
+    setEditingTender(null);
+    setShowTenderForm(false);
+  };
+
+  const refreshData = async () => {
+    if (!user) return;
+    // For superadmin, only load if a department is selected
+    if (user.adminLevel === 'superadmin' && !user.department) {
+      setSubmissions([]);
+      setComplaints([]);
+      setTenders([]);
+      setStats({});
+      return;
+    }
+    
+    setSubmissionsLoading(true);
+    try {
+      const dept = user.department;
+
+      // Fetch data based on department
+      if (dept === 'licensing') {
+        const submissionsData = await adminApi.getSubmissions({
+          department: dept,
+          page: 1,
+          limit: 100,
+        });
+        setSubmissions(submissionsData.submissions || []);
+        setComplaints([]);
+        setTenders([]);
+      } else if (dept === 'complaints') {
+        const complaintsData = await adminApi.getAdminComplaints({
+          page: 1,
+          limit: 100,
+        });
+        setComplaints(complaintsData.complaints || []);
+        setSubmissions([]);
+        setTenders([]);
+      } else if (dept === 'tenders') {
+        const tendersData = await adminApi.getAdminTenders({
+          page: 1,
+          limit: 100,
+        });
+        setTenders(tendersData.tenders || []);
+        setSubmissions([]);
+        setComplaints([]);
+      } else if (dept === 'qos') {
+        // QoS doesn't have submissions yet
+        setSubmissions([]);
+        setComplaints([]);
+        setTenders([]);
+      }
+
+      // Fetch stats from backend
+      const statsData = await adminApi.getAdminStats(dept);
+      setStats(statsData);
+    } catch (error) {
+      console.error('Failed to load data:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load department data',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (token, newStatus) => {
+    try {
+      setSubmissionsLoading(true);
+      const dept = user?.department;
+
+      if (dept === 'complaints') {
+        await adminApi.updateComplaintStatus(token, newStatus);
+      } else if (dept === 'tenders') {
+        await adminApi.updateTenderStatus(token, newStatus);
+      } else {
+        await adminApi.updateSubmissionStatus(token, newStatus);
+      }
+
+      await refreshData();
+      setSelectedSubmission(null);
+      toast({
+        title: 'Status Updated',
+        description: `Item ${token} has been moved to ${newStatus}.`,
+      });
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update status',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
+
+  const handleAddNote = async (token) => {
+    if (!adminNote.trim()) return;
+    try {
+      setSubmissionsLoading(true);
+      const dept = user?.department;
+
+      if (dept === 'complaints') {
+        await adminApi.addComplaintNotes(token, adminNote);
+      } else if (dept === 'tenders') {
+        await adminApi.addTenderNotes(token, adminNote);
+      } else {
+        await adminApi.addSubmissionNotes(token, adminNote);
+      }
+
+      setAdminNote('');
+      await refreshData();
+      setSelectedSubmission(null);
+      toast({
+        title: 'Note Added',
+        description: `Internal admin note saved for ${token}.`,
+      });
+    } catch (error) {
+      console.error('Failed to add note:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add note',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
+
+  const handleDisabledMock = (feature) => {
+    toast({
+      title: 'Development Preview',
+      description: `${feature} module will be available in the upcoming release phase.`,
+    });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('bocra_user');
+    navigate('/login');
+  };
+
+  // Settings handlers
+  const handleSettingsChange = (key, value) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettingsSaved(false);
   };
 
   const handleSaveSettings = async () => {
     setSettingsLoading(true);
     try {
       await adminApi.updateSystemSettings(settings);
-      toast({ title: 'Settings Saved', description: 'System configuration updated successfully.' });
-    } catch (err) {
-      toast({ title: 'Error', description: 'Failed to save settings.', variant: 'destructive' });
+      localStorage.setItem('bocra_settings', JSON.stringify(settings));
+      setSettingsSaved(true);
+      toast({
+        title: 'Settings Saved',
+        description: 'System settings have been saved successfully.',
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setSettingsLoading(false);
     }
   };
 
-  const handleSettingsChange = (field, value) => {
-    setSettings(prev => ({ ...prev, [field]: value }));
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'approved': return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Approved</Badge>;
-      case 'rejected': return <Badge className="bg-rose-100 text-rose-700 border-rose-200">Rejected</Badge>;
-      case 'pending': return <Badge className="bg-amber-100 text-amber-700 border-amber-200">Under Review</Badge>;
-      default: return <Badge variant="secondary">{status}</Badge>;
+  const handleResetSettings = async () => {
+    setSettingsLoading(true);
+    try {
+      await loadSettings();
+      setSettingsSaved(true);
+      toast({
+        title: 'Settings Reset',
+        description: 'Settings have been reset to last saved values.',
+      });
+    } catch (error) {
+      console.error('Error resetting settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reset settings.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSettingsLoading(false);
     }
   };
 
-  if (loading) {
+  const getStatusBadge = (status) => {
+    const config = {
+      'Approved': { className: 'bg-emerald-500 hover:bg-emerald-600', icon: CheckCircle },
+      'Under Review': { className: 'bg-[#003366] hover:bg-[#003366]', icon: Clock },
+      'Pending Review': { className: 'bg-amber-500 hover:bg-amber-600', icon: Clock },
+      'Rejected': { className: 'bg-[#B91C1C] hover:bg-[#991b1b]', icon: XCircle },
+    };
+    const c = config[status] || config['Pending Review'];
+    const Icon = c.icon;
     return (
-      <div className="min-h-screen bg-[#0E1525] flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="h-12 w-12 text-[#14B8A6] animate-spin" />
-        <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Initializing Control Panel...</p>
-      </div>
+      <Badge className={c.className}>
+        <Icon className="h-3 w-3 mr-1" />
+        {status}
+      </Badge>
     );
-  }
-
-  // Determine which data to show in active data list
-  const activeData = activeView === 'submissions' 
-    ? (user?.department === 'tenders' ? tenders : 
-       user?.department === 'complaints' ? complaints : 
-       user?.department === 'licensing' ? licensingApps : [])
-    : allApplications;
-
-  const stats = {
-    total: allApplications.length,
-    pending: allApplications.filter(a => a.status === 'pending').length,
-    approved: allApplications.filter(a => a.status === 'approved').length,
-    rejected: allApplications.filter(a => a.status === 'rejected').length
   };
 
+  const getPriorityBadge = (priority) => {
+    const colors = {
+      High: 'bg-red-100 text-red-800 border-red-200',
+      Medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      Low: 'bg-[#E6F4EC] text-[#1A6B3C] border-green-200',
+    };
+    return <Badge variant="outline" className={colors[priority]}>{priority}</Badge>;
+  };
+
+  const getDeptIcon = (dept) => {
+    const icons = {
+      [DEPARTMENTS.LICENSING]: Zap,
+      [DEPARTMENTS.COMPLAINTS]: MessageSquare,
+      [DEPARTMENTS.QOS]: BarChart3,
+      [DEPARTMENTS.TENDERS]: Briefcase,
+    };
+    return icons[dept] || Shield;
+  };
+
+  // Get active submissions data based on department
+  const getActiveData = () => {
+    const dept = user?.department;
+    if (dept === 'complaints') return complaints;
+    if (dept === 'tenders') return tenders;
+    return submissions;
+  };
+
+  const activeData = getActiveData();
+
+  const filteredSubmissions = activeData.filter((sub) => {
+    const matchesSearch =
+      sub.citizenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sub.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sub.id?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || sub.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
+
+  if (!user) return null;
+
+  const DeptIcon = getDeptIcon(user.department);
+  const deptColor = DEPARTMENT_COLORS[user.department] || { bg: 'bg-[#003366]', text: 'text-[#003366]', light: 'bg-[#E8F0F9]' };
+
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-slate-50">
+      {/* Mobile Sidebar Toggle */}
+      <button
+        onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+        className="lg:hidden fixed top-4 left-4 z-[60] p-3 bg-slate-900 text-white rounded-xl shadow-lg"
+      >
+        {mobileSidebarOpen ? <XIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileSidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-[#020617] text-white transition-all duration-300 lg:static lg:block
-        ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-       shadow-2xl shadow-black/50`}>
-        <div className="flex flex-col h-full bg-[#020617]">
-          <div className="p-8 pb-4">
-            <div className="flex items-center gap-4 mb-10 group cursor-pointer">
-               <div className="w-12 h-12 bg-[#14B8A6] rounded-2xl flex items-center justify-center shadow-lg shadow-[#14B8A6]/30 group-hover:scale-110 transition-transform">
-                  <Shield size={22} className="text-white" />
-               </div>
-               <div>
-                  <h1 className="text-xl font-black tracking-tighter">BOCRA</h1>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-teal-500">Admin Portal</p>
-               </div>
+      <div className={`fixed left-0 top-0 bottom-0 w-72 bg-slate-900 text-white z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 ${
+        mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        {/* Logo */}
+        <div className="p-6 border-b border-slate-700/50">
+          <Link to="/" className="flex items-center gap-3">
+            <img src="/logo.png" alt="BOCRA" className="h-12 w-auto brightness-0 invert" />
+          </Link>
+        </div>
+
+        {/* Department Badge */}
+        <div className="px-6 py-4 border-b border-slate-700/50">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl ${deptColor.light} bg-opacity-10`}>
+            <div className={`w-10 h-10 rounded-xl ${deptColor.bg} flex items-center justify-center`}>
+              <DeptIcon className="h-5 w-5 text-white" />
             </div>
-
-            <nav className="space-y-2">
-              {[
-                { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
-                { id: 'submissions', label: user?.department === 'tenders' ? 'Tenders hub' : 'Department Queue', icon: Inbox },
-                { id: 'applications', label: 'All Submissions', icon: FileText, superOnly: true },
-                { id: 'users', label: 'Staff Accounts', icon: Users, superOnly: true },
-                { id: 'licensing', label: 'Licensing Desk', icon: CreditCard, superOnly: true },
-              ].filter(item => !item.superOnly || user?.adminLevel === 'superadmin').map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveView(item.id);
-                    setMobileSidebarOpen(false);
-                  }}
-                  className={`
-                    w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 relative group
-                    ${activeView === item.id 
-                      ? 'bg-[#14B8A6] text-white shadow-xl shadow-[#14B8A6]/20' 
-                      : 'text-slate-500 hover:text-white hover:bg-white/5'}
-                  `}
-                >
-                  <item.icon size={20} className={activeView === item.id ? '' : 'group-hover:scale-110 transition-transform'} />
-                  <span className="font-bold text-sm tracking-tight">{item.label}</span>
-                  {activeView === item.id && (
-                    <div className="absolute right-4 w-1.5 h-1.5 bg-white rounded-full"></div>
-                  )}
-                </button>
-              ))}
-
-              {user?.adminLevel === 'superadmin' && (
-                <button 
-                  onClick={() => setActiveView('settings')}
-                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${activeView === 'settings' ? 'bg-[#14B8A6] text-white shadow-xl' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
-                >
-                  <Settings size={20} />
-                  <span className="font-bold text-sm tracking-tight">System Settings</span>
-                </button>
-              )}
-            </nav>
+            <div>
+              <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Department</p>
+              <p className="text-sm font-bold text-white">{DEPARTMENT_LABELS[user.department]?.split(' &')[0] || 'General'}</p>
+            </div>
           </div>
+        </div>
 
-          <div className="mt-auto p-6 border-t border-white/5 bg-black/20">
-            <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-white/5 mb-4 group cursor-pointer hover:bg-white/10 transition-colors">
-               <div className="w-10 h-10 rounded-full bg-[#14B8A6] flex items-center justify-center text-white font-black group-hover:rotate-12 transition-transform">
-                  {user?.name?.charAt(0)}
-               </div>
-               <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-bold truncate tracking-tight">{user?.name}</p>
-                  <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest truncate">{user?.adminLevel}</p>
-               </div>
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          <p className="px-3 text-xs text-slate-500 uppercase tracking-wider font-semibold mb-3">Overview</p>
+          <button 
+            onClick={() => { 
+              setActiveView('dashboard');
+              setSearchTerm('');
+              setFilterStatus('all');
+              toast({ title: 'Dashboard', description: 'Viewing main dashboard.' }); 
+            }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+              activeView === 'dashboard' 
+                ? 'bg-slate-800 text-white' 
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Dashboard
+          </button>
+
+          {/* User Management - Only for superadmins */}
+          {user?.adminLevel === 'superadmin' && (
+            <>
+              <button 
+                onClick={() => { 
+                  setActiveView('users');
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                  toast({ title: 'User Management', description: 'Manage all system users.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'users' 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                User Management
+              </button>
+
+              <button 
+                onClick={() => { 
+                  setActiveView('applications');
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                  loadAllApplications();
+                  toast({ title: 'Applications', description: 'Viewing applications from all departments.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'applications' 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                Applications
+              </button>
+
+              <button 
+                onClick={() => { 
+                  setActiveView('licensing');
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                  toast({ title: 'License Applications', description: 'Manage citizen license applications.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'licensing' 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Zap className="h-4 w-4" />
+                License Applications
+              </button>
+            </>
+          )}
+
+          {/* Departments - Only for superadmins */}
+          {user?.adminLevel === 'superadmin' && (
+            <>
+              <p className="px-3 text-xs text-slate-500 uppercase tracking-wider font-semibold mt-6 mb-3">Departments</p>
+              <button 
+                onClick={() => { 
+                  const updatedUser = { ...user, department: DEPARTMENTS.LICENSING };
+                  localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
+                  setUser(updatedUser);
+                  setActiveView('submissions');
+                  toast({ title: 'Licensing', description: 'Switched to Licensing Department.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'submissions' && user?.department === DEPARTMENTS.LICENSING 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Zap className="h-4 w-4" />
+                Licensing
+              </button>
+              <button 
+                onClick={() => { 
+                  const updatedUser = { ...user, department: DEPARTMENTS.COMPLAINTS };
+                  localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
+                  setUser(updatedUser);
+                  setActiveView('submissions');
+                  toast({ title: 'Complaints', description: 'Switched to Complaints Department.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'submissions' && user?.department === DEPARTMENTS.COMPLAINTS 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Complaints
+              </button>
+              <button 
+                onClick={() => { 
+                  const updatedUser = { ...user, department: DEPARTMENTS.QOS };
+                  localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
+                  setUser(updatedUser);
+                  setActiveView('submissions');
+                  toast({ title: 'Quality of Service', description: 'Switched to QoS Department.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'submissions' && user?.department === DEPARTMENTS.QOS 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <BarChart3 className="h-4 w-4" />
+                Quality of Service
+              </button>
+              <button 
+                onClick={() => { 
+                  const updatedUser = { ...user, department: DEPARTMENTS.TENDERS };
+                  localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
+                  setUser(updatedUser);
+                  setActiveView('submissions');
+                  toast({ title: 'Tenders', description: 'Switched to Tenders Department.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'submissions' && user?.department === DEPARTMENTS.TENDERS 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Briefcase className="h-4 w-4" />
+                Tenders
+              </button>
+
+              <p className="px-3 text-xs text-slate-500 uppercase tracking-wider font-semibold mt-6 mb-3">System</p>
+              <button 
+                onClick={() => { 
+                  setActiveView('settings');
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                  toast({ title: 'Settings', description: 'Manage system settings.' }); 
+                }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
+                  activeView === 'settings' 
+                    ? 'bg-slate-800 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Settings className="h-4 w-4" />
+                Settings
+              </button>
+            </>
+          )}
+        </nav>
+
+        {/* User Info */}
+        <div className="p-4 border-t border-slate-700/50">
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="w-10 h-10 rounded-full bg-[#003366] flex items-center justify-center text-white font-bold text-sm">
+              {user.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'AD'}
             </div>
-            <button 
-              onClick={handleLogout}
-              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10"
-            >
-              <LogOut size={18} />
-              <span className="font-bold text-xs uppercase tracking-widest">Sign Out</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">{user.name}</p>
+              <p className="text-xs text-slate-400 truncate">{user.email}</p>
+            </div>
+            <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-400 rounded-lg transition-colors">
+              <LogOut className="h-4 w-4" />
             </button>
           </div>
         </div>
-      </aside>
+      </div>
 
-      {/* Main Content */}
-      <main className="flex-1 min-h-screen overflow-y-auto">
+      {/* Main Content Area */}
+      <div className="lg:ml-72 p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8">
         {/* Header */}
-        <header className="h-24 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 sticky top-0 z-40 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button className="lg:hidden p-2 text-slate-500" onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}>
-              <Menu size={24} />
-            </button>
-            <div>
-              <h2 className="text-xl font-black text-slate-900 capitalize tracking-tight">{activeView.replace('-', ' ')}</h2>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span>Terminal Session Active</span>
-              </div>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+              {activeView === 'dashboard' 
+                ? 'Dashboard' 
+                : activeView === 'users' 
+                ? 'User Management' 
+                : activeView === 'applications' 
+                ? 'All Applications' 
+                : activeView === 'licensing'
+                ? 'License Applications'
+                : activeView === 'settings'
+                ? 'Settings'
+                : `${DEPARTMENT_LABELS[user.department] || 'Admin'} - Submissions`}
+            </h1>
+            <p className="text-slate-500 mt-1">
+              {activeView === 'dashboard'
+                ? `Welcome back, ${user.name}. Here's what's happening in your department.`
+                : activeView === 'users'
+                ? 'Manage all system users and permissions.'
+                : activeView === 'applications'
+                ? 'Manage license applications from all departments'
+                : activeView === 'licensing'
+                ? 'Review and manage citizen license applications'
+                : activeView === 'settings'
+                ? 'Configure system-wide settings and preferences'
+                : `Managing ${DEPARTMENT_LABELS[user.department] || 'submissions'} submissions.`}
+            </p>
           </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-3 bg-slate-50 px-5 py-2.5 rounded-2xl border border-slate-100">
-              <Clock size={16} className="text-slate-400" />
-              <span className="text-sm font-bold text-slate-600 tracking-tight">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-            </div>
-            <button className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors relative shadow-sm">
-               <Bell size={18} />
-               <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-[#14B8A6] border-2 border-white rounded-full"></span>
-            </button>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <Badge variant="outline" className={`text-sm px-3 py-1.5 ${
+              user.adminLevel === 'superadmin' 
+                ? 'border-purple-200 text-purple-700 bg-purple-50' 
+                : 'border-[#003366]/20 text-[#0A4D8C] bg-[#E8F0F9]'
+            }`}>
+              <Shield className="h-3.5 w-3.5 mr-1.5" />
+              {user.adminLevel === 'superadmin' ? 'Super Admin' : 'Admin'}
+            </Badge>
           </div>
-        </header>
+        </div>
 
-        <div className="p-8 max-w-[1400px] mx-auto pb-12">
-          {/* Dashboard/Overview View */}
-          {activeView === 'dashboard' && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <StatTile label="Current Backlog" value={stats.total} icon={Inbox} accent={BRAND.blue} helper="Active Requests" />
-                  <StatTile label="Pending Review" value={stats.pending} icon={Clock} accent={BRAND.yellow} helper="Action Required" />
-                  <StatTile label="Approvals" value={stats.approved} icon={CheckCircle} accent={BRAND.emerald} helper="YTD Issued" />
-                  <StatTile label="System Health" value="Optimum" icon={Zap} accent={BRAND.accent} helper="Latency < 45ms" />
-               </div>
-
-               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <Card className="lg:col-span-2 border-0 shadow-sm rounded-[2.5rem] overflow-hidden">
-                     <CardHeader className="bg-white border-b border-slate-100 p-8">
-                        <div className="flex items-center justify-between">
-                           <CardTitle className="text-xl font-black text-slate-900">Institutional Throughput</CardTitle>
-                           <Badge variant="outline" className="rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-widest border-slate-200">Real-time Pipeline</Badge>
-                        </div>
-                     </CardHeader>
-                     <CardContent className="p-8">
-                        <div className="h-[400px] w-full">
-                           <ResponsiveContainer width="100%" height="100%">
-                              <BarChart data={[
-                                { name: 'Licensing', apps: departmentStats.licensing.total, pending: departmentStats.licensing.pending },
-                                { name: 'Complaints', apps: departmentStats.complaints.total, pending: departmentStats.complaints.pending },
-                                { name: 'Tenders', apps: departmentStats.tenders.total, pending: departmentStats.tenders.pending },
-                                { name: 'QoS', apps: 42, pending: 2 }
-                              ]}>
-                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                                 <XAxis dataKey="name" stroke="#94A3B8" fontSize={11} fontWeight={700} tickLine={false} axisLine={false} dy={10} />
-                                 <YAxis stroke="#94A3B8" fontSize={11} fontWeight={700} tickLine={false} axisLine={false} />
-                                 <Tooltip 
-                                    contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }}
-                                    cursor={{ fill: '#F8FAFC' }}
-                                 />
-                                 <Bar dataKey="apps" fill="#14B8A6" radius={[8, 8, 8, 8]} barSize={32} />
-                              </BarChart>
-                           </ResponsiveContainer>
-                        </div>
-                     </CardContent>
-                  </Card>
-
-                  <Card className="border-0 shadow-sm rounded-[2.5rem] overflow-hidden">
-                     <CardHeader className="bg-white border-b border-slate-100 p-8">
-                        <CardTitle className="text-xl font-black text-slate-900">Distribution</CardTitle>
-                     </CardHeader>
-                     <CardContent className="p-8 pb-4">
-                        <div className="h-[300px] w-full">
-                           <ResponsiveContainer width="100%" height="100%">
-                              <PieChart>
-                                 <Pie
-                                    data={[
-                                       { name: 'Approved', value: stats.approved },
-                                       { name: 'Pending', value: stats.pending },
-                                       { name: 'Rejected', value: stats.rejected }
-                                    ]}
-                                    innerRadius={70} outerRadius={100} paddingAngle={12} dataKey="value" stroke="none"
-                                 >
-                                    <Cell fill="#10B981" />
-                                    <Cell fill="#F59E0B" />
-                                    <Cell fill="#F43F5E" />
-                                 </Pie>
-                                 <Tooltip />
-                              </PieChart>
-                           </ResponsiveContainer>
-                        </div>
-                        <div className="space-y-4 pt-4 border-t border-slate-100 mt-4">
-                           {[
-                              { label: 'Approved', color: 'bg-emerald-500', val: stats.approved },
-                              { label: 'Pending', color: 'bg-amber-500', val: stats.pending },
-                              { label: 'Rejected', color: 'bg-rose-500', val: stats.rejected }
-                           ].map((item, i) => (
-                              <div key={i} className="flex items-center justify-between">
-                                 <div className="flex items-center gap-3">
-                                    <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
-                                    <span className="text-sm font-bold text-slate-600">{item.label}</span>
-                                 </div>
-                                 <span className="text-sm font-black text-slate-900">{item.val} items</span>
-                              </div>
-                           ))}
-                        </div>
-                     </CardContent>
-                  </Card>
-               </div>
-            </div>
-          )}
-
-          {/* Applications/Submissions View */}
-          {activeView === 'submissions' && (
-            <div className="space-y-6 animate-in fade-in duration-500">
-              {user?.department === 'tenders' && (
-                <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit border border-slate-200 shadow-inner mb-6">
-                  <button 
-                    onClick={() => setTenderView('submissions')}
-                    className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${tenderView === 'submissions' ? 'bg-white text-teal-600 shadow-xl shadow-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
-                  >
-                    Bids & Submissions
-                  </button>
-                  <button 
-                    onClick={() => setTenderView('postings')}
-                    className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${tenderView === 'postings' ? 'bg-white text-teal-600 shadow-xl shadow-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
-                  >
-                    Active Notices
-                  </button>
-                </div>
-              )}
-
-              {user?.department === 'tenders' && tenderView === 'postings' ? (
-                showTenderForm ? (
-                  <Card className="border-0 shadow-2xl rounded-[3rem] overflow-hidden animate-in zoom-in duration-300">
-                    <CardHeader className="p-12 border-b bg-slate-50">
-                      <CardTitle className="text-3xl font-black text-slate-900">{editingTender ? 'Edit Tender Notice' : 'Post New Procurement Notice'}</CardTitle>
-                      <CardDescription className="text-base mt-2 font-medium">Provide comprehensive details for the open tender opportunity.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-12">
-                      <form onSubmit={handleTenderFormSubmit} className="space-y-8">
-                        <div className="grid md:grid-cols-2 gap-8">
-                           <div className="space-y-4">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Tender Reference Number</Label>
-                            <Input 
-                              required 
-                              value={formData.tenderNumber} 
-                              onChange={(e) => setFormData({...formData, tenderNumber: e.target.value})}
-                              placeholder="e.g. BOCRA/TEN/2026/01"
-                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
-                            />
-                          </div>
-                          <div className="space-y-4">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Notice Title</Label>
-                            <Input 
-                              required 
-                              value={formData.title} 
-                              onChange={(e) => setFormData({...formData, title: e.target.value})}
-                              placeholder="Official tender title..."
-                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
-                            />
-                          </div>
-                          <div className="space-y-4">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Procurement Category</Label>
-                            <Input 
-                              required 
-                              value={formData.category} 
-                              onChange={(e) => setFormData({...formData, category: e.target.value})}
-                              placeholder="e.g. IT, Infrastructure, Consultancy"
-                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
-                            />
-                          </div>
-                          <div className="space-y-4">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Closing Date & Time</Label>
-                            <Input 
-                              type="datetime-local"
-                              required 
-                              value={formData.closingDate} 
-                              onChange={(e) => setFormData({...formData, closingDate: e.target.value})}
-                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Detailed Scope & Requirements</Label>
-                          <textarea 
-                            required
-                            value={formData.description}
-                            onChange={(e) => setFormData({...formData, description: e.target.value})}
-                            rows={6}
-                            className="w-full p-6 rounded-[2rem] border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-medium leading-relaxed bg-slate-50"
-                            placeholder="Describe the tender requirements, eligibility, and evaluation criteria..."
-                          />
-                        </div>
-                        <div className="flex gap-4 pt-6">
-                          <Button type="button" variant="outline" className="h-16 flex-1 rounded-2xl border-2 border-slate-900 font-bold" onClick={() => setShowTenderForm(false)}>Discard</Button>
-                          <Button type="submit" className="h-16 flex-[2] rounded-2xl bg-[#14B8A6] hover:bg-[#0D9488] text-white font-black shadow-xl shadow-teal-500/20">
-                            {tenderPostingsLoading ? <Loader2 className="animate-spin h-6 w-6" /> : (editingTender ? 'Update Notice' : 'Post Tender Notice')}
-                          </Button>
-                        </div>
-                      </form>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <SurfaceCard 
-                    title="Current Tender Notices" 
-                    subtitle="Manage procurement opportunities published on the public portal."
-                    icon={Briefcase}
-                    action={
-                      <Button className="bg-[#14B8A6] hover:bg-teal-600 h-12 rounded-2xl px-6 font-bold text-white shadow-lg" onClick={() => {
-                        setEditingTender(null);
-                        setFormData({ tenderNumber: '', title: '', category: '', closingDate: '', estimatedValue: '', location: '', description: '' });
-                        setShowTenderForm(true);
-                      }}>
-                        <Plus className="mr-2" /> Publish New Tender
-                      </Button>
-                    }
-                  >
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left">
-                        <thead className="bg-slate-50">
-                          <tr>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Reference</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Title & Category</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Closing Date</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {tenderPostings.map((t) => (
-                            <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-8 py-6 font-mono text-xs font-bold text-teal-600 leading-none">{t.tenderNumber}</td>
-                              <td className="px-8 py-6">
-                                <p className="text-sm font-bold text-slate-900">{t.title}</p>
-                                <p className="text-xs font-medium text-slate-400">{t.category}</p>
-                              </td>
-                              <td className="px-8 py-6">
-                                <Badge className="bg-amber-100 text-amber-700 border-0 text-[10px] font-black tracking-tight px-3 py-1">
-                                  {new Date(t.closingDate).toLocaleDateString()}
-                                </Badge>
-                              </td>
-                              <td className="px-8 py-6">
-                                <div className="flex gap-2">
-                                  <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 rounded-xl" onClick={() => {
-                                    setEditingTender(t);
-                                    setFormData({ ...t });
-                                    setShowTenderForm(true);
-                                  }}>
-                                    <Edit2 size={16} />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="hover:bg-rose-50 hover:text-rose-600 rounded-xl" onClick={() => handleDeleteTenderPosting(t.id)}>
-                                    <Trash2 size={16} />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </SurfaceCard>
-                )
-              ) : (
-                <SurfaceCard 
-                  title={`${DEPARTMENT_LABELS[user?.department || 'licensing']} Queue`}
-                  subtitle="Actionable repository for incoming departmental requests."
-                  icon={Inbox}
-                >
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead className="bg-slate-50">
-                        <tr>
-                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Reference Number</th>
-                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Applicant Info</th>
-                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Current State</th>
-                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Operations</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {activeData.map((app) => (
-                          <tr key={app.id} className="hover:bg-slate-50/50 transition-colors group">
-                            <td className="px-8 py-6 font-mono text-xs font-bold text-teal-600">{app.token || app.id.slice(0, 12)}</td>
-                            <td className="px-8 py-6">
-                              <p className="text-sm font-bold text-slate-900">{app.citizenName}</p>
-                              <p className="text-xs font-medium text-slate-400">{app.citizenEmail}</p>
-                            </td>
-                            <td className="px-8 py-6">{getStatusBadge(app.status)}</td>
-                            <td className="px-8 py-6">
-                              <Button 
-                                onClick={() => setSelectedSubmission(app)}
-                                className="bg-slate-900 hover:bg-[#14B8A6] text-white rounded-xl font-black text-[10px] uppercase tracking-widest h-10 px-6 transition-all"
-                              >
-                                {app.status === 'pending' ? 'Decision Required' : 'Review Manifest'}
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+        {/* Stats Grid - Only show during submissions view */}
+        {activeView === 'submissions' && user?.department && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+            <Card className="border-0 shadow-md bg-white">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">Total Submissions</p>
+                    <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total || 0}</p>
                   </div>
-                </SurfaceCard>
-              )}
-            </div>
-          )}
-
-          {/* Users View */}
-          {activeView === 'users' && (
-            <div className="space-y-6 animate-in fade-in duration-500">
+                <div className={`w-12 h-12 rounded-2xl ${deptColor.light} flex items-center justify-center`}>
+                  <FileText className={`h-6 w-6 ${deptColor.text}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-white">
+            <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">Staff Directory</h2>
-                  <p className="text-slate-500 font-medium">Manage institutional access and departmental privileges.</p>
+                  <p className="text-sm font-medium text-slate-500">Pending Review</p>
+                  <p className="text-3xl font-bold text-amber-600 mt-1">{stats.pending || 0}</p>
                 </div>
-                {!showUserForm && (
-                  <Button className="bg-[#14B8A6] hover:bg-teal-600 text-white rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-widest shadow-lg" onClick={() => setShowUserForm(true)}>
-                    <Plus className="mr-2 h-4 w-4 stroke-[3px]" /> Authenticate New Staff
-                  </Button>
-                )}
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-amber-600" />
+                </div>
               </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">High Priority</p>
+                  <p className="text-3xl font-bold text-red-600 mt-1">{stats.highPriority || 0}</p>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Approved</p>
+                  <p className="text-3xl font-bold text-emerald-600 mt-1">{stats.approved || 0}</p>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-emerald-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        )}
 
-              {showUserForm ? (
-                <Card className="border-0 shadow-2xl rounded-[3rem] overflow-hidden">
-                  <CardHeader className="p-12 border-b bg-slate-50 flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="text-2xl font-black text-slate-900">{editingUser ? 'Policy Modification' : 'Access Provisioning'}</CardTitle>
-                      <CardDescription className="font-medium">Establishing secure credentials for institutional staff.</CardDescription>
-                    </div>
-                    <Button variant="ghost" className="rounded-2xl text-slate-400 hover:text-slate-900" onClick={() => setShowUserForm(false)}>
-                      <X size={24} />
+        {/* Content based on active view */}
+        {activeView === 'dashboard' && (
+          /* Dashboard View - Always visible */
+          <>
+            {user?.adminLevel === 'superadmin' ? (
+              /* Superadmin Dashboard */
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                  <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-500 font-medium">Total Users</p>
+                          <p className="text-3xl font-bold text-slate-900 mt-1">{userStats.totalUsers}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <Users className="h-6 w-6 text-slate-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-500 font-medium">Admin Users</p>
+                          <p className="text-3xl font-bold text-blue-600 mt-1">{userStats.adminCount}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Shield className="h-6 w-6 text-blue-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-500 font-medium">Citizen Users</p>
+                          <p className="text-3xl font-bold text-teal-600 mt-1">{userStats.citizenCount}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-lg bg-teal-100 flex items-center justify-center">
+                          <Users className="h-6 w-6 text-teal-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* System Charts */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-slate-900">System Analytics</h2>
+                    <Button
+                      onClick={loadSystemStats}
+                      disabled={systemStatsLoading}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      {systemStatsLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <BarChart3 className="h-4 w-4" />
+                      )}
+                      Refresh Data
                     </Button>
-                  </CardHeader>
-                  <CardContent className="p-12">
-                    <UserForm 
-                      initialData={editingUser} 
-                      onSubmit={() => {
-                        setShowUserForm(false);
-                        loadUsers();
-                      }}
-                      onCancel={() => setShowUserForm(false)}
-                      isLoading={usersLoading}
+                  </div>
+                  
+                  {systemStatsLoading ? (
+                    <Card className="bg-white border-0 shadow-md">
+                      <CardContent className="py-12 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-[#003366] mx-auto" />
+                        <p className="text-slate-500 mt-4">Loading system analytics...</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Applications by Department */}
+                      <Card className="bg-white border-0 shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">Applications by Department</CardTitle>
+                          <CardDescription>Total submissions per department</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={[
+                              { name: 'Licensing', value: departmentStats.licensing?.total || 0, fill: '#3b82f6' },
+                              { name: 'Complaints', value: departmentStats.complaints?.total || 0, fill: '#f97316' },
+                              { name: 'Tenders', value: departmentStats.tenders?.total || 0, fill: '#10b981' },
+                              { name: 'QoS', value: departmentStats.qos?.total || 0, fill: '#a855f7' },
+                            ]}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis />
+                              <Tooltip />
+                              <Bar dataKey="value" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Applications by Status */}
+                      <Card className="bg-white border-0 shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">Applications by Status</CardTitle>
+                          <CardDescription>Overall submission status distribution</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={[
+                                  { 
+                                    name: 'Pending', 
+                                    value: (departmentStats.licensing?.pending || 0) + (departmentStats.complaints?.pending || 0) + (departmentStats.tenders?.pending || 0) + (departmentStats.qos?.pending || 0),
+                                    fill: '#f59e0b'
+                                  },
+                                  { 
+                                    name: 'Approved', 
+                                    value: (departmentStats.licensing?.approved || 0) + (departmentStats.complaints?.approved || 0) + (departmentStats.tenders?.approved || 0) + (departmentStats.qos?.approved || 0),
+                                    fill: '#10b981'
+                                  },
+                                  { 
+                                    name: 'Rejected', 
+                                    value: (departmentStats.licensing?.rejected || 0) + (departmentStats.complaints?.rejected || 0) + (departmentStats.tenders?.rejected || 0) + (departmentStats.qos?.rejected || 0),
+                                    fill: '#ef4444'
+                                  },
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, value }) => `${name}: ${value}`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                <Cell fill="#f59e0b" />
+                                <Cell fill="#10b981" />
+                                <Cell fill="#ef4444" />
+                              </Pie>
+                              <Tooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* User Distribution */}
+                      <Card className="bg-white border-0 shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">User Distribution</CardTitle>
+                          <CardDescription>System users by type</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={[
+                                  { name: 'Admin Users', value: userStats.adminCount, fill: '#3b82f6' },
+                                  { name: 'Citizen Users', value: userStats.citizenCount, fill: '#14b8a6' },
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, value }) => `${name}: ${value}`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                <Cell fill="#3b82f6" />
+                                <Cell fill="#14b8a6" />
+                              </Pie>
+                              <Tooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Department Status Breakdown */}
+                      <Card className="bg-white border-0 shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">Department Status Summary</CardTitle>
+                          <CardDescription>Status breakdown by department</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {Object.entries(departmentStats).map(([dept, stats]) => (
+                            <div key={dept} className="border-b border-slate-100 pb-4 last:border-b-0">
+                              <div className="flex justify-between items-center mb-2">
+                                <h4 className="font-semibold text-slate-900 capitalize">{dept}</h4>
+                                <span className="text-sm font-bold text-slate-600">{stats.total} total</span>
+                              </div>
+                              <div className="flex gap-2 text-xs">
+                                <div className="flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                                  <span className="text-slate-600">Pending: {stats.pending}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                  <span className="text-slate-600">Approved: {stats.approved}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                  <span className="text-slate-600">Rejected: {stats.rejected}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : user?.adminLevel === 'admin' && !user?.department ? (
+              <Card className="border-0 shadow-md">
+                <CardContent className="py-16 text-center">
+                  <AlertCircle className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-slate-700 mb-2">No Department Selected</h3>
+                  <p className="text-slate-500">
+                    Please select a department from your profile to access submissions.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="text-center py-12">
+                <BarChart3 className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome to Dashboard</h2>
+                <p className="text-slate-500 mb-6">
+                  Navigate to Submissions to review current submissions.
+                </p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Submissions View - Only show when department is selected */}
+        {activeView === 'submissions' && user?.department && (
+          <>
+            {/* Tender View Toggle - Only for Tenders Department */}
+            {user?.department === DEPARTMENTS.TENDERS && (
+              <div className="mb-6 flex gap-2">
+                <Button
+                  onClick={() => {
+                    setTenderView('submissions');
+                    setSearchTerm('');
+                    setFilterStatus('all');
+                  }}
+                  variant={tenderView === 'submissions' ? 'default' : 'outline'}
+                  className={`gap-2 ${
+                    tenderView === 'submissions'
+                      ? 'bg-[#003366] hover:bg-[#0A4D8C]'
+                      : 'border-slate-200'
+                  }`}
+                >
+                  <FileText className="h-4 w-4" />
+                  Tender Submissions
+                </Button>
+                <Button
+                  onClick={() => {
+                    setTenderView('postings');
+                    loadTenderPostings();
+                    setSearchTerm('');
+                    setFilterStatus('all');
+                  }}
+                  variant={tenderView === 'postings' ? 'default' : 'outline'}
+                  className={`gap-2 ${
+                    tenderView === 'postings'
+                      ? 'bg-[#003366] hover:bg-[#0A4D8C]'
+                      : 'border-slate-200'
+                  }`}
+                >
+                  <Plus className="h-4 w-4" />
+                  Tender Postings
+                </Button>
+              </div>
+            )}
+
+            {/* Tender Postings View */}
+            {tenderView === 'postings' && user?.department === DEPARTMENTS.TENDERS ? (
+              <>
+                {/* Create Button */}
+                {!showTenderForm && (
+                  <div className="mb-6">
+                    <Button
+                      onClick={() => setShowTenderForm(true)}
+                      className="bg-[#003366] hover:bg-[#0A4D8C] text-white gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create New Tender
+                    </Button>
+                  </div>
+                )}
+
+                {/* Create/Edit Tender Form */}
+                {showTenderForm && (
+                  <Card className="border-0 shadow-md mb-6 bg-slate-50">
+                    <CardHeader>
+                      <CardTitle>{editingTender ? 'Edit Tender Posting' : 'Create New Tender Posting'}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Tender Number *</label>
+                          <Input
+                            placeholder="e.g., TND-2026-001"
+                            className="border-slate-200"
+                            value={formData.tenderNumber}
+                            onChange={(e) => setFormData({...formData, tenderNumber: e.target.value})}
+                            disabled={editingTender}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Title *</label>
+                          <Input
+                            placeholder="Tender title"
+                            className="border-slate-200"
+                            value={formData.title}
+                            onChange={(e) => setFormData({...formData, title: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Category *</label>
+                          <select
+                            value={formData.category}
+                            onChange={(e) => setFormData({...formData, category: e.target.value})}
+                            className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                          >
+                            <option value="">Select a category</option>
+                            <option value="Goods">Goods</option>
+                            <option value="Services">Services</option>
+                            <option value="Works">Works</option>
+                            <option value="Consultancy">Consultancy</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Closing Date *</label>
+                          <Input
+                            type="datetime-local"
+                            className="border-slate-200"
+                            value={formData.closingDate}
+                            onChange={(e) => setFormData({...formData, closingDate: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Estimated Value</label>
+                          <Input
+                            type="number"
+                            placeholder="0.00"
+                            className="border-slate-200"
+                            value={formData.estimatedValue}
+                            onChange={(e) => setFormData({...formData, estimatedValue: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 mb-1 block">Location</label>
+                          <Input
+                            placeholder="Tender location"
+                            className="border-slate-200"
+                            value={formData.location}
+                            onChange={(e) => setFormData({...formData, location: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-slate-700 mb-1 block">Description *</label>
+                        <textarea
+                          placeholder="Tender description and requirements"
+                          className="w-full h-24 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                          value={formData.description}
+                          onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        />
+                      </div>
+
+                      {/* Existing Documents (Edit Mode) */}
+                      {editingTender && editingTender.documents && editingTender.documents.length > 0 && (
+                        <div className="bg-white rounded-lg p-4 border border-slate-200">
+                          <h4 className="font-semibold text-slate-900 mb-2">Existing Documents</h4>
+                          <div className="space-y-2">
+                            {editingTender.documents
+                              .filter(doc => !documentsToDeleteAfterSave.includes(doc.id))
+                              .map((doc) => (
+                                <div key={doc.id} className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-slate-600" />
+                                    <div>
+                                      <p className="text-sm font-medium text-slate-900">{doc.filename}</p>
+                                      <p className="text-xs text-slate-500">{(doc.fileSize / 1024).toFixed(2)} KB</p>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setDocumentsToDeleteAfterSave([...documentsToDeleteAfterSave, doc.id])}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* New Documents Upload */}
+                      <div className="bg-white rounded-lg p-4 border border-slate-200">
+                        <h4 className="font-semibold text-slate-900 mb-3">Upload Documents</h4>
+                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-[#003366] transition-colors cursor-pointer">
+                          <input
+                            type="file"
+                            id="formDocumentUpload"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files || []);
+                              setFormDocuments([...formDocuments, ...files]);
+                              e.target.value = '';
+                            }}
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip"
+                          />
+                          <label htmlFor="formDocumentUpload" className="flex flex-col items-center cursor-pointer">
+                            <Upload className="h-8 w-8 text-slate-400 mb-2" />
+                            <p className="text-sm text-slate-600">Click to upload or drag and drop</p>
+                            <p className="text-xs text-slate-500 mt-1">PDF, DOC, DOCX, XLS, XLSX, PPT, ZIP</p>
+                          </label>
+                        </div>
+                        
+                        {/* Selected Files List */}
+                        {formDocuments.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            <p className="text-sm font-medium text-slate-700">Selected Documents ({formDocuments.length})</p>
+                            {formDocuments.map((file, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-slate-600" />
+                                  <div>
+                                    <p className="text-sm font-medium text-slate-900">{file.name}</p>
+                                    <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(2)} KB</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setFormDocuments(formDocuments.filter((_, i) => i !== index))}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          onClick={handleFormReset}
+                          variant="outline"
+                          disabled={tenderPostingsLoading}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (!formData.tenderNumber || !formData.title || !formData.category || !formData.closingDate || !formData.description) {
+                              toast({
+                                title: 'Error',
+                                description: 'Please fill in all required fields',
+                                variant: 'destructive',
+                              });
+                              return;
+                            }
+
+                            const submitData = {
+                              tenderNumber: formData.tenderNumber,
+                              title: formData.title,
+                              category: formData.category,
+                              closingDate: formData.closingDate,
+                              description: formData.description,
+                              estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : null,
+                              location: formData.location || null,
+                            };
+
+                            if (editingTender) {
+                              handleUpdateTenderPosting(submitData);
+                            } else {
+                              handleCreateTenderPosting(submitData);
+                            }
+                          }}
+                          disabled={tenderPostingsLoading}
+                          className="bg-[#003366] hover:bg-[#0A4D8C] text-white"
+                        >
+                          {tenderPostingsLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : editingTender ? (
+                            <>
+                              <Check className="h-4 w-4 mr-2" />
+                              Update Tender
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Create Tender
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Tender Postings List */}
+                <div className="space-y-4">
+                  {tenderPostingsLoading && !showTenderForm ? (
+                    <Card className="border-0 shadow-md">
+                      <CardContent className="py-16 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-[#003366] mx-auto" />
+                        <p className="text-slate-500 mt-4">Loading tender postings...</p>
+                      </CardContent>
+                    </Card>
+                  ) : tenderPostings.length === 0 ? (
+                    <Card className="border-0 shadow-md">
+                      <CardContent className="py-16 text-center">
+                        <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-slate-700 mb-2">No Tender Postings</h3>
+                        <p className="text-slate-500">
+                          Create your first tender posting to get started.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    tenderPostings.map((tender) => (
+                      <Card key={tender.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                        <CardContent className="pt-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-lg font-bold text-slate-900">{tender.title}</h3>
+                                <Badge className={`${
+                                  tender.status === 'Open' ? 'bg-green-500' :
+                                  tender.status === 'Closed' ? 'bg-amber-500' :
+                                  'bg-slate-500'
+                                }`}>
+                                  {tender.status}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
+                                <span className="flex items-center gap-1.5">
+                                  <Hash className="h-3.5 w-3.5" />
+                                  <span className="font-mono font-semibold text-[#003366]">{tender.tenderNumber}</span>
+                                </span>
+                                <span>•</span>
+                                <span>{tender.category}</span>
+                                <span>•</span>
+                                <span>Closes: {new Date(tender.closingDate).toLocaleDateString()}</span>
+                              </div>
+                              {tender.estimatedValue && (
+                                <div className="text-sm text-slate-600 font-semibold">
+                                  Estimated Value: ${tender.estimatedValue.toFixed(2)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <p className="text-slate-600 mb-4 line-clamp-2">{tender.description}</p>
+
+                          {/* Documents Section */}
+                          <div className="bg-slate-50 rounded-xl p-4 mb-4 border border-slate-100">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="font-semibold text-slate-900">Documents ({tender.documents?.length || 0})</h4>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-sm gap-1"
+                                onClick={() => {
+                                  // TODO: Show upload modal
+                                  toast({
+                                    title: 'Upload Documents',
+                                    description: 'Document upload functionality coming soon',
+                                  });
+                                }}
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                Add Document
+                              </Button>
+                            </div>
+                            {tender.documents && tender.documents.length > 0 ? (
+                              <div className="space-y-2">
+                                {tender.documents.map((doc) => (
+                                  <div
+                                    key={doc.id}
+                                    className="flex items-center justify-between p-2 bg-white rounded border border-slate-200"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="h-4 w-4 text-slate-600" />
+                                      <div>
+                                        <p className="text-sm font-medium text-slate-900">{doc.filename}</p>
+                                        <p className="text-xs text-slate-500">{(doc.fileSize / 1024).toFixed(2)} KB</p>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-red-600 hover:text-red-700"
+                                      onClick={() => {
+                                        if (window.confirm('Delete this document?')) {
+                                          adminApi.deleteTenderDocument(doc.id).then(() => {
+                                            toast({
+                                              title: 'Success',
+                                              description: 'Document deleted successfully',
+                                            });
+                                            loadTenderPostings();
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-slate-500">No documents uploaded yet</p>
+                            )}
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={tenderPostingsLoading}
+                              onClick={() => handleEditTender(tender)}
+                              className="text-slate-600 border-slate-200"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={tenderPostingsLoading}
+                              onClick={() => handleDeleteTenderPosting(tender.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Original Submissions View */}
+                <Card className="border-0 shadow-md mb-6">
+                  <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Input
+                      placeholder="Search by name, subject, or reference token..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 border-slate-200"
                     />
+                  </div>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="flex h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Registered">Registered</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Submissions List */}
+            <div className="space-y-4">
+              {filteredSubmissions.length === 0 ? (
+                <Card className="border-0 shadow-md">
+                  <CardContent className="py-16 text-center">
+                    <DeptIcon className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-700 mb-2">No Submissions Found</h3>
+                    <p className="text-slate-500">
+                      {searchTerm || filterStatus !== 'all'
+                        ? 'Try adjusting your search or filter criteria.'
+                        : 'No submissions have been received for this department yet.'}
+                    </p>
                   </CardContent>
                 </Card>
               ) : (
-                <UserList 
-                  users={users} 
-                  loading={usersLoading} 
-                  searchTerm={searchTerm}
-                  onSearchChange={setSearchTerm}
-                  onEdit={(u) => { setEditingUser(u); setShowUserForm(true); }}
-                  onDelete={async (u) => { if (confirm(`Revoke access for ${u.name}?`)) { await adminApi.deleteUser(u.id); loadUsers(); } }}
-                  onView={setViewingUser}
-                />
+                filteredSubmissions.map((sub) => (
+                  <Card key={sub.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-bold text-slate-900">{sub.subject}</h3>
+                            {getPriorityBadge(sub.priority)}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-slate-500">
+                            <span className="flex items-center gap-1.5">
+                              <Hash className="h-3.5 w-3.5" />
+                              <span className="font-mono font-semibold text-[#003366]">{sub.id}</span>
+                            </span>
+                            <span>•</span>
+                            <span>{sub.citizenName} ({sub.citizenEmail})</span>
+                            <span>•</span>
+                            <span>{sub.submittedDate}</span>
+                          </div>
+                        </div>
+                        {getStatusBadge(sub.status)}
+                      </div>
+
+                      <p className="text-slate-600 mb-4 line-clamp-2">{sub.description}</p>
+
+                      {/* Admin Notes */}
+                      {sub.adminNotes && (
+                        <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100">
+                          <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Admin Notes</p>
+                          <p className="text-sm text-slate-700">{sub.adminNotes}</p>
+                        </div>
+                      )}
+
+                      {/* Review Info */}
+                      {sub.reviewedBy && (
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
+                          <CheckCheck className="h-3.5 w-3.5" />
+                          Reviewed by <span className="font-semibold">{sub.reviewedBy}</span> on {new Date(sub.reviewedAt).toLocaleDateString()}
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                        {selectedSubmission === sub.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <Input
+                              placeholder="Add a note before changing status..."
+                              value={adminNote}
+                              onChange={(e) => setAdminNote(e.target.value)}
+                              disabled={submissionsLoading}
+                              className="flex-1 text-sm h-9"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={submissionsLoading || !adminNote.trim()}
+                              onClick={() => {
+                                handleAddNote(sub.id);
+                              }}
+                              className="text-[#003366]"
+                            >
+                              {submissionsLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={submissionsLoading}
+                              onClick={() => setSelectedSubmission(null)}
+                              className="text-slate-400"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            {user?.department === 'tenders' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={submissionsLoading}
+                                className="text-slate-600 border-slate-200"
+                                onClick={() => setSelectedTenderDetail(sub)}
+                              >
+                                <Eye className="h-4 w-4 mr-1.5" />
+                                View Details
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={submissionsLoading}
+                              className="text-slate-600 border-slate-200"
+                              onClick={() => setSelectedSubmission(sub.id)}
+                            >
+                              <Eye className="h-4 w-4 mr-1.5" />
+                              Add Note
+                            </Button>
+                            {/* Status buttons vary by department */}
+                            {user?.department === 'complaints' ? (
+                              <>
+                                {sub.status === 'Registered' && (
+                                  <Button
+                                    size="sm"
+                                    disabled={submissionsLoading}
+                                    className="bg-[#003366] hover:bg-[#003366] text-white"
+                                    onClick={() => handleStatusChange(sub.id, 'Acknowledged')}
+                                  >
+                                    <Clock className="h-4 w-4 mr-1.5" />
+                                    Acknowledge
+                                  </Button>
+                                )}
+                                {(sub.status === 'Registered' || sub.status === 'Acknowledged') && (
+                                  <Button
+                                    size="sm"
+                                    disabled={submissionsLoading}
+                                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                                    onClick={() => handleStatusChange(sub.id, 'In Progress')}
+                                  >
+                                    <Clock className="h-4 w-4 mr-1.5" />
+                                    In Progress
+                                  </Button>
+                                )}
+                                {(sub.status === 'Registered' || sub.status === 'Acknowledged' || sub.status === 'In Progress') && (
+                                  <Button
+                                    size="sm"
+                                    disabled={submissionsLoading}
+                                    className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                                    onClick={() => handleStatusChange(sub.id, 'Resolved')}
+                                  >
+                                    <CheckCheck className="h-4 w-4 mr-1.5" />
+                                    Resolve
+                                  </Button>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                {sub.status === 'Submitted' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      disabled={submissionsLoading}
+                                      className="bg-[#003366] hover:bg-[#003366] text-white"
+                                      onClick={() => handleStatusChange(sub.id, 'Under Review')}
+                                    >
+                                      <Clock className="h-4 w-4 mr-1.5" />
+                                      Start Review
+                                    </Button>
+                                  </>
+                                )}
+                                {(sub.status === 'Submitted' || sub.status === 'Under Review') && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      disabled={submissionsLoading}
+                                      className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                                      onClick={() => handleStatusChange(sub.id, 'Approved')}
+                                    >
+                                      <CheckCheck className="h-4 w-4 mr-1.5" />
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      disabled={submissionsLoading}
+                                      variant="destructive"
+                                      onClick={() => handleStatusChange(sub.id, 'Rejected')}
+                                    >
+                                      <XCircle className="h-4 w-4 mr-1.5" />
+                                      Reject
+                                    </Button>
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
               )}
             </div>
-          )}
+              </>
+            )}
+          </>
+        )}
 
-          {/* Applications/All Submissions View */}
-          {activeView === 'applications' && (
-            <div className="space-y-6 animate-in fade-in duration-500">
-              <SurfaceCard 
-                title="Consolidated System Audit" 
-                subtitle="A complete record of every transaction initiated across the BOCRA ecosystem."
-                icon={ShieldCheck}
-              >
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Auth Token</th>
-                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Entity</th>
-                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Portfolio</th>
-                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Current State</th>
-                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Audit</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {allApplications.map((app) => (
-                        <tr key={app.id} className="hover:bg-slate-50/20 transition-colors">
-                          <td className="px-8 py-6 font-mono text-xs font-bold text-teal-600">{app.token || 'MANIFEST_ERR'}</td>
-                          <td className="px-8 py-6">
-                            <p className="text-sm font-bold text-slate-900">{app.citizenName}</p>
-                            <p className="text-[10px] font-black text-slate-400 uppercase">{app.citizenEmail}</p>
-                          </td>
-                          <td className="px-8 py-6">
-                            <Badge className={`${DEPARTMENT_COLORS[app.department]?.bg || 'bg-slate-900'} text-white border-0 text-[10px] font-black uppercase tracking-widest px-3 py-1`}>
-                              {app.department}
-                            </Badge>
-                          </td>
-                          <td className="px-8 py-6">{getStatusBadge(app.status)}</td>
-                          <td className="px-8 py-6">
-                            <Button variant="outline" className="rounded-2xl border-2 border-slate-900 font-black text-[10px] uppercase h-10 px-6" onClick={() => setSelectedSubmission(app)}>Inspect</Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </SurfaceCard>
-            </div>
-          )}
-
-          {/* Settings View */}
-          {activeView === 'settings' && (
-            <div className="space-y-6 animate-in fade-in duration-500">
-               <Card className="border-0 shadow-xl rounded-[2.5rem] overflow-hidden shadow-slate-200">
-                <CardHeader className="p-10 border-b bg-slate-50 flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle className="text-3xl font-black text-slate-900 tracking-tight">System Node Configuration</CardTitle>
-                    <CardDescription className="text-slate-500 text-base mt-2 font-medium">Protocol weights, security barriers, and automated dispatch control.</CardDescription>
-                  </div>
-                  <Button 
-                    onClick={handleSaveSettings} 
-                    disabled={settingsLoading}
-                    className="bg-slate-900 hover:bg-[#14B8A6] text-white px-10 h-14 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl transition-all active:scale-95"
+        {/* User Management View - Only for Superadmins */}
+        {activeView === 'users' && user?.adminLevel === 'superadmin' && (
+          <>
+            {showUserForm ? (
+              <div className="mb-8">
+                <div className="mb-6">
+                  <button
+                    onClick={() => {
+                      setShowUserForm(false);
+                      setEditingUser(null);
+                    }}
+                    className="text-[#003366] hover:underline text-sm font-medium"
                   >
-                    {settingsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-3 h-5 w-5" />}
-                    Commit System Changes
+                    ← Back to Users
+                  </button>
+                </div>
+                <UserForm
+                  user={editingUser}
+                  onSubmit={handleUserSubmit}
+                  onCancel={() => {
+                    setShowUserForm(false);
+                    setEditingUser(null);
+                  }}
+                  loading={userLoading}
+                />
+              </div>
+            ) : (
+              <>
+                {/* User Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <Card className="bg-white">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-500 font-medium">Total Users</p>
+                          <p className="text-3xl font-bold text-slate-900 mt-1">{userStats.totalUsers}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <Users className="h-6 w-6 text-slate-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-500 font-medium">Admin Users</p>
+                          <p className="text-3xl font-bold text-blue-600 mt-1">{userStats.adminCount}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Shield className="h-6 w-6 text-blue-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-500 font-medium">Citizen Users</p>
+                          <p className="text-3xl font-bold text-teal-600 mt-1">{userStats.citizenCount}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-lg bg-teal-100 flex items-center justify-center">
+                          <Users className="h-6 w-6 text-teal-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Create Button */}
+                <div className="mb-6">
+                  <Button
+                    onClick={() => setShowUserForm(true)}
+                    className="bg-[#003366] hover:bg-[#0A4D8C] text-white gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create New User
                   </Button>
-                </CardHeader>
-                <CardContent className="p-0 min-h-[600px]">
-                  <Tabs defaultValue="general" className="w-full">
-                    <div className="px-10 bg-white border-b sticky top-0 z-10">
-                      <TabsList className="h-16 bg-transparent gap-8">
-                        {['general', 'security', 'email', 'automation', 'activity'].map((tab) => (
-                          <TabsTrigger 
-                            key={tab}
-                            value={tab} 
-                            className="h-16 rounded-none border-b-[3px] border-transparent data-[state=active]:border-[#14B8A6] data-[state=active]:bg-transparent px-2 font-black text-[10px] uppercase tracking-widest text-slate-400 data-[state=active]:text-slate-900 transition-all"
-                          >
-                            {tab}
-                          </TabsTrigger>
-                        ))}
-                      </TabsList>
+                </div>
+
+                {/* Users List */}
+                <UserList
+                  users={users}
+                  searchTerm={userSearchTerm}
+                  onSearchChange={setUserSearchTerm}
+                  onEdit={(user) => {
+                    setEditingUser(user);
+                    setShowUserForm(true);
+                  }}
+                  onDelete={handleDeleteUser}
+                  onView={setViewingUser}
+                  loading={userLoading}
+                />
+              </>
+            )}
+          </>
+        )}
+
+        {/* Applications View - Only for Superadmins */}
+        {activeView === 'applications' && user?.adminLevel === 'superadmin' && (
+          <>
+            {/* Search & Filter */}
+            <Card className="border-0 shadow-md mb-6">
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Input
+                      placeholder="Search by name, subject, or reference..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 border-slate-200"
+                    />
+                  </div>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="flex h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Registered">Registered</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Total Applications</p>
+                      <p className="text-3xl font-bold text-slate-900 mt-1">{allApplications.length}</p>
                     </div>
-
-                    <div className="p-12">
-                      <TabsContent value="general" className="mt-0 space-y-10">
-                        <div className="grid md:grid-cols-2 gap-10">
-                          <div className="space-y-4">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-teal-600">Portal Instance Name</Label>
-                            <Input value={settings.siteName} onChange={(e) => handleSettingsChange('siteName', e.target.value)} className="h-14 rounded-xl border-slate-200 focus:ring-2 focus:ring-teal-500/20 font-bold" />
-                          </div>
-                          <div className="space-y-4">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-teal-600">Emergency Protocol Email</Label>
-                            <Input value={settings.supportEmail} onChange={(e) => handleSettingsChange('supportEmail', e.target.value)} className="h-14 rounded-xl border-slate-200 focus:ring-2 focus:ring-teal-500/20 font-bold" />
-                          </div>
-                        </div>
-
-                        <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 flex items-center justify-between hover:bg-slate-100/50 transition-colors">
-                          <div className="flex gap-6">
-                            <div className="w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shadow-inner">
-                              <AlertCircle size={24} />
-                            </div>
-                            <div>
-                               <p className="font-black text-slate-900 text-lg leading-tight tracking-tight">Infrastructure Lockdown (Maintenance)</p>
-                               <p className="text-sm text-slate-500 font-medium">Redirect all public ingress to maintenance cluster. Emergency access only.</p>
-                            </div>
-                          </div>
-                          <Switch checked={settings.maintenanceMode} onCheckedChange={(val) => handleSettingsChange('maintenanceMode', val)} />
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="security" className="mt-0 space-y-8">
-                        <div className="space-y-6">
-                          <div className="flex items-center justify-between p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
-                            <div className="flex gap-6">
-                              <div className="w-14 h-14 bg-[#14B8A6]/10 text-teal-600 rounded-2xl flex items-center justify-center"><Lock size={24} /></div>
-                              <div>
-                                <p className="font-black text-slate-900 text-lg leading-tight tracking-tight">Biometric/Two-Factor Enforced</p>
-                                <p className="text-sm text-slate-500 font-medium">Require additional validation layers for all institutional access.</p>
-                              </div>
-                            </div>
-                            <Switch checked={settings.twoFactorAuth} onCheckedChange={(val) => handleSettingsChange('twoFactorAuth', val)} />
-                          </div>
-
-                          <div className="flex items-center justify-between p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
-                            <div className="flex gap-6">
-                              <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center"><Clock size={24} /></div>
-                              <div>
-                                <p className="font-black text-slate-900 text-lg leading-tight tracking-tight">Automated Terminal Logout</p>
-                                <p className="text-sm text-slate-500 font-medium">Flush sessions after {settings.sessionTimeout} minutes of zero IO activity.</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
-                              <Input type="number" value={settings.sessionTimeout} onChange={(e) => handleSettingsChange('sessionTimeout', parseInt(e.target.value))} className="w-24 h-12 border-0 text-center font-black text-xl" />
-                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-2">Min</span>
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-                      
-                      <TabsContent value="activity" className="mt-0">
-                        <div className="rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-                          <table className="w-full text-left">
-                            <thead className="bg-slate-50">
-                              <tr>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Vector Timestamp</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Operation Log</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Origin Handle</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                              {recentActivities.map((log, i) => (
-                                <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="px-8 py-6 text-xs text-slate-500 font-mono">{new Date(log.timestamp).toLocaleString()}</td>
-                                  <td className="px-8 py-6 text-xs font-black text-slate-900 uppercase">{log.action}</td>
-                                  <td className="px-8 py-6 text-xs text-slate-500 font-bold">{log.userEmail || 'SYSTEM_CORE'}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </TabsContent>
+                    <div className="w-12 h-12 rounded-2xl bg-[#E8F0F9] flex items-center justify-center">
+                      <FileText className="h-6 w-6 text-[#003366]" />
                     </div>
-                  </Tabs>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Pending</p>
+                      <p className="text-3xl font-bold text-amber-600 mt-1">
+                        {allApplications.filter(a => a.status === 'Submitted' || a.status === 'Under Review').length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                      <Clock className="h-6 w-6 text-amber-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Approved</p>
+                      <p className="text-3xl font-bold text-emerald-600 mt-1">
+                        {allApplications.filter(a => a.status === 'Approved').length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-emerald-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-md bg-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Rejected</p>
+                      <p className="text-3xl font-bold text-red-600 mt-1">
+                        {allApplications.filter(a => a.status === 'Rejected').length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center">
+                      <XCircle className="h-6 w-6 text-red-600" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
-          )}
 
-          {/* Licensing desk view logic */}
-          {activeView === 'licensing' && user?.adminLevel === 'superadmin' && (
-            <div className="animate-in fade-in duration-500">
-              <AdminLicensingView user={user} />
+            {/* Applications List */}
+            <div className="space-y-4">
+              {submissionsLoading ? (
+                <Card className="border-0 shadow-md">
+                  <CardContent className="py-16 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#003366] mx-auto" />
+                    <p className="text-slate-500 mt-4">Loading applications...</p>
+                  </CardContent>
+                </Card>
+              ) : allApplications.filter((app) => {
+                const matchesSearch =
+                  app.citizenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  app.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  app.id?.toLowerCase().includes(searchTerm.toLowerCase());
+                const matchesFilter = filterStatus === 'all' || app.status === filterStatus;
+                return matchesSearch && matchesFilter;
+              }).length === 0 ? (
+                <Card className="border-0 shadow-md">
+                  <CardContent className="py-16 text-center">
+                    <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-700 mb-2">No Applications Found</h3>
+                    <p className="text-slate-500">
+                      {searchTerm || filterStatus !== 'all'
+                        ? 'Try adjusting your search or filter criteria.'
+                        : 'No applications have been received yet.'}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                allApplications.filter((app) => {
+                  const matchesSearch =
+                    app.citizenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    app.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    app.id?.toLowerCase().includes(searchTerm.toLowerCase());
+                  const matchesFilter = filterStatus === 'all' || app.status === filterStatus;
+                  return matchesSearch && matchesFilter;
+                }).map((app) => (
+                  <Card key={app.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-bold text-slate-900">{app.subject}</h3>
+                            {getPriorityBadge(app.priority)}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
+                            <span className="flex items-center gap-1.5">
+                              <Hash className="h-3.5 w-3.5" />
+                              <span className="font-mono font-semibold text-[#003366]">{app.id}</span>
+                            </span>
+                            <span>•</span>
+                            <span>{app.citizenName} ({app.citizenEmail})</span>
+                            <span>•</span>
+                            <span>{app.submittedDate}</span>
+                          </div>
+                          <div className="text-xs text-slate-400 font-medium">
+                            Department: <span className="text-slate-600">{app.department ? app.department.toUpperCase() : 'N/A'}</span>
+                          </div>
+                        </div>
+                        {getStatusBadge(app.status)}
+                      </div>
+
+                      <p className="text-slate-600 mb-4 line-clamp-2">{app.description}</p>
+
+                      {/* Admin Notes */}
+                      {app.adminNotes && (
+                        <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100">
+                          <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Admin Notes</p>
+                          <p className="text-sm text-slate-700">{app.adminNotes}</p>
+                        </div>
+                      )}
+
+                      {/* Review Info */}
+                      {app.reviewedBy && (
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
+                          <CheckCheck className="h-3.5 w-3.5" />
+                          Reviewed by <span className="font-semibold">{app.reviewedBy}</span> on {new Date(app.reviewedAt).toLocaleDateString()}
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                        {selectedSubmission === app.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <Input
+                              placeholder="Add a note..."
+                              value={adminNote}
+                              onChange={(e) => setAdminNote(e.target.value)}
+                              disabled={submissionsLoading}
+                              className="flex-1 text-sm h-9"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={submissionsLoading || !adminNote.trim()}
+                              onClick={() => handleAddNote(app.id)}
+                              className="text-[#003366]"
+                            >
+                              {submissionsLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={submissionsLoading}
+                              onClick={() => setSelectedSubmission(null)}
+                              className="text-slate-400"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={submissionsLoading}
+                              className="text-slate-600 border-slate-200"
+                              onClick={() => setSelectedSubmission(app.id)}
+                            >
+                              <Eye className="h-4 w-4 mr-1.5" />
+                              Add Note
+                            </Button>
+                            {app.status === 'Submitted' && (
+                              <Button
+                                size="sm"
+                                disabled={submissionsLoading}
+                                className="bg-[#003366] hover:bg-[#003366] text-white"
+                                onClick={() => handleStatusChange(app.id, 'Under Review')}
+                              >
+                                <Clock className="h-4 w-4 mr-1.5" />
+                                Start Review
+                              </Button>
+                            )}
+                            {(app.status === 'Submitted' || app.status === 'Under Review') && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  disabled={submissionsLoading}
+                                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                                  onClick={() => handleStatusChange(app.id, 'Approved')}
+                                >
+                                  <CheckCheck className="h-4 w-4 mr-1.5" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  disabled={submissionsLoading}
+                                  variant="destructive"
+                                  onClick={() => handleStatusChange(app.id, 'Rejected')}
+                                >
+                                  <XCircle className="h-4 w-4 mr-1.5" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
-          )}
-        </div>
-      </main>
+          </>
+        )}
 
-      {/* Modals & Overlays */}
-      {viewingUser && <UserModal user={viewingUser} onClose={() => setViewingUser(null)} />}
-      
-      {selectedSubmission && (
-         <TenderDetailModal 
-            tender={selectedSubmission} 
-            onClose={() => setSelectedSubmission(null)}
-            onAddNote={handleAddNote}
-            onStatusChange={handleStatusChange}
-            loading={submissionsLoading}
-            adminNote={adminNote}
-            setAdminNote={setAdminNote}
-         />
+        {/* License Applications View - Only for Superadmins */}
+        {activeView === 'licensing' && user?.adminLevel === 'superadmin' && (
+          <AdminLicensingView user={user} />
+        )}
+
+        {/* Settings View - Only for Superadmins */}
+        {activeView === 'settings' && user?.adminLevel === 'superadmin' && (
+          <div className="space-y-6">
+            {/* Settings Header */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 mb-1">
+                  System Configuration
+                </h2>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleResetSettings}
+                  disabled={settingsSaved || settingsLoading}
+                  className="gap-2"
+                >
+                  {settingsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Reset Changes
+                </Button>
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={settingsSaved || settingsLoading}
+                  className="gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  {settingsLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  {settingsLoading ? 'Saving...' : 'Save Settings'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Settings Tabs */}
+            <Tabs defaultValue="general" className="w-full">
+              <TabsList className="bg-slate-100 border-b">
+                <TabsTrigger value="general" className="gap-2">
+                  <Info className="h-4 w-4" />
+                  General
+                </TabsTrigger>
+                <TabsTrigger value="security" className="gap-2">
+                  <Lock className="h-4 w-4" />
+                  Security
+                </TabsTrigger>
+                <TabsTrigger value="email" className="gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email
+                </TabsTrigger>
+                <TabsTrigger value="display" className="gap-2">
+                  <Palette className="h-4 w-4" />
+                  Display
+                </TabsTrigger>
+                <TabsTrigger value="notifications" className="gap-2">
+                  <Bell className="h-4 w-4" />
+                  Notifications
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="gap-2">
+                  <Activity className="h-4 w-4" />
+                  Activity
+                </TabsTrigger>
+              </TabsList>
+
+              {/* General Settings Tab */}
+              <TabsContent value="general">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>General Settings</CardTitle>
+                    <CardDescription>Configure basic system information and maintenance settings</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="system-name" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          System Name
+                        </Label>
+                        <Input
+                          id="system-name"
+                          value={settings.systemName}
+                          onChange={(e) => handleSettingsChange('systemName', e.target.value)}
+                          placeholder="Enter system name"
+                          className="border-slate-200"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="system-desc" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          System Description
+                        </Label>
+                        <Input
+                          id="system-desc"
+                          value={settings.systemDescription}
+                          onChange={(e) => handleSettingsChange('systemDescription', e.target.value)}
+                          placeholder="Brief system description"
+                          className="border-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">Maintenance Mode</p>
+                        <p className="text-sm text-slate-500">Enable to prevent users from accessing the system</p>
+                      </div>
+                      <Switch
+                        checked={settings.maintenanceMode}
+                        onCheckedChange={(checked) => handleSettingsChange('maintenanceMode', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    {/* System Information Display */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                        <Info className="h-4 w-4" />
+                        System Information
+                      </h4>
+                      <div className="space-y-2 text-sm text-blue-800">
+                        <p><strong>Current Version:</strong> 1.0.0</p>
+                        <p><strong>Last Updated:</strong> {new Date().toLocaleDateString()}</p>
+                        <p><strong>Database Status:</strong> <span className="text-green-600 font-semibold">✓ Connected</span></p>
+                        <p><strong>API Status:</strong> <span className="text-green-600 font-semibold">✓ Online</span></p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Security Settings Tab */}
+              <TabsContent value="security">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>Security Settings</CardTitle>
+                    <CardDescription>Configure password policies and session management</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="pwd-min-length" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          Minimum Password Length (characters)
+                        </Label>
+                        <Input
+                          id="pwd-min-length"
+                          type="number"
+                          min="6"
+                          max="20"
+                          value={settings.passwordMinLength}
+                          onChange={(e) => handleSettingsChange('passwordMinLength', parseInt(e.target.value))}
+                          className="border-slate-200"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="pwd-expire" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          Password Expiry (days)
+                        </Label>
+                        <Input
+                          id="pwd-expire"
+                          type="number"
+                          min="30"
+                          max="365"
+                          value={settings.passwordExpireDays}
+                          onChange={(e) => handleSettingsChange('passwordExpireDays', parseInt(e.target.value))}
+                          className="border-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="session-timeout" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          Session Timeout (minutes)
+                        </Label>
+                        <Input
+                          id="session-timeout"
+                          type="number"
+                          min="10"
+                          max="120"
+                          value={settings.sessionTimeoutMinutes}
+                          onChange={(e) => handleSettingsChange('sessionTimeoutMinutes', parseInt(e.target.value))}
+                          className="border-slate-200"
+                        />
+                      </div>
+                      <div className="flex items-end pb-2">
+                        <div className="flex-1">
+                          <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                            Password Requirements
+                          </Label>
+                          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <span className="text-sm text-slate-600">Require special characters</span>
+                            <Switch
+                              checked={settings.passwordRequireSpecial}
+                              onCheckedChange={(checked) => handleSettingsChange('passwordRequireSpecial', checked)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900 flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-amber-600" />
+                          Two-Factor Authentication
+                        </p>
+                        <p className="text-sm text-slate-500">Require 2FA for all admin accounts</p>
+                      </div>
+                      <Switch
+                        checked={settings.enableTwoFactor}
+                        onCheckedChange={(checked) => handleSettingsChange('enableTwoFactor', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        Security Recommendations
+                      </h4>
+                      <ul className="text-sm text-amber-800 space-y-1">
+                        <li>✓ Use passwords with minimum 12 characters for better security</li>
+                        <li>✓ Enable 2FA for all administrative users</li>
+                        <li>✓ Set session timeout to 15-30 minutes</li>
+                        <li>✓ Review and update security settings monthly</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Email Settings Tab */}
+              <TabsContent value="email">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>Email & Notification Settings</CardTitle>
+                    <CardDescription>Configure email notifications and SMTP settings</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">Enable Email Notifications</p>
+                        <p className="text-sm text-slate-500">Send notifications via email</p>
+                      </div>
+                      <Switch
+                        checked={settings.emailNotificationsEnabled}
+                        onCheckedChange={(checked) => handleSettingsChange('emailNotificationsEnabled', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    {settings.emailNotificationsEnabled && (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-900">New Submission Notifications</p>
+                            <p className="text-sm text-slate-500">Notify admins of new submissions</p>
+                          </div>
+                          <Switch
+                            checked={settings.emailOnNewSubmission}
+                            onCheckedChange={(checked) => handleSettingsChange('emailOnNewSubmission', checked)}
+                            className="ml-4"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-900">Status Change Notifications</p>
+                            <p className="text-sm text-slate-500">Notify citizens of submission status changes</p>
+                          </div>
+                          <Switch
+                            checked={settings.emailOnStatusChange}
+                            onCheckedChange={(checked) => handleSettingsChange('emailOnStatusChange', checked)}
+                            className="ml-4"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-900">User Account Notifications</p>
+                            <p className="text-sm text-slate-500">Send credentials when creating new user accounts</p>
+                          </div>
+                          <Switch
+                            checked={settings.emailOnUserCreation}
+                            onCheckedChange={(checked) => handleSettingsChange('emailOnUserCreation', checked)}
+                            className="ml-4"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Email Configuration
+                      </h4>
+                      <div className="space-y-2 text-sm text-green-800">
+                        <p><strong>SMTP Server:</strong> smtp.bocra.org.bw</p>
+                        <p><strong>Port:</strong> 587</p>
+                        <p><strong>From Email:</strong> noreply@bocra.org.bw</p>
+                        <p><strong>Status:</strong> <span className="text-green-600 font-semibold">✓ Configured</span></p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Display Settings Tab */}
+              <TabsContent value="display">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>Display & Interface Settings</CardTitle>
+                    <CardDescription>Customize the appearance and layout of the system</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">Dark Mode</p>
+                        <p className="text-sm text-slate-500">Use dark theme for the interface</p>
+                      </div>
+                      <Switch
+                        checked={settings.darkMode}
+                        onCheckedChange={(checked) => handleSettingsChange('darkMode', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="display-density" className="text-sm font-semibold text-slate-700 mb-3 block">
+                        Display Density
+                      </Label>
+                      <div className="space-y-2">
+                        {['compact', 'normal', 'spacious'].map((density) => (
+                          <button
+                            key={density}
+                            onClick={() => handleSettingsChange('displayDensity', density)}
+                            className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                              settings.displayDensity === density
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-slate-200 bg-white hover:bg-slate-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              checked={settings.displayDensity === density}
+                              readOnly
+                              className="accent-blue-600"
+                            />
+                            <span className="font-medium text-slate-900 capitalize">{density} Spacing</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="items-per-page" className="text-sm font-semibold text-slate-700 mb-2 block">
+                        Items Per Page
+                      </Label>
+                      <Input
+                        id="items-per-page"
+                        type="number"
+                        min="5"
+                        max="50"
+                        step="5"
+                        value={settings.itemsPerPage}
+                        onChange={(e) => handleSettingsChange('itemsPerPage', parseInt(e.target.value))}
+                        className="border-slate-200"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Number of rows displayed per page in lists</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Notifications Settings Tab */}
+              <TabsContent value="notifications">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>Notification Preferences</CardTitle>
+                    <CardDescription>Configure in-app and browser notifications</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">In-App Notifications</p>
+                        <p className="text-sm text-slate-500">Show notifications in the application</p>
+                      </div>
+                      <Switch
+                        checked={settings.notificationsEnabled}
+                        onCheckedChange={(checked) => handleSettingsChange('notificationsEnabled', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">Browser Notifications</p>
+                        <p className="text-sm text-slate-500">Show desktop notifications (requires permission)</p>
+                      </div>
+                      <Switch
+                        checked={settings.enableBrowserNotifications}
+                        onCheckedChange={(checked) => handleSettingsChange('enableBrowserNotifications', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">Notification Sound</p>
+                        <p className="text-sm text-slate-500">Play sound for notifications</p>
+                      </div>
+                      <Switch
+                        checked={settings.notificationSound}
+                        onCheckedChange={(checked) => handleSettingsChange('notificationSound', checked)}
+                        className="ml-4"
+                      />
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                        <Bell className="h-4 w-4" />
+                        Notification Types
+                      </h4>
+                      <ul className="text-sm text-blue-800 space-y-2">
+                        <li>✓ New submissions and applications</li>
+                        <li>✓ Status updates and approvals</li>
+                        <li>✓ System maintenance alerts</li>
+                        <li>✓ User management changes</li>
+                        <li>✓ Document uploads and updates</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Activity Log Tab */}
+              <TabsContent value="activity">
+                <Card className="border-0 shadow-md">
+                  <CardHeader>
+                    <CardTitle>Recent System Activity</CardTitle>
+                    <CardDescription>View recent administrative actions and system events</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      {recentActivities.slice(0, 5).map((activity) => {
+                        const Icon = activity.type === 'create' ? Plus : activity.type === 'update' ? CheckCheck : Activity;
+                        return (
+                          <div key={activity.id} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors">
+                            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                              activity.type === 'create' ? 'bg-green-100' : activity.type === 'update' ? 'bg-blue-100' : 'bg-slate-100'
+                            }`}>
+                              <Icon className={`h-5 w-5 ${
+                                activity.type === 'create' ? 'text-green-600' : activity.type === 'update' ? 'text-blue-600' : 'text-slate-600'
+                              }`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-slate-900">{activity.action}</p>
+                              <p className="text-sm text-slate-500">{activity.user || activity.reference || activity.tender}</p>
+                              <p className="text-xs text-slate-400 mt-1">{activity.timestamp.toLocaleString()}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={loadAllActivities}
+                      disabled={allActivitiesLoading}
+                    >
+                      {allActivitiesLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Loading Activity Log...
+                        </>
+                      ) : (
+                        'View Full Activity Log'
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+      </div>
+
+      {/* Activity Log Modal */}
+      {showAllActivities && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+            <CardHeader className="border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl">Activity Log</CardTitle>
+                  <CardDescription>Total activities: {allActivities.length}</CardDescription>
+                </div>
+                <button
+                  onClick={() => setShowAllActivities(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <XIcon className="h-6 w-6" />
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-y-auto py-4">
+              <div className="space-y-3">
+                {allActivities.length > 0 ? (
+                  allActivities.map((activity) => {
+                    const Icon = activity.type === 'create' ? Plus : activity.type === 'update' ? CheckCheck : Activity;
+                    return (
+                      <div key={activity.id} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors">
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                          activity.type === 'create' ? 'bg-green-100' : activity.type === 'update' ? 'bg-blue-100' : 'bg-slate-100'
+                        }`}>
+                          <Icon className={`h-5 w-5 ${
+                            activity.type === 'create' ? 'text-green-600' : activity.type === 'update' ? 'text-blue-600' : 'text-slate-600'
+                          }`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-slate-900">{activity.action}</p>
+                          <p className="text-sm text-slate-500">{activity.user}</p>
+                          <p className="text-xs text-slate-400 mt-1">{activity.timestamp.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8">
+                    <Activity className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-500">No activities found</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+            <div className="border-t p-4 flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowAllActivities(false)}
+                className="flex-1"
+              >
+                Close
+              </Button>
+            </div>
+          </Card>
+        </div>
       )}
+
+      {/* User Detail Modal */}
+      {viewingUser && (
+        <UserModal user={viewingUser} onClose={() => setViewingUser(null)} />
+      )}
+
+      {/* Tender Detail Modal */}
+      <TenderDetailModal
+        tender={selectedTenderDetail}
+        isOpen={!!selectedTenderDetail}
+        onClose={() => setSelectedTenderDetail(null)}
+        onAddNote={(tenderId) => handleAddNote(tenderId)}
+        onStatusChange={(tenderId, newStatus) => handleStatusChange(tenderId, newStatus)}
+        loading={submissionsLoading}
+        adminNote={adminNote}
+        setAdminNote={setAdminNote}
+      />
     </div>
   );
 };

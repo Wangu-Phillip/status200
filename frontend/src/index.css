@@ -5,45 +5,60 @@
 @tailwind utilities;
 
 :root {
-  --bocra-navy: #003366;
-  --bocra-navy-dark: #001F40;
-  --bocra-orange: #F47920;
-  --bocra-navy-tint: #E8F0F9;
-  --bocra-cream: #F5F5F3;
-  --bocra-surface: #F8FBFF;
-  --bocra-border: #D9E6F4;
-  --bocra-text: #0F172A;
-  --bocra-text-soft: #475569;
+  /* ═══════════════════════════════════════════
+     BOCRA FULL BRAND PALETTE — 4 logo colors
+     Navy + Orange (dominant)
+     Sky Blue + Signal Green (supporting)
+  ═══════════════════════════════════════════ */
+  --bocra-navy:        #003366;
+  --bocra-navy-dark:   #001F40;
+  --bocra-navy-mid:    #0A4D8C;
+  --bocra-navy-tint:   #E8F0F9;
 
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 210 60% 98%;
-  --card-foreground: 215 75% 25%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 210 100% 20%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 65% 94%;
+  --bocra-orange:      #F47920;
+  --bocra-orange-dark: #C25E00;
+  --bocra-orange-tint: #FFF0E6;
+
+  /* Sky blue — from logo signal arc stripes */
+  --bocra-sky:         #0099CC;
+  --bocra-sky-dark:    #007AA3;
+  --bocra-sky-tint:    #E0F4FB;
+
+  /* Signal green — from logo wave mark */
+  --bocra-green:       #6DC04B;
+  --bocra-green-dark:  #4E9933;
+  --bocra-green-tint:  #EDF7E8;
+
+  --bocra-cream:       #F5F5F3;
+  --bocra-surface:     #F8FBFF;
+  --bocra-border:      #D9E6F4;
+  --bocra-text:        #0F172A;
+  --bocra-text-soft:   #475569;
+
+  --background:           0 0% 100%;
+  --foreground:           222.2 84% 4.9%;
+  --card:                 210 60% 98%;
+  --card-foreground:      215 75% 25%;
+  --popover:              0 0% 100%;
+  --popover-foreground:   222.2 84% 4.9%;
+  --primary:              210 100% 20%;
+  --primary-foreground:   210 40% 98%;
+  --secondary:            210 65% 94%;
   --secondary-foreground: 210 100% 20%;
-  --muted: 210 50% 96%;
-  --muted-foreground: 215 16% 40%;
-  --accent: 28 91% 54%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 75% 45%;
+  --muted:                210 50% 96%;
+  --muted-foreground:     215 16% 40%;
+  --accent:               28 91% 54%;
+  --accent-foreground:    0 0% 100%;
+  --destructive:          0 75% 45%;
   --destructive-foreground: 210 40% 98%;
-  --border: 210 45% 88%;
-  --input: 210 45% 88%;
-  --ring: 210 100% 20%;
-  --radius: 1rem;
+  --border:               210 45% 88%;
+  --input:                210 45% 88%;
+  --ring:                 210 100% 20%;
+  --radius:               1rem;
 }
 
-* {
-  border-color: hsl(var(--border));
-}
-
-html {
-  scroll-behavior: smooth;
-}
+* { border-color: hsl(var(--border)); }
+html { scroll-behavior: smooth; }
 
 body {
   font-family: 'DM Sans', sans-serif;
@@ -54,10 +69,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-a,
-button {
-  transition: all 0.25s ease;
-}
+a, button { transition: all 0.25s ease; }
 
 ::selection {
   background: rgba(244, 121, 32, 0.18);
@@ -65,37 +77,19 @@ button {
 }
 
 @layer utilities {
-  .text-bocra-navy {
-    color: var(--bocra-navy);
-  }
+  .text-bocra-navy   { color: var(--bocra-navy); }
+  .text-bocra-orange { color: var(--bocra-orange); }
+  .text-bocra-sky    { color: var(--bocra-sky); }
+  .text-bocra-green  { color: var(--bocra-green-dark); }
 
-  .text-bocra-orange {
-    color: var(--bocra-orange);
-  }
-
-  .bg-bocra-navy {
-    background-color: var(--bocra-navy);
-  }
-
-  .bg-bocra-navy-dark {
-    background-color: var(--bocra-navy-dark);
-  }
-
-  .bg-bocra-orange {
-    background-color: var(--bocra-orange);
-  }
-
-  .bg-bocra-tint {
-    background-color: var(--bocra-navy-tint);
-  }
-
-  .bg-bocra-surface {
-    background-color: var(--bocra-surface);
-  }
-
-  .border-bocra {
-    border-color: var(--bocra-border);
-  }
+  .bg-bocra-navy      { background-color: var(--bocra-navy); }
+  .bg-bocra-navy-dark { background-color: var(--bocra-navy-dark); }
+  .bg-bocra-orange    { background-color: var(--bocra-orange); }
+  .bg-bocra-sky       { background-color: var(--bocra-sky); }
+  .bg-bocra-green     { background-color: var(--bocra-green); }
+  .bg-bocra-tint      { background-color: var(--bocra-navy-tint); }
+  .bg-bocra-surface   { background-color: var(--bocra-surface); }
+  .border-bocra       { border-color: var(--bocra-border); }
 
   .section-shell {
     @apply rounded-[2rem] border shadow-sm;
@@ -103,44 +97,62 @@ button {
     border-color: var(--bocra-border);
     backdrop-filter: blur(8px);
   }
-
   .section-shell-soft {
     @apply rounded-[2rem] border;
     background: rgba(232, 240, 249, 0.72);
     border-color: rgba(0, 51, 102, 0.08);
   }
-
   .section-title {
     @apply text-2xl sm:text-4xl font-bold tracking-tight text-slate-900;
   }
-
   .section-kicker {
     @apply text-xs font-semibold uppercase tracking-[0.12em];
     color: var(--bocra-orange);
   }
-
   .soft-panel {
     @apply rounded-2xl border shadow-sm;
     background: var(--bocra-surface);
     border-color: var(--bocra-border);
   }
-
   .soft-panel-tint {
     @apply rounded-2xl border shadow-sm;
     background: var(--bocra-navy-tint);
     border-color: rgba(0, 51, 102, 0.08);
   }
-
   .brand-chip {
     @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em];
     background: rgba(255, 255, 255, 0.82);
     color: var(--bocra-navy);
   }
-
   .brand-divider {
     @apply h-1 rounded-full;
     background: var(--bocra-orange);
   }
+  .icon-badge-navy {
+    @apply flex items-center justify-center rounded-2xl;
+    background: var(--bocra-navy-tint);
+    color: var(--bocra-navy);
+  }
+  .icon-badge-orange {
+    @apply flex items-center justify-center rounded-2xl;
+    background: var(--bocra-orange-tint);
+    color: var(--bocra-orange);
+  }
+  .icon-badge-sky {
+    @apply flex items-center justify-center rounded-2xl;
+    background: var(--bocra-sky-tint);
+    color: var(--bocra-sky);
+  }
+  .icon-badge-green {
+    @apply flex items-center justify-center rounded-2xl;
+    background: var(--bocra-green-tint);
+    color: var(--bocra-green-dark);
+  }
+  /* Status badges */
+  .status-approved { background: #EDF7E8; color: #4E9933; border-color: rgba(78,153,51,0.2); }
+  .status-review   { background: #E0F4FB; color: #007AA3; border-color: rgba(0,153,204,0.2); }
+  .status-pending  { background: #FFF0E6; color: #C25E00; border-color: rgba(244,121,32,0.2); }
+  .status-rejected { background: #FEE2E2; color: #B91C1C; border-color: rgba(185,28,28,0.2); }
 
   .subtle-grid {
     background-image:
@@ -148,40 +160,16 @@ button {
       linear-gradient(90deg, rgba(0, 51, 102, 0.04) 1px, transparent 1px);
     background-size: 32px 32px;
   }
-
-  .icon-badge-navy {
-    @apply flex items-center justify-center rounded-2xl;
-    background: var(--bocra-navy-tint);
-    color: var(--bocra-navy);
-  }
-
-  .icon-badge-orange {
-    @apply flex items-center justify-center rounded-2xl;
-    background: #FFF0E6;
-    color: var(--bocra-orange);
-  }
-
-  .hero-title {
-    letter-spacing: -0.04em;
-  }
-
+  .hero-title { letter-spacing: -0.04em; }
   .glass-bocra {
     background: rgba(255, 255, 255, 0.72);
     border: 1px solid rgba(217, 230, 244, 0.9);
     backdrop-filter: blur(12px);
   }
-
-  .news-cover-navy {
-    background: linear-gradient(135deg, #E8F0F9 0%, #DCE8F6 100%);
-  }
-
-  .news-cover-orange {
-    background: linear-gradient(135deg, #FFF0E6 0%, #FFE1CE 100%);
-  }
-
-  .news-cover-dark {
-    background: linear-gradient(135deg, #003366 0%, #001F40 100%);
-  }
+  .news-cover-navy   { background: linear-gradient(135deg, #E8F0F9 0%, #DCE8F6 100%); }
+  .news-cover-orange { background: linear-gradient(135deg, #FFF0E6 0%, #FFE1CE 100%); }
+  .news-cover-sky    { background: linear-gradient(135deg, #E0F4FB 0%, #C8ECF7 100%); }
+  .news-cover-dark   { background: linear-gradient(135deg, #003366 0%, #001F40 100%); }
 }
 
 .heritage-overlay {
@@ -192,18 +180,13 @@ button {
   background-repeat: repeat;
   background-size: 220px;
 }
-
 .basket-pattern {
   background-image:
     radial-gradient(circle at 1px 1px, currentColor 1.2px, transparent 0),
     linear-gradient(45deg, transparent 48%, currentColor 49%, currentColor 51%, transparent 52%);
   background-size: 22px 22px, 28px 28px;
 }
-
-.stripe-card {
-  position: relative;
-}
-
+.stripe-card { position: relative; }
 .stripe-card::before {
   content: "";
   position: absolute;
@@ -214,10 +197,9 @@ button {
   opacity: 0.95;
 }
 
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
