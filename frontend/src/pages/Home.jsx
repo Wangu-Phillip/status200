@@ -149,7 +149,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F3] relative">
+    <div className="relative bg-white/50">
       <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden opacity-15">
         <img
           src="/botswana_heritage.png"
@@ -159,9 +159,9 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#F5F5F3]/95 via-[#F5F5F3]/88 to-[#F5F5F3]/96"></div>
       </div>
 
-      <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden pt-16">
+      <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden">
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-br from-[#E8F0F9] via-[#F5F5F3] to-white"
+          className="absolute inset-0 top-0 z-0 bg-gradient-to-br from-[#E8F0F9] via-[#F5F5F3] to-white"
           style={{ y }}
         >
           {/* Enhanced Animated Background Elements */}
@@ -235,7 +235,7 @@ const Home = () => {
         </motion.div>
 
         <motion.div 
-          className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full"
+          className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full h-full flex items-center"
           style={{ opacity }}
         >
           <div className="grid lg:grid-cols-2 gap-16 items-center">
