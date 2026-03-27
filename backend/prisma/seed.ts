@@ -14,6 +14,7 @@ async function main() {
   await prisma.application.deleteMany();
   await prisma.user.deleteMany();
   await prisma.statusCheck.deleteMany();
+  await prisma.typeApprovedDevice.deleteMany();
 
   console.log('🗑️  Cleared existing data');
 
@@ -270,6 +271,117 @@ async function main() {
   });
 
   console.log('✅ Created status checks');
+
+  // Create type-approved devices
+  const typeApprovedDevices = [
+    {
+      deviceName: 'Wireless Router XR-500',
+      manufacturer: 'Tech Corp Ltd',
+      model: 'XR500-2025',
+      certificateNumber: 'TA-BW-2025-001',
+      category: 'Radio Communication',
+      approvalDate: new Date('2025-01-15'),
+      expiryDate: new Date('2028-01-15'),
+      standards: 'ITU-R, FCC Part 15',
+      status: 'Active',
+      frequency: '2.4 GHz, 5 GHz',
+    },
+    {
+      deviceName: 'Mobile Phone Base Station',
+      manufacturer: 'TeleCom Solutions',
+      model: 'BS-3000-NG',
+      certificateNumber: 'TA-BW-2025-002',
+      category: 'Telecommunications',
+      approvalDate: new Date('2024-11-20'),
+      expiryDate: new Date('2027-11-20'),
+      standards: 'ETSI, 3GPP',
+      status: 'Active',
+      frequency: '800 MHz, 1800 MHz, 2100 MHz',
+    },
+    {
+      deviceName: 'FM Broadcast Transmitter',
+      manufacturer: 'BroadcastTech Inc',
+      model: 'FMT-500W',
+      certificateNumber: 'TA-BW-2025-003',
+      category: 'Broadcasting Equipment',
+      approvalDate: new Date('2025-02-10'),
+      expiryDate: new Date('2028-02-10'),
+      standards: 'ITU-R BS.1064',
+      status: 'Active',
+      frequency: '88-108 MHz',
+    },
+    {
+      deviceName: 'WiFi 6 Access Point',
+      manufacturer: 'NetCore Systems',
+      model: 'NC-AP-6E',
+      certificateNumber: 'TA-BW-2024-045',
+      category: 'Wireless Devices',
+      approvalDate: new Date('2024-09-05'),
+      expiryDate: new Date('2027-09-05'),
+      standards: 'IEEE 802.11ax, FCC',
+      status: 'Active',
+      frequency: '2.4 GHz, 5 GHz, 6 GHz',
+    },
+    {
+      deviceName: 'VSAT Terminal',
+      manufacturer: 'Satellite Networks Ltd',
+      model: 'SNL-VSAT-KU',
+      certificateNumber: 'TA-BW-2025-004',
+      category: 'Satellite Equipment',
+      approvalDate: new Date('2025-01-20'),
+      expiryDate: new Date('2028-01-20'),
+      standards: 'ITU-R S.580, IFRB',
+      status: 'Active',
+      frequency: '12-14 GHz (Ku-band)',
+    },
+    {
+      deviceName: 'Two-Way Radio Transceiver',
+      manufacturer: 'CommuniTech Ltd',
+      model: 'CT-R100',
+      certificateNumber: 'TA-BW-2024-042',
+      category: 'Radio Communication',
+      approvalDate: new Date('2024-08-15'),
+      expiryDate: new Date('2027-08-15'),
+      standards: 'ITU-R, ETSI EN 300',
+      status: 'Active',
+      frequency: '400-470 MHz',
+    },
+    {
+      deviceName: 'Mobile Phone - Smartphone',
+      manufacturer: 'GlobalPhone Corp',
+      model: 'GP-S24 Ultra',
+      certificateNumber: 'TA-BW-2025-005',
+      category: 'Wireless Devices',
+      approvalDate: new Date('2025-03-01'),
+      expiryDate: new Date('2028-03-01'),
+      standards: '3GPP, FCC, CE',
+      status: 'Active',
+      frequency: 'Multi-band (2G-5G)',
+    },
+    {
+      deviceName: 'Microwave Oven',
+      manufacturer: 'Home Appliances Ltd',
+      model: 'HA-MW-2000',
+      certificateNumber: 'TA-BW-2024-040',
+      category: 'Other',
+      approvalDate: new Date('2024-07-10'),
+      expiryDate: new Date('2027-07-10'),
+      standards: 'IEC 61000, FCC Part 18',
+      status: 'Active',
+      frequency: '2.45 GHz (ISM)',
+    },
+  ];
+
+  for (const device of typeApprovedDevices) {
+    await prisma.typeApprovedDevice.create({
+      data: {
+        id: uuidv4(),
+        ...device,
+      },
+    });
+  }
+
+  console.log('✅ Created 8 type-approved devices');
 
   console.log('\n✨ Database seed completed successfully!\n');
   console.log('📋 Test Credentials:');

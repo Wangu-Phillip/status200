@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Response, Request } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest, authenticateToken, authorizeAdmin } from '../middleware/auth.js';
 
@@ -18,8 +18,6 @@ const verifyDepartmentAccess = (userDepart: string | undefined, requestDepart: s
 
 /**
  * Get submissions filtered by department
- * For department admins: Only their assigned department
- * For superadmin: Filter by department query param or return all
  */
 router.get(
   '/submissions',
@@ -37,12 +35,9 @@ router.get(
         req.user?.adminLevel === 'admin' &&
         !verifyDepartmentAccess(req.user?.department, department)
       ) {
-        res
-          .status(403)
-          .json({
-            error:
-              'You only have access to your assigned department',
-          });
+        res.status(403).json({
+          error: 'You only have access to your assigned department',
+        });
         return;
       }
 
@@ -92,9 +87,7 @@ router.get(
       });
     } catch (error) {
       console.error('Get submissions error:', error);
-      res
-        .status(500)
-        .json({ error: 'Failed to fetch submissions' });
+      res.status(500).json({ error: 'Failed to fetch submissions' });
     }
   }
 );
@@ -116,8 +109,7 @@ router.get(
         !verifyDepartmentAccess(req.user?.department, department)
       ) {
         res.status(403).json({
-          error:
-            'You only have access to your assigned department',
+          error: 'You only have access to your assigned department',
         });
         return;
       }
@@ -135,34 +127,67 @@ router.get(
         return;
       }
 
-      // Fetch stats
-      const where = { department: targetDept };
+      // Fetch stats from appropriate table based on department
+      let total = 0;
+      let pending = 0;
+      let underReview = 0;
+      let approved = 0;
+      let rejected = 0;
+      let highPriority = 0;
 
-      const total = await prisma.application.count({ where });
-      const pending = await prisma.application.count({
-        where: { ...where, status: 'Submitted' },
-      });
-      const underReview = await prisma.application.count({
-        where: { ...where, status: 'Under Review' },
-      });
-      const approved = await prisma.application.count({
-        where: {
-          ...where,
-          status: 'Approved',
-        },
-      });
-      const rejected = await prisma.application.count({
-        where: {
-          ...where,
-          status: 'Rejected',
-        },
-      });
-      const highPriority = await prisma.application.count({
-        where: {
-          ...where,
-          priority: 'High',
-        },
-      });
+      if (targetDept === 'complaints') {
+        total = await prisma.complaint.count({ where: { department: targetDept } });
+        pending = await prisma.complaint.count({
+          where: { department: targetDept, status: { in: ['Registered', 'Submitted'] } },
+        });
+        underReview = await prisma.complaint.count({
+          where: { department: targetDept, status: 'Under Review' },
+        });
+        approved = await prisma.complaint.count({
+          where: { department: targetDept, status: 'Approved' },
+        });
+        rejected = await prisma.complaint.count({
+          where: { department: targetDept, status: 'Rejected' },
+        });
+        highPriority = await prisma.complaint.count({
+          where: { department: targetDept, priority: 'High' },
+        });
+      } else if (targetDept === 'tenders') {
+        total = await prisma.tender.count({ where: { department: targetDept } });
+        pending = await prisma.tender.count({
+          where: { department: targetDept, status: 'Submitted' },
+        });
+        underReview = await prisma.tender.count({
+          where: { department: targetDept, status: 'Under Review' },
+        });
+        approved = await prisma.tender.count({
+          where: { department: targetDept, status: 'Approved' },
+        });
+        rejected = await prisma.tender.count({
+          where: { department: targetDept, status: 'Rejected' },
+        });
+        highPriority = await prisma.tender.count({
+          where: { department: targetDept, priority: 'High' },
+        });
+      } else {
+        // licensing and qos use Application table
+        total = await prisma.application.count({ where: { department: targetDept } });
+        pending = await prisma.application.count({
+          where: { department: targetDept, status: 'Submitted' },
+        });
+        underReview = await prisma.application.count({
+          where: { department: targetDept, status: 'Under Review' },
+        });
+        approved = await prisma.application.count({
+          where: { department: targetDept, status: 'Approved' },
+        });
+        rejected = await prisma.application.count({
+          where: { department: targetDept, status: 'Rejected' },
+        });
+        highPriority = await prisma.application.count({
+          where: { department: targetDept, priority: 'High' },
+        });
+      }
 
       res.json({
         total,
@@ -212,8 +237,7 @@ router.put(
         submission.department !== req.user?.department
       ) {
         res.status(403).json({
-          error:
-            'You only have access to your assigned department',
+          error: 'You only have access to your assigned department',
         });
         return;
       }
@@ -270,8 +294,7 @@ router.put(
         submission.department !== req.user?.department
       ) {
         res.status(403).json({
-          error:
-            'You only have access to your assigned department',
+          error: 'You only have access to your assigned department',
         });
         return;
       }
@@ -298,7 +321,7 @@ router.put(
 // =====================
 
 /**
- * Get complaints filtered by department
+ * Get complaints
  */
 router.get(
   '/complaints',
@@ -310,13 +333,7 @@ router.get(
       const limit = Number(req.query.limit) || 10;
       const skip = (page - 1) * limit;
 
-      // Department admins see only their department
-      const targetDept =
-        req.user?.adminLevel === 'admin'
-          ? req.user?.department
-          : 'complaints';
-
-      const where = { department: targetDept };
+      const where = req.user?.adminLevel === 'admin' ? { department: req.user?.department } : {};
 
       const complaints = await prisma.complaint.findMany({
         where,
@@ -328,27 +345,8 @@ router.get(
 
       const total = await prisma.complaint.count({ where });
 
-      const formatted = complaints.map((comp) => ({
-        id: comp.ticketNumber,
-        token: comp.ticketNumber,
-        citizenName: comp.complainantName,
-        citizenEmail: comp.complainantEmail,
-        subject: comp.complaintType,
-        description: comp.description,
-        status: comp.status,
-        priority: comp.priority,
-        department: comp.department,
-        submittedDate: comp.registeredDate.toLocaleDateString(),
-        reviewedBy: comp.reviewedBy,
-        reviewedAt: comp.reviewedAt
-          ? new Date(comp.reviewedAt).toLocaleDateString()
-          : null,
-        adminNotes: comp.adminNotes,
-        documents: comp.documents,
-      }));
-
       res.json({
-        complaints: formatted,
+        complaints,
         pagination: { page, limit, total },
       });
     } catch (error) {
@@ -358,118 +356,12 @@ router.get(
   }
 );
 
-/**
- * Update complaint status
- */
-router.put(
-  '/complaints/:ticketNumber/status',
-  authenticateToken,
-  authorizeAdmin,
-  async (req: AuthRequest, res: Response) => {
-    try {
-      const { ticketNumber } = req.params;
-      const { status } = req.body;
-
-      if (!status) {
-        res.status(400).json({ error: 'Status is required' });
-        return;
-      }
-
-      const complaint = await prisma.complaint.findUnique({
-        where: { ticketNumber },
-      });
-
-      if (!complaint) {
-        res.status(404).json({ error: 'Complaint not found' });
-        return;
-      }
-
-      if (
-        req.user?.adminLevel === 'admin' &&
-        complaint.department !== req.user?.department
-      ) {
-        res.status(403).json({
-          error: 'You only have access to your assigned department',
-        });
-        return;
-      }
-
-      const updated = await prisma.complaint.update({
-        where: { ticketNumber },
-        data: {
-          status,
-          reviewedBy: req.user?.name,
-          reviewedAt: new Date(),
-          lastUpdated: new Date(),
-        },
-      });
-
-      res.json({ message: 'Status updated successfully', complaint: updated });
-    } catch (error) {
-      console.error('Update complaint status error:', error);
-      res.status(500).json({ error: 'Failed to update status' });
-    }
-  }
-);
-
-/**
- * Add notes to complaint
- */
-router.put(
-  '/complaints/:ticketNumber/notes',
-  authenticateToken,
-  authorizeAdmin,
-  async (req: AuthRequest, res: Response) => {
-    try {
-      const { ticketNumber } = req.params;
-      const { notes } = req.body;
-
-      if (!notes || notes.trim() === '') {
-        res.status(400).json({ error: 'Notes cannot be empty' });
-        return;
-      }
-
-      const complaint = await prisma.complaint.findUnique({
-        where: { ticketNumber },
-      });
-
-      if (!complaint) {
-        res.status(404).json({ error: 'Complaint not found' });
-        return;
-      }
-
-      if (
-        req.user?.adminLevel === 'admin' &&
-        complaint.department !== req.user?.department
-      ) {
-        res.status(403).json({
-          error: 'You only have access to your assigned department',
-        });
-        return;
-      }
-
-      const updated = await prisma.complaint.update({
-        where: { ticketNumber },
-        data: {
-          adminNotes: notes,
-          lastUpdated: new Date(),
-        },
-      });
-
-      res.json({ message: 'Notes added successfully', complaint: updated });
-    } catch (error) {
-      console.error('Add complaint notes error:', error);
-      res.status(500).json({ error: 'Failed to add notes' });
-    }
-  }
-);
-
 // =====================
-// TENDERS API
+// TENDERS API (User Submissions)
 // =====================
 
 /**
- * Get tenders filtered by department
+ * Get tender submissions
  */
 router.get(
   '/tenders',
@@ -481,13 +373,7 @@ router.get(
       const limit = Number(req.query.limit) || 10;
       const skip = (page - 1) * limit;
 
-      // Department admins see only their department
-      const targetDept =
-        req.user?.adminLevel === 'admin'
-          ? req.user?.department
-          : 'tenders';
-
-      const where = { department: targetDept };
+      const where = req.user?.adminLevel === 'admin' ? { department: req.user?.department } : {};
 
       const tenders = await prisma.tender.findMany({
         where,
@@ -499,140 +385,13 @@ router.get(
 
       const total = await prisma.tender.count({ where });
 
-      const formatted = tenders.map((tender) => ({
-        id: tender.tenderNumber,
-        token: tender.tenderNumber,
-        citizenName: tender.bidderName,
-        citizenEmail: tender.bidderEmail,
-        subject: tender.title,
-        description: tender.description,
-        status: tender.status,
-        priority: tender.priority,
-        department: tender.department,
-        submittedDate: tender.submissionDate.toLocaleDateString(),
-        reviewedBy: tender.reviewedBy,
-        reviewedAt: tender.reviewedAt
-          ? new Date(tender.reviewedAt).toLocaleDateString()
-          : null,
-        adminNotes: tender.adminNotes,
-        documents: tender.documents,
-        estimatedValue: tender.estimatedValue,
-        submittedAmount: tender.submittedAmount,
-      }));
-
       res.json({
-        tenders: formatted,
+        tenders,
         pagination: { page, limit, total },
       });
     } catch (error) {
       console.error('Get tenders error:', error);
       res.status(500).json({ error: 'Failed to fetch tenders' });
-    }
-  }
-);
-
-/**
- * Update tender status
- */
-router.put(
-  '/tenders/:tenderNumber/status',
-  authenticateToken,
-  authorizeAdmin,
-  async (req: AuthRequest, res: Response) => {
-    try {
-      const { tenderNumber } = req.params;
-      const { status } = req.body;
-
-      if (!status) {
-        res.status(400).json({ error: 'Status is required' });
-        return;
-      }
-
-      const tender = await prisma.tender.findUnique({
-        where: { tenderNumber },
-      });
-
-      if (!tender) {
-        res.status(404).json({ error: 'Tender not found' });
-        return;
-      }
-
-      if (
-        req.user?.adminLevel === 'admin' &&
-        tender.department !== req.user?.department
-      ) {
-        res.status(403).json({
-          error: 'You only have access to your assigned department',
-        });
-        return;
-      }
-
-      const updated = await prisma.tender.update({
-        where: { tenderNumber },
-        data: {
-          status,
-          reviewedBy: req.user?.name,
-          reviewedAt: new Date(),
-          lastUpdated: new Date(),
-        },
-      });
-
-      res.json({ message: 'Status updated successfully', tender: updated });
-    } catch (error) {
-      console.error('Update tender status error:', error);
-      res.status(500).json({ error: 'Failed to update status' });
-    }
-  }
-);
-
-/**
- * Add notes to tender
- */
-router.put(
-  '/tenders/:tenderNumber/notes',
-  authenticateToken,
-  authorizeAdmin,
-  async (req: AuthRequest, res: Response) => {
-    try {
-      const { tenderNumber } = req.params;
-      const { notes } = req.body;
-
-      if (!notes || notes.trim() === '') {
-        res.status(400).json({ error: 'Notes cannot be empty' });
-        return;
-      }
-
-      const tender = await prisma.tender.findUnique({
-        where: { tenderNumber },
-      });
-
-      if (!tender) {
-        res.status(404).json({ error: 'Tender not found' });
-        return;
-      }
-
-      if (
-        req.user?.adminLevel === 'admin' &&
-        tender.department !== req.user?.department
-      ) {
-        res.status(403).json({
-          error: 'You only have access to your assigned department',
-        });
-        return;
-      }
-
-      const updated = await prisma.tender.update({
-        where: { tenderNumber },
-        data: {
-          adminNotes: notes,
-          lastUpdated: new Date(),
-        },
-      });
-
-      res.json({ message: 'Notes added successfully', tender: updated });
-    } catch (error) {
-      console.error('Add tender notes error:', error);
-      res.status(500).json({ error: 'Failed to add notes' });
     }
   }
 );
@@ -650,12 +409,11 @@ router.get(
   authorizeAdmin,
   async (req: AuthRequest, res: Response) => {
     try {
-      let settings = await prisma.systemSettings.findUnique({
+      let settings = await prisma.systemSettings.findFirst({
         where: { id: 'default' },
       });
 
       if (!settings) {
-        // Create default settings if they don't exist
         settings = await prisma.systemSettings.create({
           data: { id: 'default' },
         });
@@ -737,11 +495,11 @@ router.get(
 );
 
 // =====================
-// TENDER POSTINGS API
+// TENDER POSTINGS API (For Citizens)
 // =====================
 
 /**
- * Get all tender postings (admin view)
+ * Get all tender postings
  */
 router.get(
   '/tender-postings',
@@ -787,7 +545,7 @@ router.post(
           category: data.category,
           description: data.description,
           closingDate: new Date(data.closingDate),
-          location: data.location,
+          location: data.location || 'Botswana',
           estimatedValue: data.estimatedValue,
           status: data.status || 'Open',
         },
@@ -813,15 +571,13 @@ router.put(
       const { id } = req.params;
       const data = req.body;
 
-      // Handle date conversion if present
-      const updateData = { ...data };
-      if (updateData.closingDate) {
-        updateData.closingDate = new Date(updateData.closingDate);
+      if (data.closingDate) {
+        data.closingDate = new Date(data.closingDate);
       }
 
       const updated = await prisma.tenderPosting.update({
         where: { id },
-        data: updateData,
+        data,
       });
 
       res.json(updated);
@@ -894,6 +650,65 @@ router.delete(
     } catch (error) {
       console.error('Delete tender document error:', error);
       res.status(500).json({ error: 'Failed to delete document' });
+    }
+  }
+);
+
+// =====================
+// TYPE APPROVED DEVICES API
+// =====================
+
+/**
+ * Get all type approved devices
+ */
+router.get(
+  '/devices',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const devices = await prisma.typeApprovedDevice.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      });
+
+      const total = await prisma.typeApprovedDevice.count();
+
+      res.json({ devices, pagination: { page, limit, total } });
+    } catch (error) {
+      console.error('Get devices error:', error);
+      res.status(500).json({ error: 'Failed to fetch devices' });
+    }
+  }
+);
+
+/**
+ * Create type approved device
+ */
+router.post(
+  '/devices',
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const data = req.body;
+      const device = await prisma.typeApprovedDevice.create({
+        data: {
+          ...data,
+          approvalDate: new Date(data.approvalDate),
+          expiryDate: new Date(data.expiryDate),
+        },
+      });
+
+      res.status(201).json(device);
+    } catch (error) {
+      console.error('Create device error:', error);
+      res.status(500).json({ error: 'Failed to create device' });
     }
   }
 );

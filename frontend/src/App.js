@@ -18,8 +18,6 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TypeApproval from './pages/TypeApproval';
-import LicenseApplication from './pages/LicenseApplication';
-import Complaints from './pages/Complaints';
 import QoSReporting from './pages/QoSReporting';
 import AdminDashboard from './pages/AdminDashboard';
 import DomainRegistry from './pages/DomainRegistry';
@@ -76,8 +74,6 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/type-approval" element={<TypeApproval />} />
-            <Route path="/license-application" element={<LicenseApplication />} />
-            <Route path="/complaints" element={<Complaints />} />
             <Route path="/qos-reporting" element={<QoSReporting />} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/domain-registry" element={<DomainRegistry />} />

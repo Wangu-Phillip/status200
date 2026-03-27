@@ -4,16 +4,33 @@ export const getAuthToken = () => localStorage.getItem('bocra_token');
 
 const apiCall = async (endpoint, options = {}) => {
   const token = getAuthToken();
+  
+  // Determine if we're sending FormData (for file uploads)
+  const isFormData = options.body instanceof FormData;
+  
   const headers = {
-    'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  // Only set Content-Type if not FormData (let browser handle multipart/form-data)
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const requestOptions = {
     ...options,
     headers,
-  });
+  };
+
+  // If body is FormData, send as-is; otherwise stringify if it's an object
+  if (isFormData) {
+    requestOptions.body = options.body;
+  } else if (options.body && typeof options.body === 'object') {
+    requestOptions.body = JSON.stringify(options.body);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, requestOptions);
 
   if (!response.ok) {
     const error = await response.json();
@@ -32,17 +49,33 @@ export const getApplications = ({ page = 1, limit = 10 } = {}) =>
 
 export const getApplication = (id) => apiCall(`/applications/${id}`);
 
-export const submitApplication = (data) =>
-  apiCall('/applications', {
+export const submitApplication = (data) => {
+  const options = {
     method: 'POST',
-    body: JSON.stringify(data),
-  });
+  };
+  
+  if (data instanceof FormData) {
+    options.body = data;
+  } else {
+    options.body = data;
+  }
+  
+  return apiCall('/applications', options);
+};
 
-export const updateApplication = (id, data) =>
-  apiCall(`/applications/${id}`, {
+export const updateApplication = (id, data) => {
+  const options = {
     method: 'PUT',
-    body: JSON.stringify(data),
-  });
+  };
+  
+  if (data instanceof FormData) {
+    options.body = data;
+  } else {
+    options.body = data;
+  }
+  
+  return apiCall(`/applications/${id}`, options);
+};
 
 export const deleteApplication = (id) =>
   apiCall(`/applications/${id}`, {
@@ -113,6 +146,20 @@ export const uploadTenderDocument = (tenderId, documentData) =>
     body: JSON.stringify(documentData),
   });
 
+// Get available tender postings for citizens to browse and apply to
+export const getAvailableTenderPostings = ({ page = 1, limit = 20, status = 'Open', category = null } = {}) => {
+  const query = new URLSearchParams();
+  query.append('page', page);
+  query.append('limit', limit);
+  query.append('status', status);
+  if (category) query.append('category', category);
+  return apiCall(`/tender-postings/available?${query.toString()}`);
+};
+
+// Get a specific tender posting
+export const getTenderPosting = (id) => 
+  apiCall(`/tender-postings/${id}`);
+
 // =====================
 // DOCUMENTS API
 // =====================
@@ -138,6 +185,12 @@ export const updateUserProfile = (data) =>
   apiCall('/user/profile', {
     method: 'PUT',
     body: JSON.stringify(data),
+  });
+
+export const changePassword = (currentPassword, newPassword, confirmPassword) =>
+  apiCall('/user/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
   });
 
 // =====================
@@ -235,6 +288,7 @@ export const addTenderNotes = (tenderNumber, notes) =>
     method: 'PUT',
     body: JSON.stringify({ notes }),
   });
+
 // =====================
 // SYSTEM SETTINGS API
 // =====================
@@ -262,10 +316,11 @@ export const getActivityLogs = ({ limit = 25, offset = 0 } = {}) => {
 // TENDER POSTINGS API
 // =====================
 
-export const getTenderPostings = ({ page = 1, limit = 10 } = {}) => {
+export const getTenderPostings = ({ page = 1, limit = 10, status = null } = {}) => {
   const query = new URLSearchParams();
   query.append('page', page);
   query.append('limit', limit);
+  if (status) query.append('status', status);
   return apiCall(`/admin/tender-postings?${query.toString()}`);
 };
 
