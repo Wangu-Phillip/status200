@@ -55,12 +55,12 @@ export async function validatePassword(
 
   if (minLength === undefined || requireSpecial === undefined) {
     const settings = await getSettings();
-    minLength = minLength || settings.passwordMinLength;
+    minLength = minLength ?? settings.passwordMinLength;
     requireSpecial = requireSpecial !== undefined ? requireSpecial : settings.passwordRequireSpecial;
   }
 
   // Check minimum length
-  if (password.length < minLength) {
+  if (minLength && password.length < minLength) {
     errors.push(`Password must be at least ${minLength} characters long`);
   }
 

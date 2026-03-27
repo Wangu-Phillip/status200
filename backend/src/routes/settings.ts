@@ -6,7 +6,7 @@ const router: Router = express.Router();
 const prisma = new PrismaClient();
 
 // GET system settings - for superadmins only
-router.get('/', authenticateToken, authorizeSuperAdmin, async (req: Request, res: Response) => {
+router.get('/', authenticateToken, authorizeSuperAdmin, async (_req: Request, res: Response) => {
   try {
     let settings = await prisma.systemSettings.findFirst();
     
@@ -137,10 +137,10 @@ router.put('/', authenticateToken, authorizeSuperAdmin, async (req: Request, res
     }
 
     const { id, createdAt, ...settingsData } = settings;
-    res.json(settingsData);
+    return res.json(settingsData);
   } catch (error) {
     console.error('Error updating settings:', error);
-    res.status(500).json({ error: 'Failed to update settings' });
+    return res.status(500).json({ error: 'Failed to update settings' });
   }
 });
 

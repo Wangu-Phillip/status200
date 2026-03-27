@@ -91,7 +91,7 @@ router.get('/type/:actionType', authenticateToken, authorizeSuperAdmin, async (r
 });
 
 // GET activity stats
-router.get('/stats', authenticateToken, authorizeSuperAdmin, async (req: Request, res: Response) => {
+router.get('/stats', authenticateToken, authorizeSuperAdmin, async (_req: Request, res: Response) => {
   try {
     const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);

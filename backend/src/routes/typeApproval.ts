@@ -106,7 +106,7 @@ router.get('/devices', async (req: any, res: Response) => {
 /**
  * Get categories for filtering
  */
-router.get('/categories', async (req: any, res: Response) => {
+router.get('/categories', async (_req: any, res: Response) => {
   try {
     const categories = await prisma.typeApprovedDevice.findMany({
       select: {
