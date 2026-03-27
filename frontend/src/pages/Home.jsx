@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import {
@@ -14,7 +14,7 @@ import {
   Wifi,
   CheckCircle2
 } from 'lucide-react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { newsItems } from '../mockData';
 
 const ConnectivityNodes = () => {
@@ -217,6 +217,48 @@ const TypewriterText = ({ text, delay = 0 }) => {
 };
 
 const Home = () => {
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+  
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+
+  const [systemMetrics, setSystemMetrics] = useState({
+    spectrumLoad: 72.4,
+    activeNodes: 1248,
+    networkHealth: 4.2,
+    callSuccess: 98.5,
+    availability: 99.9,
+    nodeHealth: 94,
+    throughput: 124.5
+  });
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [operatorCompliance, setOperatorCompliance] = useState({
+    BTC: 'Compliant',
+    Mascom: 'Compliant',
+    Orange: 'Action Required'
+  });
+
+  // Update metrics periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastUpdated(new Date());
+      setSystemMetrics(prev => ({
+        spectrumLoad: Math.max(45, Math.min(85, prev.spectrumLoad + (Math.random() - 0.5) * 3)),
+        activeNodes: Math.max(1200, Math.min(1500, prev.activeNodes + Math.floor((Math.random() - 0.5) * 20))),
+        networkHealth: Math.max(3.8, Math.min(4.5, prev.networkHealth + (Math.random() - 0.5) * 0.1)),
+        callSuccess: Math.max(95, Math.min(99.5, prev.callSuccess + (Math.random() - 0.5) * 0.8)),
+        availability: Math.max(99.7, Math.min(100, prev.availability + (Math.random() - 0.5) * 0.08)),
+        nodeHealth: Math.max(90, Math.min(98, prev.nodeHealth + (Math.random() - 0.5) * 1.5)),
+        throughput: Math.max(110, Math.min(140, prev.throughput + (Math.random() - 0.5) * 5))
+      }));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   const mandates = [
     {
       title: 'TELECOMMUNICATIONS',
@@ -307,58 +349,145 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F3] relative">
+    <div className="relative bg-white/50">
       <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden opacity-15">
         <div className="absolute inset-0 basket-pattern text-[#003366] opacity-10"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#F5F5F3]/95 via-[#F5F5F3]/88 to-[#F5F5F3]/96"></div>
       </div>
 
-      <section className="relative pt-24 sm:pt-40 pb-16 sm:pb-32 overflow-hidden">
-        <ConnectivityNodes />
-        <div className="absolute inset-0 subtle-grid opacity-30"></div>
-        <div className="absolute top-0 left-0 w-full h-[120%] bg-gradient-to-br from-[#E8F0F9]/50 via-white to-transparent -skew-y-6 origin-top-left -z-10"></div>
+      <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden">
+        <motion.div 
+          className="absolute inset-0 top-0 z-0 bg-gradient-to-br from-[#E8F0F9] via-[#F5F5F3] to-white"
+          style={{ y }}
+        >
+          {/* Enhanced Animated Background Elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            {[...Array(30)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute rounded-full bg-[#003366]/5"
+                style={{
+                  width: Math.random() * 200 + 50,
+                  height: Math.random() * 200 + 50,
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  y: [0, -40, 0],
+                  x: [0, 20, 0],
+                  scale: [1, 1.2, 1],
+                  opacity: [0.05, 0.15, 0.05]
+                }}
+                transition={{
+                  duration: 8 + Math.random() * 10,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: Math.random() * 5
+                }}
+              />
+            ))}
+            
+            {/* Pulsing Core Dots */}
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={`pulse-${i}`}
+                className="absolute w-1 h-1 bg-[#003366] rounded-full shadow-[0_0_10px_#003366]"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  scale: [0, 4, 0],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  delay: i * 1.5
+                }}
+              />
+            ))}
+          </div>
+          
+          {/* Animated Connecting Lines (SVG) */}
+          <svg className="absolute inset-0 w-full h-full opacity-5" pointerEvents="none">
+            <motion.path
+              d="M0 100 Q 250 50 500 100 T 1000 100"
+              stroke="#003366"
+              strokeWidth="2"
+              fill="none"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            />
+          </svg>
+          
+          {/* Grid Pattern */}
+          <div className="absolute inset-0" style={{
+            backgroundImage: `linear-gradient(rgba(0,51,102,0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0,51,102,0.03) 1px, transparent 1px)`,
+            backgroundSize: '80px 80px'
+          }} />
+        </motion.div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-14 items-center">
-            <div className="space-y-8">
-              {/* Removed redundant pulsing logo as requested */}
-
-              <span className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-[#E8F0F9] text-[#003366] text-xs font-black uppercase tracking-widest border border-[#003366]/10 shadow-sm">
+        <motion.div 
+          className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full h-full flex items-center"
+          style={{ opacity }}
+        >
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -100 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="space-y-8"
+            >
+              <motion.span
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-[#E8F0F9] text-[#003366] text-sm font-semibold border border-[#003366]/10 shadow-sm"
+              >
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F47920] opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F47920]"></span>
                 </span>
                 <span>Official Staff &amp; Citizen Portal</span>
-              </span>
+              </motion.span>
 
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 1.2 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
               >
-                <p className="section-kicker mb-4 font-black tracking-[0.3em] text-[#003366] opacity-60">
-                  NATIONAL REGULATORY GATEWAY
-                </p>
-                <h1 className="text-5xl sm:text-7xl lg:text-9xl font-black text-slate-900 tracking-tighter leading-[0.82] hero-title mb-6">
-                  <TypewriterText text="Access BOCRA" />
-                  <br className="hidden sm:block" />
+                <p className="section-kicker mb-3">Botswana Communications Regulatory Authority</p>
+                <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.08] hero-title">
+                  Connecting Botswana&apos;s <br className="hidden sm:block" />
                   <motion.span 
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.8, duration: 1 }}
-                    className="bg-clip-text text-transparent bg-gradient-to-r from-[#003366] via-[#F47920] to-[#003366] bg-[length:200%_auto] animate-gradient-x"
+                    className="bg-clip-text text-transparent bg-gradient-to-r from-[#003366] to-[#0A4D8C] bg-[length:200%_auto]"
+                    animate={{ backgroundPosition: ["0% center", "200% center"] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                   >
-                    Services In Minutes
+                    Digital Future
                   </motion.span>
                 </h1>
               </motion.div>
 
-              <p className="text-base sm:text-xl text-slate-600 max-w-xl leading-relaxed">
-                Apply, report, track, and manage all regulatory services in one secure platform designed for Botswana's citizens and businesses..
-                How can we help you today?
-              </p>
+              <motion.p 
+                className="text-base sm:text-xl text-slate-600 max-w-xl leading-relaxed"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+              >
+                Regulatory services that are seamless, transparent, and citizen-centred —
+                built to support trust, innovation, and national digital transformation.
+              </motion.p>
 
-              <div className="flex flex-wrap gap-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="flex flex-wrap gap-4"
+              >
                 <Link to="/dashboard">
                   <Button
                     className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl text-base sm:text-lg font-semibold shadow-xl shadow-[#003366]/20 group w-full sm:w-auto"
@@ -367,19 +496,14 @@ const Home = () => {
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
+              </motion.div>
 
-                <Link to="/tenders">
-                  <Button
-                    variant="outline"
-                    className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl border-2 border-[#003366]/15 bg-white/70 backdrop-blur-sm text-slate-700 text-base sm:text-lg font-semibold hover:bg-[#E8F0F9] hover:border-[#003366]/35 w-full sm:w-auto"
-                  >
-                    <Briefcase className="mr-2 h-5 w-5 text-[#003366]" />
-                    Tenders Hub
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="grid sm:grid-cols-3 gap-4 pt-2">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9 }}
+                className="grid sm:grid-cols-3 gap-4 pt-2"
+              >
                 {[
                   { label: 'Licensing', value: 'Digital applications' },
                   { label: 'Monitoring', value: 'QoS visibility' },
@@ -390,19 +514,119 @@ const Home = () => {
                     <p className="text-sm font-bold text-[#003366]">{item.value}</p>
                   </div>
                 ))}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="hidden lg:block relative h-full min-h-[400px] mt-48 translate-y-8"
+              initial={{ opacity: 0, scale: 0.5, rotateY: 30 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+              transition={{ duration: 1.2, delay: 0.4, type: "spring", damping: 15 }}
+              className="relative perspective-1000"
             >
-              <ShutterLogo />
+              {/* Floating Tech Icons Decor */}
+              {[Wifi, Globe, Radio, Zap].map((Icon, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute p-4 bg-white/80 backdrop-blur-xl border border-[#003366]/10 rounded-2xl z-20 shadow-lg"
+                  style={{
+                    left: i === 0 ? '-10%' : i === 1 ? '90%' : i === 2 ? '0%' : '80%',
+                    top: i === 0 ? '10%' : i === 1 ? '20%' : i === 2 ? '70%' : '80%',
+                  }}
+                  animate={{
+                    y: [0, -20, 0],
+                    rotate: [0, 10, -10, 0]
+                  }}
+                  transition={{
+                    duration: 5 + i,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.5
+                  }}
+                >
+                  <Icon className="w-8 h-8 text-[#003366]" />
+                </motion.div>
+              ))}
+
+              <motion.div
+                className="relative z-10"
+                animate={{ 
+                  y: [0, -15, 0],
+                  scale: [1, 1.02, 1]
+                }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              >
+                {/* Glowing Aura behind quick links */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#003366]/20 to-[#75B2DD]/10 blur-[100px] rounded-full" />
+                
+                <div className="section-shell p-4 sm:p-8 relative overflow-hidden">
+                  <div className="heritage-overlay basket-pattern text-[#003366] opacity-[0.04]"></div>
+
+                  <div className="relative grid grid-cols-2 gap-5">
+                    {[
+                      {
+                        title: 'Apply for License',
+                        description: 'Telecom & broadcasting services',
+                        icon: Zap,
+                        path: '/license-application',
+                        tone: 'soft-panel-tint',
+                        iconTone: 'icon-badge-navy',
+                      },
+                      {
+                        title: 'Report a Complaint',
+                        description: 'Consumer protection support',
+                        icon: ShieldCheck,
+                        path: '/complaints',
+                        tone: 'soft-panel',
+                        iconTone: 'icon-badge-orange',
+                      },
+                      {
+                        title: 'Type Approval',
+                        description: 'Equipment certification portal',
+                        icon: Globe,
+                        path: '/type-approval',
+                        tone: 'soft-panel-tint',
+                        iconTone: 'icon-badge-navy',
+                      },
+                      {
+                        title: 'Live Monitoring',
+                        description: 'Real-time QoS insights',
+                        icon: BarChart3,
+                        path: '/live-qos',
+                        tone: 'soft-panel',
+                        iconTone: 'icon-badge-orange',
+                      },
+                    ].map((link) => (
+                      <Link key={link.title} to={link.path}>
+                        <div className={`${link.tone} p-4 sm:p-6 rounded-2xl transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer h-full`}>
+                          <div className={`w-12 h-12 sm:w-14 sm:h-14 ${link.iconTone} mb-4 shadow-sm`}>
+                            <link.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                          </div>
+                          <h3 className="font-bold text-slate-800 mb-1 leading-snug">{link.title}</h3>
+                          <p className="text-sm text-slate-600">{link.description}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
             </motion.div>
           </div>
-        </div>
+        </motion.div>
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <div className="w-6 h-10 border-2 border-[#003366]/30 rounded-full flex justify-center pt-2">
+            <motion.div 
+              className="w-1.5 h-1.5 bg-[#003366] rounded-full"
+              animate={{ y: [0, 12, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          </div>
+        </motion.div>
       </section>
 
       <section className="py-16 sm:py-24 relative z-[1]">
@@ -461,33 +685,35 @@ const Home = () => {
                       <div className="w-3 h-3 rounded-full bg-[#E8F0F9]"></div>
                       <div className="w-3 h-3 rounded-full bg-white/70"></div>
                     </div>
-                    <span className="text-white/65 text-sm font-mono tracking-wider uppercase">Live Network Pulse</span>
+                    <span className="text-white/65 text-sm font-mono tracking-wider uppercase">
+                      {lastUpdated.toLocaleTimeString()}
+                    </span>
                   </div>
 
                   <div className="p-8 space-y-6 bg-[#F8FBFF]">
                     <div className="flex items-center justify-between">
                       <span className="text-slate-600 font-medium">National Throughput</span>
-                      <span className="text-[#003366] font-bold">124.5 GB/s</span>
+                      <span className="text-[#003366] font-bold">{systemMetrics.throughput.toFixed(1)} GB/s</span>
                     </div>
 
                     <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#003366] w-[72%] rounded-full"></div>
+                      <div className="h-full bg-[#003366] rounded-full" style={{ width: `${Math.min((systemMetrics.throughput / 150) * 100, 100)}%` }}></div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="soft-panel p-4">
-                        <div className="text-2xl font-bold text-slate-900">99.9%</div>
+                        <div className="text-2xl font-bold text-slate-900">{systemMetrics.availability.toFixed(2)}%</div>
                         <div className="text-xs text-slate-500 uppercase font-semibold mt-1">Uptime Avg</div>
                       </div>
                       <div className="soft-panel p-4">
-                        <div className="text-2xl font-bold text-slate-900">42ms</div>
-                        <div className="text-xs text-slate-500 uppercase font-semibold mt-1">Avg Latency</div>
+                        <div className="text-2xl font-bold text-slate-900">{systemMetrics.networkHealth.toFixed(1)}/5</div>
+                        <div className="text-xs text-slate-500 uppercase font-semibold mt-1">Net Health</div>
                       </div>
                     </div>
 
                     <div className="soft-panel-tint p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[#003366] font-semibold text-sm">Operator Compliance</span>
+                        <span className="text-[#003366] font-semibold text-sm">Compliance Status</span>
                         <span className="text-[#1A6B3C] font-bold text-sm">2/3 Compliant</span>
                       </div>
                     </div>
@@ -522,7 +748,7 @@ const Home = () => {
               <div className="mt-10">
                 <Link to="/live-qos">
                   <Button size="lg" className="rounded-xl px-8 text-white">
-                    Explore Transparency Portal
+                    Access Live Monitoring
                   </Button>
                 </Link>
               </div>

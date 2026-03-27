@@ -10,6 +10,7 @@ import { AuthProvider } from './context/AuthContext';
 import { seedDemoData } from './utils/persistence';
 import Home from './pages/Home';
 import About from './pages/About';
+import Careers from './pages/Careers';
 import Mandate from './pages/Mandate';
 import Projects from './pages/Projects';
 import Documents from './pages/Documents';
@@ -66,6 +67,7 @@ function App() {
             <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
+            <Route path="/careers" element={<Careers />} />
             <Route path="/mandate" element={<Mandate />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/documents" element={<Documents />} />
