@@ -6,6 +6,7 @@ import {
   CheckCircle, Globe, Palette, Sliders, AlertTriangle, Loader2, Save, X 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../../hooks/use-toast';
 import * as api from '../../services/api';
 
 const SettingsView = () => {
@@ -20,6 +21,14 @@ const SettingsView = () => {
     phone: '',
     organization: '',
   });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
   const [preferencesData, setPreferencesData] = useState({
     darkMode: true,
     compactLayout: false,
@@ -78,6 +87,51 @@ const SettingsView = () => {
     localStorage.removeItem('bocra_user');
     localStorage.removeItem('bocra_token');
     navigate('/login');
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    // Validate inputs
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError('All fields are required');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters long');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await api.changePassword(
+        passwordData.currentPassword,
+        passwordData.newPassword,
+        passwordData.confirmPassword
+      );
+      setPasswordSuccess('Password changed successfully!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setTimeout(() => {
+        setShowPasswordForm(false);
+        setPasswordSuccess('');
+      }, 2000);
+    } catch (error) {
+      setPasswordError(error.message || 'Failed to change password');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const replayTour = () => {
@@ -183,7 +237,100 @@ const SettingsView = () => {
               <div className="absolute top-0 right-0 w-64 h-64 bg-[#0099CC]/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
               <div className="flex items-center justify-between mb-8 relative">
                 <h3 className="text-xl font-bold text-slate-100 flex items-center">
-                  <Shield className="w-5 h-5 mr-3 text-[#0099CC]" />
+                  <Key className="w-5 h-5 mr-3 text-blue-500" />
+                  Change Password
+                </h3>
+              </div>
+              <div className="space-y-6 relative">
+                {!showPasswordForm ? (
+                  <div className="p-6 bg-slate-900/50 border border-[#1e293b] rounded-3xl flex items-center justify-between group hover:border-[#334155] transition-all">
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-200 mb-2">Update Your Password</p>
+                      <p className="text-slate-500 text-sm">Secure your account with a strong password</p>
+                    </div>
+                    <Button 
+                      onClick={() => setShowPasswordForm(true)}
+                      className="bg-blue-600 hover:bg-blue-500 rounded-2xl px-8 py-3 text-white font-bold ml-4 flex-shrink-0"
+                    >
+                      Change Password
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleChangePassword} className="p-8 bg-slate-900/30 border border-[#1e293b] rounded-3xl space-y-6">
+                    {passwordError && (
+                      <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-rose-400 text-sm font-medium">{passwordError}</p>
+                      </div>
+                    )}
+                    {passwordSuccess && (
+                      <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-emerald-400 text-sm font-medium">{passwordSuccess}</p>
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-bold text-slate-300 mb-3">Current Password</label>
+                      <input 
+                        type="password" 
+                        value={passwordData.currentPassword} 
+                        onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                        placeholder="Enter your current password"
+                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-300 mb-3">New Password</label>
+                      <input 
+                        type="password" 
+                        value={passwordData.newPassword} 
+                        onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                        placeholder="Enter a new password (min. 8 characters)"
+                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-300 mb-3">Confirm New Password</label>
+                      <input 
+                        type="password" 
+                        value={passwordData.confirmPassword} 
+                        onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                        placeholder="Confirm your new password"
+                        className="w-full bg-slate-900/50 border border-[#1e293b] rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                      />
+                    </div>
+                    <div className="flex gap-4 justify-end pt-6 border-t border-[#1e293b]">
+                      <Button 
+                        type="button"
+                        onClick={() => {
+                          setShowPasswordForm(false);
+                          setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                          setPasswordError('');
+                          setPasswordSuccess('');
+                        }}
+                        variant="outline" 
+                        className="rounded-xl px-8 py-3"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        disabled={saving}
+                        className="bg-blue-600 hover:bg-blue-500 rounded-xl px-8 py-3 text-white font-bold flex items-center"
+                      >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                        {saving ? 'Updating...' : 'Update Password'}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </section>
+            <section className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/[0.03] rounded-full blur-3xl -mr-32 -mt-32"></div>
+              <div className="flex items-center justify-between mb-8 relative">
+                <h3 className="text-xl font-bold text-slate-100 flex items-center">
+                  <Shield className="w-5 h-5 mr-3 text-teal-500" />
                   Authentication Protocol
                 </h3>
                 <Badge className="bg-[#6DC04B]/10 text-[#4E9933] border-none font-bold uppercase tracking-widest text-[10px]">Active: JWT (RS256)</Badge>

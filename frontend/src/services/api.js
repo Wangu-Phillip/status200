@@ -4,16 +4,33 @@ export const getAuthToken = () => localStorage.getItem('bocra_token');
 
 const apiCall = async (endpoint, options = {}) => {
   const token = getAuthToken();
+  
+  // Determine if we're sending FormData (for file uploads)
+  const isFormData = options.body instanceof FormData;
+  
   const headers = {
-    'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  // Only set Content-Type if not FormData (let browser handle multipart/form-data)
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const requestOptions = {
     ...options,
     headers,
-  });
+  };
+
+  // If body is FormData, send as-is; otherwise stringify if it's an object
+  if (isFormData) {
+    requestOptions.body = options.body;
+  } else if (options.body && typeof options.body === 'object') {
+    requestOptions.body = JSON.stringify(options.body);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, requestOptions);
 
   if (!response.ok) {
     const error = await response.json();
@@ -32,17 +49,33 @@ export const getApplications = ({ page = 1, limit = 10 } = {}) =>
 
 export const getApplication = (id) => apiCall(`/applications/${id}`);
 
-export const submitApplication = (data) =>
-  apiCall('/applications', {
+export const submitApplication = (data) => {
+  const options = {
     method: 'POST',
-    body: JSON.stringify(data),
-  });
+  };
+  
+  if (data instanceof FormData) {
+    options.body = data;
+  } else {
+    options.body = data;
+  }
+  
+  return apiCall('/applications', options);
+};
 
-export const updateApplication = (id, data) =>
-  apiCall(`/applications/${id}`, {
+export const updateApplication = (id, data) => {
+  const options = {
     method: 'PUT',
-    body: JSON.stringify(data),
-  });
+  };
+  
+  if (data instanceof FormData) {
+    options.body = data;
+  } else {
+    options.body = data;
+  }
+  
+  return apiCall(`/applications/${id}`, options);
+};
 
 export const deleteApplication = (id) =>
   apiCall(`/applications/${id}`, {
@@ -113,6 +146,20 @@ export const uploadTenderDocument = (tenderId, documentData) =>
     body: JSON.stringify(documentData),
   });
 
+// Get available tender postings for citizens to browse and apply to
+export const getAvailableTenderPostings = ({ page = 1, limit = 20, status = 'Open', category = null } = {}) => {
+  const query = new URLSearchParams();
+  query.append('page', page);
+  query.append('limit', limit);
+  query.append('status', status);
+  if (category) query.append('category', category);
+  return apiCall(`/tender-postings/available?${query.toString()}`);
+};
+
+// Get a specific tender posting
+export const getTenderPosting = (id) => 
+  apiCall(`/tender-postings/${id}`);
+
 // =====================
 // DOCUMENTS API
 // =====================
@@ -140,6 +187,12 @@ export const updateUserProfile = (data) =>
     body: JSON.stringify(data),
   });
 
+export const changePassword = (currentPassword, newPassword, confirmPassword) =>
+  apiCall('/user/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+  });
+
 // =====================
 // DASHBOARD API
 // =====================
@@ -161,6 +214,29 @@ export const searchGlobal = ({ query = '', page = 1, limit = 10 } = {}) =>
   apiCall(`/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
 
 // =====================
+// USER MANAGEMENT API (Admin)
+// =====================
+
+export const getUsers = () => apiCall('/users');
+
+export const createUser = (userData) =>
+  apiCall('/users', {
+    method: 'POST',
+    body: JSON.stringify(userData),
+  });
+
+export const updateUser = (id, userData) =>
+  apiCall(`/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(userData),
+  });
+
+export const deleteUser = (id) =>
+  apiCall(`/users/${id}`, {
+    method: 'DELETE',
+  });
+
+// =====================
 // ADMIN API
 // =====================
 
@@ -171,6 +247,8 @@ export const getSubmissions = ({ department = '', page = 1, limit = 10 } = {}) =
   query.append('limit', limit);
   return apiCall(`/admin/submissions?${query.toString()}`);
 };
+
+export const getAllSubmissions = (options = { limit: 100 }) => getSubmissions(options);
 
 export const getAdminStats = (department = '') => {
   const query = new URLSearchParams();
@@ -234,4 +312,67 @@ export const addTenderNotes = (tenderNumber, notes) =>
   apiCall(`/admin/tenders/${tenderNumber}/notes`, {
     method: 'PUT',
     body: JSON.stringify({ notes }),
+  });
+
+// =====================
+// SYSTEM SETTINGS API
+// =====================
+
+export const getSystemSettings = () => apiCall('/admin/settings');
+
+export const updateSystemSettings = (settings) =>
+  apiCall('/admin/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  });
+
+// =====================
+// ACTIVITY LOGS API
+// =====================
+
+export const getActivityLogs = ({ limit = 25, offset = 0 } = {}) => {
+  const query = new URLSearchParams();
+  query.append('limit', limit);
+  query.append('offset', offset);
+  return apiCall(`/admin/activity-logs?${query.toString()}`);
+};
+
+// =====================
+// TENDER POSTINGS API
+// =====================
+
+export const getTenderPostings = ({ page = 1, limit = 10, status = null } = {}) => {
+  const query = new URLSearchParams();
+  query.append('page', page);
+  query.append('limit', limit);
+  if (status) query.append('status', status);
+  return apiCall(`/admin/tender-postings?${query.toString()}`);
+};
+
+export const createTenderPosting = (data) =>
+  apiCall('/admin/tender-postings', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const updateTenderPosting = (id, data) =>
+  apiCall(`/admin/tender-postings/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+export const deleteTenderPosting = (id) =>
+  apiCall(`/admin/tender-postings/${id}`, {
+    method: 'DELETE',
+  });
+
+export const uploadTenderPostingDocument = (postingId, docData) =>
+  apiCall(`/admin/tender-postings/${postingId}/documents`, {
+    method: 'POST',
+    body: JSON.stringify(docData),
+  });
+
+export const deleteTenderDocument = (docId) =>
+  apiCall(`/admin/tender-postings/documents/${docId}`, {
+    method: 'DELETE',
   });

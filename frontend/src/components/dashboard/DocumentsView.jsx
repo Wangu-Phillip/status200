@@ -88,10 +88,6 @@ const DocumentsView = () => {
           <p className="text-slate-500 mt-2 leading-relaxed">Access official guidelines, invoices, and your verified regulatory archive ({documents.length}).</p>
         </div>
         <div className="flex items-center space-x-3">
-          <button className="flex items-center space-x-2 px-6 py-3.5 bg-[#003366] hover:bg-[#003366] text-white rounded-2xl transition-all text-sm font-bold shadow-xl shadow-[#0099CC]/20 active:scale-95 group disabled:opacity-50">
-            <Upload className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
-            <span>Upload New Document</span>
-          </button>
         </div>
       </div>
 

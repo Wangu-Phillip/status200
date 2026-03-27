@@ -19,6 +19,7 @@ import {
   Upload,
   X as XIcon,
   Loader2,
+  Briefcase
 } from 'lucide-react';
 
 import { Badge } from '../components/ui/badge';
@@ -27,6 +28,9 @@ import ApplicationsView from '../components/dashboard/ApplicationsView';
 import ComplaintsView from '../components/dashboard/ComplaintsView';
 import DocumentsView from '../components/dashboard/DocumentsView';
 import SettingsView from '../components/dashboard/SettingsView';
+import TendersView from '../components/dashboard/TendersView';
+import * as api from '../services/api';
+import TenderSubmission from './TenderSubmission';
 import PortalTour from '../components/PortalTour';
 import Chatbot from '../components/Chatbot';
 import TenderSubmission from './TenderSubmission';
@@ -388,6 +392,7 @@ const Dashboard = () => {
     setShowTour(false);
     localStorage.setItem('bocra_tour_seen', 'true');
     setChatGreeting('You’re all set. What would you like to do first?');
+    setChatGreeting(`You’re all set, ${user?.name?.split(' ')[0] || 'Citizen'}! What would you like to do first?`);
     setOpenChat(true);
   };
 
@@ -430,6 +435,75 @@ const Dashboard = () => {
                   <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700" style={{ backgroundColor: '#FFF8DF' }}>
                     <AlertCircle className="h-3.5 w-3.5" style={{ color: BRAND.red }} />
                     Action centre
+  const formatDate = (dateString = new Date()) => {
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-GB', options);
+  };
+
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'applications', label: 'My Applications', icon: FileText },
+    { id: 'complaints', label: 'My Complaints', icon: MessageSquare },
+    { id: 'tenders', label: 'Tenders', icon: Briefcase },
+    { id: 'documents', label: 'My Documents', icon: Files },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
+
+  if (!user) return null;
+
+  const statCards = [
+    { label: 'Total Applications', value: stats?.totalApplications || '0', trend: '+12%', color: 'text-teal-500' },
+    { label: 'Active Complaints', value: stats?.activeComplaints || '0', trend: '-2%', color: 'text-amber-500' },
+    { label: 'Node Trust Score', value: `${stats?.nodeTrustScore || 82}%`, trend: '+5%', color: 'text-blue-500' },
+    { label: 'Verified Devices', value: stats?.verifiedDevices || '0', trend: '+18%', color: 'text-emerald-500' },
+  ];
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Approved': return '#2E7D32';
+      case 'Under Review': return '#1565C0';
+      case 'Rejected / Flagged': return '#C62828';
+      case 'Pending Documents': return '#F9A825';
+      default: return '#1e293b';
+    }
+  };
+
+  const getActivityIcon = (actionType) => {
+    switch (actionType) {
+      case 'application': return FileText;
+      case 'complaint': return MessageSquare;
+      case 'document': return Files;
+      default: return AlertCircle;
+    }
+  };
+
+  const getActivityColor = (actionType) => {
+    switch (actionType) {
+      case 'application': return 'bg-teal-500/10 text-teal-400 border-teal-500/20';
+      case 'complaint': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+      case 'document': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+    }
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'applications': return <ApplicationsView />;
+      case 'complaints': return <ComplaintsView />;
+      case 'documents': return <DocumentsView />;
+      case 'tenders': return <TendersView />;
+      case 'settings': return <SettingsView />;
+      case 'tender-submission': return <TenderSubmission setActiveTab={setActiveTab} />;
+      default: return (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div id="stats-section" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {statCards.map((card, i) => (
+              <div key={i} className="bg-[#0a0f1e] border border-[#1e293b] p-6 rounded-[1.5rem] hover:border-[#003366]/30 transition-all group overflow-hidden relative shadow-lg shadow-black/20">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#003366]/5 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-[#003366]/10 transition-colors"></div>
+                <div className="flex justify-between items-start mb-4 relative">
+                  <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">{card.label}</span>
+                  <div className="w-8 h-8 rounded-lg bg-slate-900/50 flex items-center justify-center border border-white/5">
+                    <MoreVertical className="w-4 h-4 text-slate-600" />
                   </div>
                   <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">
                     Continue where you left off
@@ -567,6 +641,31 @@ const Dashboard = () => {
                     })}
                   </div>
                 </SurfaceCard>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="px-2">
+                <h2 className="text-2xl font-black tracking-tight text-white">Power Actions</h2>
+              </div>
+              <div className="space-y-5">
+                {[
+                  { tab: 'applications', icon: Plus, color: 'teal', label: 'Start Application', desc: 'Secure new sector licenses', id: 'new-app-button' },
+                  { tab: 'complaints', icon: MessageSquare, color: 'orange', label: 'Consumer Rights', desc: 'Report service violations' },
+                  { tab: 'tenders', icon: Briefcase, color: 'blue', label: 'Browse & Submit Tenders', desc: 'View open tenders and submit proposals' },
+                ].map((action, i) => (
+                  <button key={i} id={action.id} onClick={() => setActiveTab(action.tab)} className="block w-full text-left group">
+                    <div className={`bg-[#0a0f1e] border border-white/5 p-8 rounded-[2.5rem] transition-all cursor-pointer relative overflow-hidden active:scale-95 hover:border-[#003366]/30 group-hover:shadow-[0_20px_40px_-15px_rgba(0,51,102,0.2)]`}>
+                      <div className={`w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-slate-300 mb-6 group-hover:bg-[#003366] group-hover:text-white transition-all duration-500`}>
+                        <action.icon className="w-7 h-7" />
+                      </div>
+                      <h3 className="font-black text-xl text-slate-100 tracking-tight group-hover:text-white">{action.label}</h3>
+                      <p className="text-sm text-slate-500 mt-2 font-medium leading-relaxed">{action.desc}</p>
+                      <div className="absolute top-8 right-8 w-1.5 h-1.5 bg-[#003366] rounded-full opacity-50 group-hover:opacity-100 group-hover:scale-150 transition-all"></div>
+                    </div>
+                  </button>
+                ))}
+              </div>
 
                 <SurfaceCard className="p-5 sm:p-6">
                   <div className="flex items-center justify-between gap-3">

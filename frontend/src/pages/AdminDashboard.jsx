@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
+import { 
+  PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell 
+} from 'recharts';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Switch } from '../components/ui/switch';
+import { Label } from '../components/ui/label';
 import UserForm from '../components/admin/UserForm';
 import UserList from '../components/admin/UserList';
 import UserModal from '../components/admin/UserModal';
+import TenderDetailModal from '../components/TenderDetailModal';
+import AdminLicensingView from '../components/admin/AdminLicensingView';
 import {
   DEPARTMENTS,
   DEPARTMENT_LABELS,
@@ -39,390 +47,336 @@ import {
   Users,
   Plus,
   Settings,
+  ShieldCheck,
+  TrendingUp,
+  LayoutDashboard,
+  Inbox,
+  Lock,
+  Mail,
+  Bell,
+  ChevronRight,
+  Menu,
+  X,
+  CreditCard,
+  Target,
   Loader2,
+  Trash2,
+  Edit2
 } from 'lucide-react';
 
-import { Menu, X as XIcon } from 'lucide-react';
+const BRAND = {
+  navy: '#010B1D',
+  accent: '#14B8A6',
+  white: '#FFFFFF',
+  slate: '#64748B',
+  border: '#E2E8F0',
+  red: '#F43F5E',
+  yellow: '#F59E0B',
+  emerald: '#10B981',
+  blue: '#3B82F6'
+};
+
+const StatTile = ({ label, value, icon: Icon, accent, helper }) => (
+  <Card className="border-0 shadow-sm rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 group">
+    <CardContent className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="p-3.5 rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-[#14B8A6]/10 group-hover:text-[#14B8A6] transition-colors">
+          <Icon size={22} />
+        </div>
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{helper}</span>
+          <div className="h-1 w-8 rounded-full mt-1" style={{ backgroundColor: accent }}></div>
+        </div>
+      </div>
+      <div>
+        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+        <p className="text-3xl font-black text-slate-900 mt-1">{value}</p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const SurfaceCard = ({ title, children, subtitle, icon: Icon, action }) => (
+  <Card className="border-0 shadow-sm rounded-[2.5rem] overflow-hidden">
+    <CardHeader className="bg-white border-b border-slate-100 p-8 flex flex-row items-center justify-between space-y-0">
+      <div className="flex items-center gap-4">
+        {Icon && <div className="p-3 rounded-2xl bg-teal-50 text-teal-600"><Icon size={20} /></div>}
+        <div>
+          <CardTitle className="text-xl font-black text-slate-900">{title}</CardTitle>
+          {subtitle && <CardDescription className="font-medium text-slate-500">{subtitle}</CardDescription>}
+        </div>
+      </div>
+      {action}
+    </CardHeader>
+    <CardContent className="p-0">
+      {children}
+    </CardContent>
+  </Card>
+);
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [activeView, setActiveView] = useState('dashboard');
   const [user, setUser] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Data states
+  const [users, setUsers] = useState([]);
+  const [allApplications, setAllApplications] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [tenders, setTenders] = useState([]);
-  const [allApplications, setAllApplications] = useState([]);
-  const [stats, setStats] = useState({});
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
-  const [adminNote, setAdminNote] = useState('');
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'submissions', 'users', 'applications', or 'settings'
-  const [submissionsLoading, setSubmissionsLoading] = useState(false);
+  const [tenderPostings, setTenderPostings] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [licensingApps, setLicensingApps] = useState([]);
+  const [departmentStats, setDepartmentStats] = useState({
+    licensing: { total: 0, pending: 0, approved: 0, rejected: 0 },
+    complaints: { total: 0, pending: 0, approved: 0, rejected: 0 },
+    tenders: { total: 0, pending: 0, approved: 0, rejected: 0 }
+  });
   
-  // User management state (for superadmin)
-  const [users, setUsers] = useState([]);
-  const [userSearchTerm, setUserSearchTerm] = useState('');
-  const [userLoading, setUserLoading] = useState(false);
+  // UI states
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
-  const [userStats, setUserStats] = useState({
-    totalUsers: 0,
-    adminCount: 0,
-    citizenCount: 0,
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [adminNote, setAdminNote] = useState('');
+  const [tenderView, setTenderView] = useState('submissions'); // 'submissions' or 'postings'
+  const [showTenderForm, setShowTenderForm] = useState(false);
+  const [editingTender, setEditingTender] = useState(null);
+  const [formData, setFormData] = useState({
+    tenderNumber: '',
+    title: '',
+    category: '',
+    closingDate: '',
+    estimatedValue: '',
+    location: '',
+    description: ''
   });
-  
-  const { toast } = useToast();
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+  // Settings states
+  const [settings, setSettings] = useState({
+    siteName: 'BOCRA Portal',
+    maintenanceMode: false,
+    registrationEnabled: true,
+    supportEmail: 'support@bocra.org.bw',
+    sessionTimeout: 30,
+    twoFactorAuth: false
+  });
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [tenderPostingsLoading, setTenderPostingsLoading] = useState(false);
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const userData = localStorage.getItem('bocra_user');
-    if (!userData) {
-      navigate('/login');
+    const authUser = JSON.parse(localStorage.getItem('adminUser'));
+    const token = localStorage.getItem('adminToken');
+
+    if (!authUser || !token) {
+      navigate('/admin/login');
       return;
     }
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.userType !== 'admin') {
-      navigate('/dashboard');
-      return;
-    }
-    setUser(parsedUser);
+
+    setUser(authUser);
+    refreshData(authUser);
   }, [navigate]);
 
-  // Load department-specific data
-  useEffect(() => {
-    if (!user) return;
-    // For non-superadmin, department must be set
-    if (user.adminLevel === 'admin' && !user.department) {
-      navigate('/login');
-      return;
+  const refreshData = async (currUser) => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        loadUsers(),
+        loadAllApplications(),
+        loadSettings(),
+        loadAllActivities()
+      ]);
+
+      if (currUser.department === 'tenders') {
+        await loadTenderPostings();
+      }
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load dashboard data.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
-    refreshData();
-    // Load users if superadmin
-    if (user.adminLevel === 'superadmin') {
-      loadUsers();
-    }
-  }, [user, navigate]);
+  };
 
   const loadUsers = async () => {
-    setUserLoading(true);
-    const token = localStorage.getItem('bocra_token');
+    setUsersLoading(true);
     try {
-      const response = await fetch(`${API_URL}/users`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to load users');
-      }
-
-      const data = await response.json();
+      const data = await adminApi.getUsers();
       setUsers(data.users || []);
-
-      // Calculate stats
-      const adminCount = (data.users || []).filter((u) => u.userType === 'admin').length;
-      const citizenCount = (data.users || []).filter((u) => u.userType === 'client').length;
-
-      setUserStats({
-        totalUsers: data.users?.length || 0,
-        adminCount,
-        citizenCount,
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load users',
-        variant: 'destructive',
-      });
+    } catch (err) {
+      console.error('User fetch failed:', err);
     } finally {
-      setUserLoading(false);
-    }
-  };
-
-  const handleUserSubmit = async (formData) => {
-    setUserLoading(true);
-    const token = localStorage.getItem('bocra_token');
-
-    try {
-      const method = editingUser ? 'PUT' : 'POST';
-      const endpoint = editingUser ? `${API_URL}/users/${editingUser.id}` : `${API_URL}/users`;
-
-      const response = await fetch(endpoint, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to save user');
-      }
-
-      toast({
-        title: 'Success',
-        description: editingUser ? 'User updated successfully' : 'User created successfully',
-      });
-
-      setShowUserForm(false);
-      setEditingUser(null);
-      loadUsers();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setUserLoading(false);
-    }
-  };
-
-  const handleDeleteUser = async (userToDelete) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${userToDelete.name}? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
-
-    setUserLoading(true);
-    const token = localStorage.getItem('bocra_token');
-
-    try {
-      const response = await fetch(`${API_URL}/users/${userToDelete.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to delete user');
-      }
-
-      toast({
-        title: 'Success',
-        description: 'User deleted successfully',
-      });
-
-      loadUsers();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setUserLoading(false);
+      setUsersLoading(false);
     }
   };
 
   const loadAllApplications = async () => {
-    setSubmissionsLoading(true);
     try {
-      let allApps = [];
-
-      // Load licensing applications
-      try {
-        const licensingData = await adminApi.getSubmissions({
-          department: 'licensing',
-          page: 1,
-          limit: 100,
-        });
-        if (licensingData.submissions) {
-          allApps = [...allApps, ...licensingData.submissions];
+      const resp = await adminApi.getAllSubmissions();
+      const subs = resp.submissions || [];
+      setAllApplications(subs);
+      
+      // Filter by department if needed
+      setComplaints(subs.filter(a => a.department === 'complaints'));
+      setTenders(subs.filter(a => a.department === 'tenders'));
+      setLicensingApps(subs.filter(a => a.department === 'licensing'));
+      
+      // Calculate stats
+      const stats = {
+        licensing: { total: 0, pending: 0, approved: 0, rejected: 0 },
+        complaints: { total: 0, pending: 0, approved: 0, rejected: 0 },
+        tenders: { total: 0, pending: 0, approved: 0, rejected: 0 }
+      };
+      
+      subs.forEach(app => {
+        if (stats[app.department]) {
+          stats[app.department].total++;
+          if (app.status === 'pending' || app.status === 'Submitted') stats[app.department].pending++;
+          if (app.status === 'approved' || app.status === 'Approved') stats[app.department].approved++;
+          if (app.status === 'rejected' || app.status === 'Rejected') stats[app.department].rejected++;
         }
-      } catch (error) {
-        console.error('Failed to load licensing applications:', error);
-      }
-
-      // Load complaints
-      try {
-        const complaintsData = await adminApi.getAdminComplaints({
-          page: 1,
-          limit: 100,
-        });
-        if (complaintsData.complaints) {
-          allApps = [...allApps, ...complaintsData.complaints];
-        }
-      } catch (error) {
-        console.error('Failed to load complaints:', error);
-      }
-
-      // Load tenders
-      try {
-        const tendersData = await adminApi.getAdminTenders({
-          page: 1,
-          limit: 100,
-        });
-        if (tendersData.tenders) {
-          allApps = [...allApps, ...tendersData.tenders];
-        }
-      } catch (error) {
-        console.error('Failed to load tenders:', error);
-      }
-
-      setAllApplications(allApps);
-    } catch (error) {
-      console.error('Failed to load applications:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load applications',
-        variant: 'destructive',
       });
-    } finally {
-      setSubmissionsLoading(false);
+      setDepartmentStats(stats);
+    } catch (err) {
+      console.error('Applications fetch failed:', err);
     }
   };
 
-  const refreshData = async () => {
-    if (!user) return;
-    // For superadmin, only load if a department is selected
-    if (user.adminLevel === 'superadmin' && !user.department) {
-      setSubmissions([]);
-      setComplaints([]);
-      setTenders([]);
-      setStats({});
-      return;
-    }
-    
-    setSubmissionsLoading(true);
+  const loadTenderPostings = async () => {
+    setTenderPostingsLoading(true);
     try {
-      const dept = user.department;
-
-      // Fetch data based on department
-      if (dept === 'licensing') {
-        const submissionsData = await adminApi.getSubmissions({
-          department: dept,
-          page: 1,
-          limit: 100,
-        });
-        setSubmissions(submissionsData.submissions || []);
-        setComplaints([]);
-        setTenders([]);
-      } else if (dept === 'complaints') {
-        const complaintsData = await adminApi.getAdminComplaints({
-          page: 1,
-          limit: 100,
-        });
-        setComplaints(complaintsData.complaints || []);
-        setSubmissions([]);
-        setTenders([]);
-      } else if (dept === 'tenders') {
-        const tendersData = await adminApi.getAdminTenders({
-          page: 1,
-          limit: 100,
-        });
-        setTenders(tendersData.tenders || []);
-        setSubmissions([]);
-        setComplaints([]);
-      } else if (dept === 'qos') {
-        // QoS doesn't have submissions yet
-        setSubmissions([]);
-        setComplaints([]);
-        setTenders([]);
-      }
-
-      // Fetch stats from backend
-      const statsData = await adminApi.getAdminStats(dept);
-      setStats(statsData);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load department data',
-        variant: 'destructive',
-      });
+      const data = await adminApi.getTenderPostings();
+      setTenderPostings(data);
+    } catch (err) {
+      console.error('Tender postings fetch failed:', err);
     } finally {
-      setSubmissionsLoading(false);
+      setTenderPostingsLoading(false);
     }
   };
 
-  const handleStatusChange = async (token, newStatus) => {
+  const loadSettings = async () => {
     try {
-      setSubmissionsLoading(true);
-      const dept = user?.department;
-
-      if (dept === 'complaints') {
-        await adminApi.updateComplaintStatus(token, newStatus);
-      } else if (dept === 'tenders') {
-        await adminApi.updateTenderStatus(token, newStatus);
-      } else {
-        await adminApi.updateSubmissionStatus(token, newStatus);
-      }
-
-      await refreshData();
-      setSelectedSubmission(null);
-      toast({
-        title: 'Status Updated',
-        description: `Item ${token} has been moved to ${newStatus}.`,
-      });
-    } catch (error) {
-      console.error('Failed to update status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update status',
-        variant: 'destructive',
-      });
-    } finally {
-      setSubmissionsLoading(false);
+      const data = await adminApi.getSystemSettings();
+      if (data) setSettings(data);
+    } catch (err) {
+      console.error('Settings fetch failed:', err);
     }
   };
 
-  const handleAddNote = async (token) => {
-    if (!adminNote.trim()) return;
+  const loadAllActivities = async () => {
     try {
-      setSubmissionsLoading(true);
-      const dept = user?.department;
-
-      if (dept === 'complaints') {
-        await adminApi.addComplaintNotes(token, adminNote);
-      } else if (dept === 'tenders') {
-        await adminApi.addTenderNotes(token, adminNote);
-      } else {
-        await adminApi.addSubmissionNotes(token, adminNote);
-      }
-
-      setAdminNote('');
-      await refreshData();
-      setSelectedSubmission(null);
-      toast({
-        title: 'Note Added',
-        description: `Internal admin note saved for ${token}.`,
-      });
-    } catch (error) {
-      console.error('Failed to add note:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add note',
-        variant: 'destructive',
-      });
-    } finally {
-      setSubmissionsLoading(false);
+      const data = await adminApi.getActivityLogs();
+      setRecentActivities(data.slice(0, 10));
+    } catch (err) {
+      console.error('Activity logs fetch failed:', err);
     }
-  };
-
-  const handleDisabledMock = (feature) => {
-    toast({
-      title: 'Development Preview',
-      description: `${feature} module will be available in the upcoming release phase.`,
-    });
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('bocra_user');
-    navigate('/login');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    navigate('/admin/login');
+  };
+
+  const handleStatusChange = async (newStatus) => {
+    if (!selectedSubmission) return;
+    setSubmissionsLoading(true);
+    try {
+      await adminApi.updateSubmissionStatus(selectedSubmission.id, newStatus);
+      toast({
+        title: 'Status Updated',
+        description: `Submission ${selectedSubmission.token || selectedSubmission.id} is now ${newStatus}.`,
+      });
+      loadAllApplications();
+      setSelectedSubmission(null);
+    } catch (error) {
+      toast({
+        title: 'Update Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
+
+  const handleAddNote = async (note) => {
+    if (!selectedSubmission) return;
+    try {
+      await adminApi.addSubmissionNotes(selectedSubmission.id, note);
+      toast({ title: 'Note Added', description: 'Internal note saved successfully.' });
+      loadAllApplications();
+    } catch (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleTenderFormSubmit = async (e) => {
+    e.preventDefault();
+    setTenderPostingsLoading(true);
+    try {
+      if (editingTender) {
+        await adminApi.updateTenderPosting(editingTender.id, formData);
+        toast({ title: 'Tender Updated', description: 'Notice has been updated.' });
+      } else {
+        await adminApi.createTenderPosting(formData);
+        toast({ title: 'Tender Posted', description: 'New procurement notice is now live.' });
+      }
+      setShowTenderForm(false);
+      setEditingTender(null);
+      loadTenderPostings();
+    } catch (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setTenderPostingsLoading(false);
+    }
+  };
+
+  const handleDeleteTenderPosting = async (id) => {
+    if (!window.confirm('Delete this tender notice?')) return;
+    try {
+      await adminApi.deleteTenderPosting(id);
+      toast({ title: 'Deleted', description: 'Notice has been removed.' });
+      loadTenderPostings();
+    } catch (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setSettingsLoading(true);
+    try {
+      await adminApi.updateSystemSettings(settings);
+      toast({ title: 'Settings Saved', description: 'System configuration updated successfully.' });
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to save settings.', variant: 'destructive' });
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const handleSettingsChange = (field, value) => {
+    setSettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'approved': return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Approved</Badge>;
+      case 'rejected': return <Badge className="bg-rose-100 text-rose-700 border-rose-200">Rejected</Badge>;
+      case 'pending': return <Badge className="bg-amber-100 text-amber-700 border-amber-200">Under Review</Badge>;
+      default: return <Badge variant="secondary">{status}</Badge>;
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -434,272 +388,112 @@ const AdminDashboard = () => {
     };
     const c = config[status] || config['Pending Review'];
     const Icon = c.icon;
+  if (loading) {
     return (
-      <Badge className={c.className}>
-        <Icon className="h-3 w-3 mr-1" />
-        {status}
-      </Badge>
+      <div className="min-h-screen bg-[#0E1525] flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="h-12 w-12 text-[#14B8A6] animate-spin" />
+        <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Initializing Control Panel...</p>
+      </div>
     );
+  }
+
+  // Determine which data to show in active data list
+  const activeData = activeView === 'submissions' 
+    ? (user?.department === 'tenders' ? tenders : 
+       user?.department === 'complaints' ? complaints : 
+       user?.department === 'licensing' ? licensingApps : [])
+    : allApplications;
+
+  const stats = {
+    total: allApplications.length,
+    pending: allApplications.filter(a => a.status === 'pending').length,
+    approved: allApplications.filter(a => a.status === 'approved').length,
+    rejected: allApplications.filter(a => a.status === 'rejected').length
   };
-
-  const getPriorityBadge = (priority) => {
-    const colors = {
-      High: 'bg-red-100 text-red-800 border-red-200',
-      Medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      Low: 'bg-[#E6F4EC] text-[#1A6B3C] border-green-200',
-    };
-    return <Badge variant="outline" className={colors[priority]}>{priority}</Badge>;
-  };
-
-  const getDeptIcon = (dept) => {
-    const icons = {
-      [DEPARTMENTS.LICENSING]: Zap,
-      [DEPARTMENTS.COMPLAINTS]: MessageSquare,
-      [DEPARTMENTS.QOS]: BarChart3,
-      [DEPARTMENTS.TENDERS]: Briefcase,
-    };
-    return icons[dept] || Shield;
-  };
-
-  // Get active submissions data based on department
-  const getActiveData = () => {
-    const dept = user?.department;
-    if (dept === 'complaints') return complaints;
-    if (dept === 'tenders') return tenders;
-    return submissions;
-  };
-
-  const activeData = getActiveData();
-
-  const filteredSubmissions = activeData.filter((sub) => {
-    const matchesSearch =
-      sub.citizenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sub.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sub.id?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || sub.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
-
-  if (!user) return null;
-
-  const DeptIcon = getDeptIcon(user.department);
-  const deptColor = DEPARTMENT_COLORS[user.department] || { bg: 'bg-[#003366]', text: 'text-[#003366]', light: 'bg-[#E8F0F9]' };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Mobile Sidebar Toggle */}
-      <button
-        onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-[60] p-3 bg-slate-900 text-white rounded-xl shadow-lg"
-      >
-        {mobileSidebarOpen ? <XIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </button>
-
-      {/* Mobile Overlay */}
-      {mobileSidebarOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setMobileSidebarOpen(false)}
-        />
-      )}
-
+    <div className="flex min-h-screen bg-[#F8FAFC]">
       {/* Sidebar */}
-      <div className={`fixed left-0 top-0 bottom-0 w-72 bg-slate-900 text-white z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 ${
-        mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        {/* Logo */}
-        <div className="p-6 border-b border-slate-700/50">
-          <Link to="/" className="flex items-center gap-3">
-            <img src="/logo.png" alt="BOCRA" className="h-12 w-auto brightness-0 invert" />
-          </Link>
-        </div>
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-72 bg-[#020617] text-white transition-all duration-300 lg:static lg:block
+        ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+       shadow-2xl shadow-black/50`}>
+        <div className="flex flex-col h-full bg-[#020617]">
+          <div className="p-8 pb-4">
+            <div className="flex items-center gap-4 mb-10 group cursor-pointer">
+               <div className="w-12 h-12 bg-[#14B8A6] rounded-2xl flex items-center justify-center shadow-lg shadow-[#14B8A6]/30 group-hover:scale-110 transition-transform">
+                  <Shield size={22} className="text-white" />
+               </div>
+               <div>
+                  <h1 className="text-xl font-black tracking-tighter">BOCRA</h1>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-teal-500">Admin Portal</p>
+               </div>
+            </div>
 
-        {/* Department Badge */}
-        <div className="px-6 py-4 border-b border-slate-700/50">
-          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl ${deptColor.light} bg-opacity-10`}>
-            <div className={`w-10 h-10 rounded-xl ${deptColor.bg} flex items-center justify-center`}>
-              <DeptIcon className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Department</p>
-              <p className="text-sm font-bold text-white">{DEPARTMENT_LABELS[user.department]?.split(' &')[0] || 'General'}</p>
-            </div>
+            <nav className="space-y-2">
+              {[
+                { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+                { id: 'submissions', label: user?.department === 'tenders' ? 'Tenders hub' : 'Department Queue', icon: Inbox },
+                { id: 'applications', label: 'All Submissions', icon: FileText, superOnly: true },
+                { id: 'users', label: 'Staff Accounts', icon: Users, superOnly: true },
+                { id: 'licensing', label: 'Licensing Desk', icon: CreditCard, superOnly: true },
+              ].filter(item => !item.superOnly || user?.adminLevel === 'superadmin').map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveView(item.id);
+                    setMobileSidebarOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 relative group
+                    ${activeView === item.id 
+                      ? 'bg-[#14B8A6] text-white shadow-xl shadow-[#14B8A6]/20' 
+                      : 'text-slate-500 hover:text-white hover:bg-white/5'}
+                  `}
+                >
+                  <item.icon size={20} className={activeView === item.id ? '' : 'group-hover:scale-110 transition-transform'} />
+                  <span className="font-bold text-sm tracking-tight">{item.label}</span>
+                  {activeView === item.id && (
+                    <div className="absolute right-4 w-1.5 h-1.5 bg-white rounded-full"></div>
+                  )}
+                </button>
+              ))}
+
+              {user?.adminLevel === 'superadmin' && (
+                <button 
+                  onClick={() => setActiveView('settings')}
+                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${activeView === 'settings' ? 'bg-[#14B8A6] text-white shadow-xl' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+                >
+                  <Settings size={20} />
+                  <span className="font-bold text-sm tracking-tight">System Settings</span>
+                </button>
+              )}
+            </nav>
           </div>
-        </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-          <p className="px-3 text-xs text-slate-500 uppercase tracking-wider font-semibold mb-3">Overview</p>
-          <button 
-            onClick={() => { 
-              setActiveView('dashboard');
-              setSearchTerm('');
-              setFilterStatus('all');
-              toast({ title: 'Dashboard', description: 'Viewing main dashboard.' }); 
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-              activeView === 'dashboard' 
-                ? 'bg-slate-800 text-white' 
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <BarChart3 className="h-4 w-4" />
-            Dashboard
-          </button>
-
-          {/* User Management - Only for superadmins */}
-          {user?.adminLevel === 'superadmin' && (
-            <>
-              <button 
-                onClick={() => { 
-                  setActiveView('users');
-                  setSearchTerm('');
-                  setFilterStatus('all');
-                  toast({ title: 'User Management', description: 'Manage all system users.' }); 
-                }} 
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  activeView === 'users' 
-                    ? 'bg-slate-800 text-white' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <Users className="h-4 w-4" />
-                User Management
-              </button>
-
-              <button 
-                onClick={() => { 
-                  setActiveView('applications');
-                  setSearchTerm('');
-                  setFilterStatus('all');
-                  loadAllApplications();
-                  toast({ title: 'Applications', description: 'Viewing applications from all departments.' }); 
-                }} 
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  activeView === 'applications' 
-                    ? 'bg-slate-800 text-white' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <FileText className="h-4 w-4" />
-                Applications
-              </button>
-            </>
-          )}
-
-          {/* Departments - Only for superadmins */}
-          {user?.adminLevel === 'superadmin' && (
-            <>
-              <p className="px-3 text-xs text-slate-500 uppercase tracking-wider font-semibold mt-6 mb-3">Departments</p>
-              <button 
-                onClick={() => { 
-                  const updatedUser = { ...user, department: DEPARTMENTS.LICENSING };
-                  localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
-                  setUser(updatedUser);
-                  setActiveView('submissions');
-                  toast({ title: 'Licensing', description: 'Switched to Licensing Department.' }); 
-                }} 
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  activeView === 'submissions' && user?.department === DEPARTMENTS.LICENSING 
-                    ? 'bg-slate-800 text-white' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <Zap className="h-4 w-4" />
-                Licensing
-              </button>
-              <button 
-                onClick={() => { 
-                  const updatedUser = { ...user, department: DEPARTMENTS.COMPLAINTS };
-                  localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
-                  setUser(updatedUser);
-                  setActiveView('submissions');
-                  toast({ title: 'Complaints', description: 'Switched to Complaints Department.' }); 
-                }} 
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  activeView === 'submissions' && user?.department === DEPARTMENTS.COMPLAINTS 
-                    ? 'bg-slate-800 text-white' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <MessageSquare className="h-4 w-4" />
-                Complaints
-              </button>
-              <button 
-                onClick={() => { 
-                  const updatedUser = { ...user, department: DEPARTMENTS.QOS };
-                  localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
-                  setUser(updatedUser);
-                  setActiveView('submissions');
-                  toast({ title: 'Quality of Service', description: 'Switched to QoS Department.' }); 
-                }} 
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  activeView === 'submissions' && user?.department === DEPARTMENTS.QOS 
-                    ? 'bg-slate-800 text-white' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <BarChart3 className="h-4 w-4" />
-                Quality of Service
-              </button>
-              <button 
-                onClick={() => { 
-                  const updatedUser = { ...user, department: DEPARTMENTS.TENDERS };
-                  localStorage.setItem('bocra_user', JSON.stringify(updatedUser));
-                  setUser(updatedUser);
-                  setActiveView('submissions');
-                  toast({ title: 'Tenders', description: 'Switched to Tenders Department.' }); 
-                }} 
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  activeView === 'submissions' && user?.department === DEPARTMENTS.TENDERS 
-                    ? 'bg-slate-800 text-white' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <Briefcase className="h-4 w-4" />
-                Tenders
-              </button>
-
-              <p className="px-3 text-xs text-slate-500 uppercase tracking-wider font-semibold mt-6 mb-3">System</p>
-              <button 
-                onClick={() => { 
-                  setActiveView('settings');
-                  setSearchTerm('');
-                  setFilterStatus('all');
-                  toast({ title: 'Settings', description: 'Manage system settings.' }); 
-                }} 
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
-                  activeView === 'settings' 
-                    ? 'bg-slate-800 text-white' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </button>
-            </>
-          )}
-        </nav>
-
-        {/* User Info */}
-        <div className="p-4 border-t border-slate-700/50">
-          <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-10 h-10 rounded-full bg-[#003366] flex items-center justify-center text-white font-bold text-sm">
-              {user.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'AD'}
+          <div className="mt-auto p-6 border-t border-white/5 bg-black/20">
+            <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-white/5 mb-4 group cursor-pointer hover:bg-white/10 transition-colors">
+               <div className="w-10 h-10 rounded-full bg-[#14B8A6] flex items-center justify-center text-white font-black group-hover:rotate-12 transition-transform">
+                  {user?.name?.charAt(0)}
+               </div>
+               <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-bold truncate tracking-tight">{user?.name}</p>
+                  <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest truncate">{user?.adminLevel}</p>
+               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user.name}</p>
-              <p className="text-xs text-slate-400 truncate">{user.email}</p>
-            </div>
-            <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-400 rounded-lg transition-colors">
-              <LogOut className="h-4 w-4" />
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10"
+            >
+              <LogOut size={18} />
+              <span className="font-bold text-xs uppercase tracking-widest">Sign Out</span>
             </button>
           </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Main Content Area */}
-      <div className="lg:ml-72 p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8">
+      {/* Main Content */}
+      <main className="flex-1 min-h-screen overflow-y-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
@@ -725,16 +519,29 @@ const AdminDashboard = () => {
                 ? 'Configure system-wide settings and preferences'
                 : `Managing ${DEPARTMENT_LABELS[user.department] || 'submissions'} submissions.`}
             </p>
+        <header className="h-24 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 sticky top-0 z-40 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button className="lg:hidden p-2 text-slate-500" onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}>
+              <Menu size={24} />
+            </button>
+            <div>
+              <h2 className="text-xl font-black text-slate-900 capitalize tracking-tight">{activeView.replace('-', ' ')}</h2>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span>Terminal Session Active</span>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <Badge variant="outline" className={`text-sm px-3 py-1.5 ${
-              user.adminLevel === 'superadmin' 
-                ? 'border-purple-200 text-purple-700 bg-purple-50' 
-                : 'border-[#003366]/20 text-[#0A4D8C] bg-[#E8F0F9]'
-            }`}>
-              <Shield className="h-3.5 w-3.5 mr-1.5" />
-              {user.adminLevel === 'superadmin' ? 'Super Admin' : 'Admin'}
-            </Badge>
+          
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-3 bg-slate-50 px-5 py-2.5 rounded-2xl border border-slate-100">
+              <Clock size={16} className="text-slate-400" />
+              <span className="text-sm font-bold text-slate-600 tracking-tight">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            </div>
+            <button className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors relative shadow-sm">
+               <Bell size={18} />
+               <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-[#14B8A6] border-2 border-white rounded-full"></span>
+            </button>
           </div>
         </div>
 
@@ -1066,25 +873,73 @@ const AdminDashboard = () => {
                             <span>•</span>
                             <span>{sub.submittedDate}</span>
                           </div>
+        </header>
+
+        <div className="p-8 max-w-[1400px] mx-auto pb-12">
+          {/* Dashboard/Overview View */}
+          {activeView === 'dashboard' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <StatTile label="Current Backlog" value={stats.total} icon={Inbox} accent={BRAND.blue} helper="Active Requests" />
+                  <StatTile label="Pending Review" value={stats.pending} icon={Clock} accent={BRAND.yellow} helper="Action Required" />
+                  <StatTile label="Approvals" value={stats.approved} icon={CheckCircle} accent={BRAND.emerald} helper="YTD Issued" />
+                  <StatTile label="System Health" value="Optimum" icon={Zap} accent={BRAND.accent} helper="Latency < 45ms" />
+               </div>
+
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <Card className="lg:col-span-2 border-0 shadow-sm rounded-[2.5rem] overflow-hidden">
+                     <CardHeader className="bg-white border-b border-slate-100 p-8">
+                        <div className="flex items-center justify-between">
+                           <CardTitle className="text-xl font-black text-slate-900">Institutional Throughput</CardTitle>
+                           <Badge variant="outline" className="rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-widest border-slate-200">Real-time Pipeline</Badge>
                         </div>
-                        {getStatusBadge(sub.status)}
-                      </div>
-
-                      <p className="text-slate-600 mb-4 line-clamp-2">{sub.description}</p>
-
-                      {/* Admin Notes */}
-                      {sub.adminNotes && (
-                        <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100">
-                          <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Admin Notes</p>
-                          <p className="text-sm text-slate-700">{sub.adminNotes}</p>
+                     </CardHeader>
+                     <CardContent className="p-8">
+                        <div className="h-[400px] w-full">
+                           <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={[
+                                { name: 'Licensing', apps: departmentStats.licensing.total, pending: departmentStats.licensing.pending },
+                                { name: 'Complaints', apps: departmentStats.complaints.total, pending: departmentStats.complaints.pending },
+                                { name: 'Tenders', apps: departmentStats.tenders.total, pending: departmentStats.tenders.pending },
+                                { name: 'QoS', apps: 42, pending: 2 }
+                              ]}>
+                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                                 <XAxis dataKey="name" stroke="#94A3B8" fontSize={11} fontWeight={700} tickLine={false} axisLine={false} dy={10} />
+                                 <YAxis stroke="#94A3B8" fontSize={11} fontWeight={700} tickLine={false} axisLine={false} />
+                                 <Tooltip 
+                                    contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }}
+                                    cursor={{ fill: '#F8FAFC' }}
+                                 />
+                                 <Bar dataKey="apps" fill="#14B8A6" radius={[8, 8, 8, 8]} barSize={32} />
+                              </BarChart>
+                           </ResponsiveContainer>
                         </div>
-                      )}
+                     </CardContent>
+                  </Card>
 
-                      {/* Review Info */}
-                      {sub.reviewedBy && (
-                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
-                          <CheckCheck className="h-3.5 w-3.5" />
-                          Reviewed by <span className="font-semibold">{sub.reviewedBy}</span> on {new Date(sub.reviewedAt).toLocaleDateString()}
+                  <Card className="border-0 shadow-sm rounded-[2.5rem] overflow-hidden">
+                     <CardHeader className="bg-white border-b border-slate-100 p-8">
+                        <CardTitle className="text-xl font-black text-slate-900">Distribution</CardTitle>
+                     </CardHeader>
+                     <CardContent className="p-8 pb-4">
+                        <div className="h-[300px] w-full">
+                           <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                 <Pie
+                                    data={[
+                                       { name: 'Approved', value: stats.approved },
+                                       { name: 'Pending', value: stats.pending },
+                                       { name: 'Rejected', value: stats.rejected }
+                                    ]}
+                                    innerRadius={70} outerRadius={100} paddingAngle={12} dataKey="value" stroke="none"
+                                 >
+                                    <Cell fill="#10B981" />
+                                    <Cell fill="#F59E0B" />
+                                    <Cell fill="#F43F5E" />
+                                 </Pie>
+                                 <Tooltip />
+                              </PieChart>
+                           </ResponsiveContainer>
                         </div>
                       )}
 
@@ -1175,66 +1030,108 @@ const AdminDashboard = () => {
                         )}
                       </div>
                     </CardContent>
+                        <div className="space-y-4 pt-4 border-t border-slate-100 mt-4">
+                           {[
+                              { label: 'Approved', color: 'bg-emerald-500', val: stats.approved },
+                              { label: 'Pending', color: 'bg-amber-500', val: stats.pending },
+                              { label: 'Rejected', color: 'bg-rose-500', val: stats.rejected }
+                           ].map((item, i) => (
+                              <div key={i} className="flex items-center justify-between">
+                                 <div className="flex items-center gap-3">
+                                    <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                                    <span className="text-sm font-bold text-slate-600">{item.label}</span>
+                                 </div>
+                                 <span className="text-sm font-black text-slate-900">{item.val} items</span>
+                              </div>
+                           ))}
+                        </div>
+                     </CardContent>
                   </Card>
-                ))
-              )}
+               </div>
             </div>
-          </>
-        )}
+          )}
 
-        {/* User Management View - Only for Superadmins */}
-        {activeView === 'users' && user?.adminLevel === 'superadmin' && (
-          <>
-            {showUserForm ? (
-              <div className="mb-8">
-                <div className="mb-6">
-                  <button
-                    onClick={() => {
-                      setShowUserForm(false);
-                      setEditingUser(null);
-                    }}
-                    className="text-[#003366] hover:underline text-sm font-medium"
+          {/* Applications/Submissions View */}
+          {activeView === 'submissions' && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              {user?.department === 'tenders' && (
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit border border-slate-200 shadow-inner mb-6">
+                  <button 
+                    onClick={() => setTenderView('submissions')}
+                    className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${tenderView === 'submissions' ? 'bg-white text-teal-600 shadow-xl shadow-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
                   >
-                    ← Back to Users
+                    Bids & Submissions
+                  </button>
+                  <button 
+                    onClick={() => setTenderView('postings')}
+                    className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${tenderView === 'postings' ? 'bg-white text-teal-600 shadow-xl shadow-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Active Notices
                   </button>
                 </div>
-                <UserForm
-                  user={editingUser}
-                  onSubmit={handleUserSubmit}
-                  onCancel={() => {
-                    setShowUserForm(false);
-                    setEditingUser(null);
-                  }}
-                  loading={userLoading}
-                />
-              </div>
-            ) : (
-              <>
-                {/* User Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <Card className="bg-white">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-slate-500 font-medium">Total Users</p>
-                          <p className="text-3xl font-bold text-slate-900 mt-1">{userStats.totalUsers}</p>
-                        </div>
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
-                          <Users className="h-6 w-6 text-slate-600" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+              )}
 
-                  <Card className="bg-white">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-slate-500 font-medium">Admin Users</p>
-                          <p className="text-3xl font-bold text-blue-600 mt-1">{userStats.adminCount}</p>
+              {user?.department === 'tenders' && tenderView === 'postings' ? (
+                showTenderForm ? (
+                  <Card className="border-0 shadow-2xl rounded-[3rem] overflow-hidden animate-in zoom-in duration-300">
+                    <CardHeader className="p-12 border-b bg-slate-50">
+                      <CardTitle className="text-3xl font-black text-slate-900">{editingTender ? 'Edit Tender Notice' : 'Post New Procurement Notice'}</CardTitle>
+                      <CardDescription className="text-base mt-2 font-medium">Provide comprehensive details for the open tender opportunity.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-12">
+                      <form onSubmit={handleTenderFormSubmit} className="space-y-8">
+                        <div className="grid md:grid-cols-2 gap-8">
+                           <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Tender Reference Number</Label>
+                            <Input 
+                              required 
+                              value={formData.tenderNumber} 
+                              onChange={(e) => setFormData({...formData, tenderNumber: e.target.value})}
+                              placeholder="e.g. BOCRA/TEN/2026/01"
+                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Notice Title</Label>
+                            <Input 
+                              required 
+                              value={formData.title} 
+                              onChange={(e) => setFormData({...formData, title: e.target.value})}
+                              placeholder="Official tender title..."
+                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Procurement Category</Label>
+                            <Input 
+                              required 
+                              value={formData.category} 
+                              onChange={(e) => setFormData({...formData, category: e.target.value})}
+                              placeholder="e.g. IT, Infrastructure, Consultancy"
+                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Closing Date & Time</Label>
+                            <Input 
+                              type="datetime-local"
+                              required 
+                              value={formData.closingDate} 
+                              onChange={(e) => setFormData({...formData, closingDate: e.target.value})}
+                              className="h-16 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-bold"
+                            />
+                          </div>
                         </div>
-                        <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                          <Shield className="h-6 w-6 text-blue-600" />
+                        <div className="space-y-4">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-[#14B8A6]">Detailed Scope & Requirements</Label>
+                          <textarea 
+                            required
+                            value={formData.description}
+                            onChange={(e) => setFormData({...formData, description: e.target.value})}
+                            rows={6}
+                            className="w-full p-6 rounded-[2rem] border-slate-200 focus:ring-2 focus:ring-[#14B8A6]/20 font-medium leading-relaxed bg-slate-50"
+                            placeholder="Describe the tender requirements, eligibility, and evaluation criteria..."
+                          />
                         </div>
                       </div>
                     </CardContent>
@@ -1251,70 +1148,213 @@ const AdminDashboard = () => {
                           <Users className="h-6 w-6 text-[#003366]" />
                         </div>
                       </div>
+                        <div className="flex gap-4 pt-6">
+                          <Button type="button" variant="outline" className="h-16 flex-1 rounded-2xl border-2 border-slate-900 font-bold" onClick={() => setShowTenderForm(false)}>Discard</Button>
+                          <Button type="submit" className="h-16 flex-[2] rounded-2xl bg-[#14B8A6] hover:bg-[#0D9488] text-white font-black shadow-xl shadow-teal-500/20">
+                            {tenderPostingsLoading ? <Loader2 className="animate-spin h-6 w-6" /> : (editingTender ? 'Update Notice' : 'Post Tender Notice')}
+                          </Button>
+                        </div>
+                      </form>
                     </CardContent>
                   </Card>
-                </div>
-
-                {/* Create Button */}
-                <div className="mb-6">
-                  <Button
-                    onClick={() => setShowUserForm(true)}
-                    className="bg-[#003366] hover:bg-[#0A4D8C] text-white gap-2"
+                ) : (
+                  <SurfaceCard 
+                    title="Current Tender Notices" 
+                    subtitle="Manage procurement opportunities published on the public portal."
+                    icon={Briefcase}
+                    action={
+                      <Button className="bg-[#14B8A6] hover:bg-teal-600 h-12 rounded-2xl px-6 font-bold text-white shadow-lg" onClick={() => {
+                        setEditingTender(null);
+                        setFormData({ tenderNumber: '', title: '', category: '', closingDate: '', estimatedValue: '', location: '', description: '' });
+                        setShowTenderForm(true);
+                      }}>
+                        <Plus className="mr-2" /> Publish New Tender
+                      </Button>
+                    }
                   >
-                    <Plus className="h-4 w-4" />
-                    Create New User
-                  </Button>
-                </div>
-
-                {/* Users List */}
-                <UserList
-                  users={users}
-                  searchTerm={userSearchTerm}
-                  onSearchChange={setUserSearchTerm}
-                  onEdit={(user) => {
-                    setEditingUser(user);
-                    setShowUserForm(true);
-                  }}
-                  onDelete={handleDeleteUser}
-                  onView={setViewingUser}
-                  loading={userLoading}
-                />
-              </>
-            )}
-          </>
-        )}
-
-        {/* Applications View - Only for Superadmins */}
-        {activeView === 'applications' && user?.adminLevel === 'superadmin' && (
-          <>
-            {/* Search & Filter */}
-            <Card className="border-0 shadow-md mb-6">
-              <CardContent className="pt-6">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <Input
-                      placeholder="Search by name, subject, or reference..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 border-slate-200"
-                    />
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Reference</th>
+                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Title & Category</th>
+                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Closing Date</th>
+                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {tenderPostings.map((t) => (
+                            <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="px-8 py-6 font-mono text-xs font-bold text-teal-600 leading-none">{t.tenderNumber}</td>
+                              <td className="px-8 py-6">
+                                <p className="text-sm font-bold text-slate-900">{t.title}</p>
+                                <p className="text-xs font-medium text-slate-400">{t.category}</p>
+                              </td>
+                              <td className="px-8 py-6">
+                                <Badge className="bg-amber-100 text-amber-700 border-0 text-[10px] font-black tracking-tight px-3 py-1">
+                                  {new Date(t.closingDate).toLocaleDateString()}
+                                </Badge>
+                              </td>
+                              <td className="px-8 py-6">
+                                <div className="flex gap-2">
+                                  <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 rounded-xl" onClick={() => {
+                                    setEditingTender(t);
+                                    setFormData({ ...t });
+                                    setShowTenderForm(true);
+                                  }}>
+                                    <Edit2 size={16} />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="hover:bg-rose-50 hover:text-rose-600 rounded-xl" onClick={() => handleDeleteTenderPosting(t.id)}>
+                                    <Trash2 size={16} />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </SurfaceCard>
+                )
+              ) : (
+                <SurfaceCard 
+                  title={`${DEPARTMENT_LABELS[user?.department || 'licensing']} Queue`}
+                  subtitle="Actionable repository for incoming departmental requests."
+                  icon={Inbox}
+                >
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Reference Number</th>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Applicant Info</th>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Current State</th>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Operations</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {activeData.map((app) => (
+                          <tr key={app.id} className="hover:bg-slate-50/50 transition-colors group">
+                            <td className="px-8 py-6 font-mono text-xs font-bold text-teal-600">{app.token || app.id.slice(0, 12)}</td>
+                            <td className="px-8 py-6">
+                              <p className="text-sm font-bold text-slate-900">{app.citizenName}</p>
+                              <p className="text-xs font-medium text-slate-400">{app.citizenEmail}</p>
+                            </td>
+                            <td className="px-8 py-6">{getStatusBadge(app.status)}</td>
+                            <td className="px-8 py-6">
+                              <Button 
+                                onClick={() => setSelectedSubmission(app)}
+                                className="bg-slate-900 hover:bg-[#14B8A6] text-white rounded-xl font-black text-[10px] uppercase tracking-widest h-10 px-6 transition-all"
+                              >
+                                {app.status === 'pending' ? 'Decision Required' : 'Review Manifest'}
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="flex h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003366]"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="Submitted">Submitted</option>
-                    <option value="Registered">Registered</option>
-                    <option value="Under Review">Under Review</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
-                  </select>
+                </SurfaceCard>
+              )}
+            </div>
+          )}
+
+          {/* Users View */}
+          {activeView === 'users' && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">Staff Directory</h2>
+                  <p className="text-slate-500 font-medium">Manage institutional access and departmental privileges.</p>
                 </div>
-              </CardContent>
-            </Card>
+                {!showUserForm && (
+                  <Button className="bg-[#14B8A6] hover:bg-teal-600 text-white rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-widest shadow-lg" onClick={() => setShowUserForm(true)}>
+                    <Plus className="mr-2 h-4 w-4 stroke-[3px]" /> Authenticate New Staff
+                  </Button>
+                )}
+              </div>
+
+              {showUserForm ? (
+                <Card className="border-0 shadow-2xl rounded-[3rem] overflow-hidden">
+                  <CardHeader className="p-12 border-b bg-slate-50 flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl font-black text-slate-900">{editingUser ? 'Policy Modification' : 'Access Provisioning'}</CardTitle>
+                      <CardDescription className="font-medium">Establishing secure credentials for institutional staff.</CardDescription>
+                    </div>
+                    <Button variant="ghost" className="rounded-2xl text-slate-400 hover:text-slate-900" onClick={() => setShowUserForm(false)}>
+                      <X size={24} />
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="p-12">
+                    <UserForm 
+                      initialData={editingUser} 
+                      onSubmit={() => {
+                        setShowUserForm(false);
+                        loadUsers();
+                      }}
+                      onCancel={() => setShowUserForm(false)}
+                      isLoading={usersLoading}
+                    />
+                  </CardContent>
+                </Card>
+              ) : (
+                <UserList 
+                  users={users} 
+                  loading={usersLoading} 
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  onEdit={(u) => { setEditingUser(u); setShowUserForm(true); }}
+                  onDelete={async (u) => { if (confirm(`Revoke access for ${u.name}?`)) { await adminApi.deleteUser(u.id); loadUsers(); } }}
+                  onView={setViewingUser}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Applications/All Submissions View */}
+          {activeView === 'applications' && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <SurfaceCard 
+                title="Consolidated System Audit" 
+                subtitle="A complete record of every transaction initiated across the BOCRA ecosystem."
+                icon={ShieldCheck}
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Auth Token</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Entity</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Portfolio</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Current State</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Audit</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {allApplications.map((app) => (
+                        <tr key={app.id} className="hover:bg-slate-50/20 transition-colors">
+                          <td className="px-8 py-6 font-mono text-xs font-bold text-teal-600">{app.token || 'MANIFEST_ERR'}</td>
+                          <td className="px-8 py-6">
+                            <p className="text-sm font-bold text-slate-900">{app.citizenName}</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase">{app.citizenEmail}</p>
+                          </td>
+                          <td className="px-8 py-6">
+                            <Badge className={`${DEPARTMENT_COLORS[app.department]?.bg || 'bg-slate-900'} text-white border-0 text-[10px] font-black uppercase tracking-widest px-3 py-1`}>
+                              {app.department}
+                            </Badge>
+                          </td>
+                          <td className="px-8 py-6">{getStatusBadge(app.status)}</td>
+                          <td className="px-8 py-6">
+                            <Button variant="outline" className="rounded-2xl border-2 border-slate-900 font-black text-[10px] uppercase h-10 px-6" onClick={() => setSelectedSubmission(app)}>Inspect</Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </SurfaceCard>
+            </div>
+          )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
@@ -1358,139 +1398,92 @@ const AdminDashboard = () => {
                     <div className="w-12 h-12 rounded-2xl bg-[#EDF7E8] flex items-center justify-center">
                       <CheckCircle className="h-6 w-6 text-[#4E9933]" />
                     </div>
+          {/* Settings View */}
+          {activeView === 'settings' && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+               <Card className="border-0 shadow-xl rounded-[2.5rem] overflow-hidden shadow-slate-200">
+                <CardHeader className="p-10 border-b bg-slate-50 flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-3xl font-black text-slate-900 tracking-tight">System Node Configuration</CardTitle>
+                    <CardDescription className="text-slate-500 text-base mt-2 font-medium">Protocol weights, security barriers, and automated dispatch control.</CardDescription>
                   </div>
-                </CardContent>
-              </Card>
-              <Card className="border-0 shadow-md bg-white">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">Rejected</p>
-                      <p className="text-3xl font-bold text-red-600 mt-1">
-                        {allApplications.filter(a => a.status === 'Rejected').length}
-                      </p>
+                  <Button 
+                    onClick={handleSaveSettings} 
+                    disabled={settingsLoading}
+                    className="bg-slate-900 hover:bg-[#14B8A6] text-white px-10 h-14 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl transition-all active:scale-95"
+                  >
+                    {settingsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-3 h-5 w-5" />}
+                    Commit System Changes
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0 min-h-[600px]">
+                  <Tabs defaultValue="general" className="w-full">
+                    <div className="px-10 bg-white border-b sticky top-0 z-10">
+                      <TabsList className="h-16 bg-transparent gap-8">
+                        {['general', 'security', 'email', 'automation', 'activity'].map((tab) => (
+                          <TabsTrigger 
+                            key={tab}
+                            value={tab} 
+                            className="h-16 rounded-none border-b-[3px] border-transparent data-[state=active]:border-[#14B8A6] data-[state=active]:bg-transparent px-2 font-black text-[10px] uppercase tracking-widest text-slate-400 data-[state=active]:text-slate-900 transition-all"
+                          >
+                            {tab}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
                     </div>
-                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center">
-                      <XCircle className="h-6 w-6 text-red-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
 
-            {/* Applications List */}
-            <div className="space-y-4">
-              {submissionsLoading ? (
-                <Card className="border-0 shadow-md">
-                  <CardContent className="py-16 text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#003366] mx-auto" />
-                    <p className="text-slate-500 mt-4">Loading applications...</p>
-                  </CardContent>
-                </Card>
-              ) : allApplications.filter((app) => {
-                const matchesSearch =
-                  app.citizenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  app.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  app.id?.toLowerCase().includes(searchTerm.toLowerCase());
-                const matchesFilter = filterStatus === 'all' || app.status === filterStatus;
-                return matchesSearch && matchesFilter;
-              }).length === 0 ? (
-                <Card className="border-0 shadow-md">
-                  <CardContent className="py-16 text-center">
-                    <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-slate-700 mb-2">No Applications Found</h3>
-                    <p className="text-slate-500">
-                      {searchTerm || filterStatus !== 'all'
-                        ? 'Try adjusting your search or filter criteria.'
-                        : 'No applications have been received yet.'}
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                allApplications.filter((app) => {
-                  const matchesSearch =
-                    app.citizenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    app.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    app.id?.toLowerCase().includes(searchTerm.toLowerCase());
-                  const matchesFilter = filterStatus === 'all' || app.status === filterStatus;
-                  return matchesSearch && matchesFilter;
-                }).map((app) => (
-                  <Card key={app.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-bold text-slate-900">{app.subject}</h3>
-                            {getPriorityBadge(app.priority)}
+                    <div className="p-12">
+                      <TabsContent value="general" className="mt-0 space-y-10">
+                        <div className="grid md:grid-cols-2 gap-10">
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-teal-600">Portal Instance Name</Label>
+                            <Input value={settings.siteName} onChange={(e) => handleSettingsChange('siteName', e.target.value)} className="h-14 rounded-xl border-slate-200 focus:ring-2 focus:ring-teal-500/20 font-bold" />
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
-                            <span className="flex items-center gap-1.5">
-                              <Hash className="h-3.5 w-3.5" />
-                              <span className="font-mono font-semibold text-[#003366]">{app.id}</span>
-                            </span>
-                            <span>•</span>
-                            <span>{app.citizenName} ({app.citizenEmail})</span>
-                            <span>•</span>
-                            <span>{app.submittedDate}</span>
-                          </div>
-                          <div className="text-xs text-slate-400 font-medium">
-                            Department: <span className="text-slate-600">{app.department ? app.department.toUpperCase() : 'N/A'}</span>
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-teal-600">Emergency Protocol Email</Label>
+                            <Input value={settings.supportEmail} onChange={(e) => handleSettingsChange('supportEmail', e.target.value)} className="h-14 rounded-xl border-slate-200 focus:ring-2 focus:ring-teal-500/20 font-bold" />
                           </div>
                         </div>
-                        {getStatusBadge(app.status)}
-                      </div>
 
-                      <p className="text-slate-600 mb-4 line-clamp-2">{app.description}</p>
-
-                      {/* Admin Notes */}
-                      {app.adminNotes && (
-                        <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100">
-                          <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Admin Notes</p>
-                          <p className="text-sm text-slate-700">{app.adminNotes}</p>
+                        <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 flex items-center justify-between hover:bg-slate-100/50 transition-colors">
+                          <div className="flex gap-6">
+                            <div className="w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shadow-inner">
+                              <AlertCircle size={24} />
+                            </div>
+                            <div>
+                               <p className="font-black text-slate-900 text-lg leading-tight tracking-tight">Infrastructure Lockdown (Maintenance)</p>
+                               <p className="text-sm text-slate-500 font-medium">Redirect all public ingress to maintenance cluster. Emergency access only.</p>
+                            </div>
+                          </div>
+                          <Switch checked={settings.maintenanceMode} onCheckedChange={(val) => handleSettingsChange('maintenanceMode', val)} />
                         </div>
-                      )}
+                      </TabsContent>
 
-                      {/* Review Info */}
-                      {app.reviewedBy && (
-                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
-                          <CheckCheck className="h-3.5 w-3.5" />
-                          Reviewed by <span className="font-semibold">{app.reviewedBy}</span> on {new Date(app.reviewedAt).toLocaleDateString()}
-                        </div>
-                      )}
+                      <TabsContent value="security" className="mt-0 space-y-8">
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                            <div className="flex gap-6">
+                              <div className="w-14 h-14 bg-[#14B8A6]/10 text-teal-600 rounded-2xl flex items-center justify-center"><Lock size={24} /></div>
+                              <div>
+                                <p className="font-black text-slate-900 text-lg leading-tight tracking-tight">Biometric/Two-Factor Enforced</p>
+                                <p className="text-sm text-slate-500 font-medium">Require additional validation layers for all institutional access.</p>
+                              </div>
+                            </div>
+                            <Switch checked={settings.twoFactorAuth} onCheckedChange={(val) => handleSettingsChange('twoFactorAuth', val)} />
+                          </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-                        {selectedSubmission === app.id ? (
-                          <div className="flex-1 flex items-center gap-2">
-                            <Input
-                              placeholder="Add a note..."
-                              value={adminNote}
-                              onChange={(e) => setAdminNote(e.target.value)}
-                              disabled={submissionsLoading}
-                              className="flex-1 text-sm h-9"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              disabled={submissionsLoading || !adminNote.trim()}
-                              onClick={() => handleAddNote(app.id)}
-                              className="text-[#003366]"
-                            >
-                              {submissionsLoading ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Send className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              disabled={submissionsLoading}
-                              onClick={() => setSelectedSubmission(null)}
-                              className="text-slate-400"
-                            >
-                              Cancel
-                            </Button>
+                          <div className="flex items-center justify-between p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                            <div className="flex gap-6">
+                              <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center"><Clock size={24} /></div>
+                              <div>
+                                <p className="font-black text-slate-900 text-lg leading-tight tracking-tight">Automated Terminal Logout</p>
+                                <p className="text-sm text-slate-500 font-medium">Flush sessions after {settings.sessionTimeout} minutes of zero IO activity.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+                              <Input type="number" value={settings.sessionTimeout} onChange={(e) => handleSettingsChange('sessionTimeout', parseInt(e.target.value))} className="w-24 h-12 border-0 text-center font-black text-xl" />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-2">Min</span>
+                            </div>
                           </div>
                         ) : (
                           <>
@@ -1544,31 +1537,60 @@ const AdminDashboard = () => {
                   </Card>
                 ))
               )}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="activity" className="mt-0">
+                        <div className="rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+                          <table className="w-full text-left">
+                            <thead className="bg-slate-50">
+                              <tr>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Vector Timestamp</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Operation Log</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Origin Handle</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {recentActivities.map((log, i) => (
+                                <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="px-8 py-6 text-xs text-slate-500 font-mono">{new Date(log.timestamp).toLocaleString()}</td>
+                                  <td className="px-8 py-6 text-xs font-black text-slate-900 uppercase">{log.action}</td>
+                                  <td className="px-8 py-6 text-xs text-slate-500 font-bold">{log.userEmail || 'SYSTEM_CORE'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </TabsContent>
+                    </div>
+                  </Tabs>
+                </CardContent>
+              </Card>
             </div>
-          </>
-        )}
+          )}
 
-        {/* Settings View - Only for Superadmins */}
-        {activeView === 'settings' && user?.adminLevel === 'superadmin' && (
-          <Card className="border-0 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl">Settings Management</CardTitle>
-              <CardDescription>Configure system-wide settings and preferences</CardDescription>
-            </CardHeader>
-            <CardContent className="py-12 text-center">
-              <Settings className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-700 mb-2">Settings Coming Soon</h3>
-              <p className="text-slate-500">
-                System settings and configuration options will be available here.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+          {/* Licensing desk view logic */}
+          {activeView === 'licensing' && user?.adminLevel === 'superadmin' && (
+            <div className="animate-in fade-in duration-500">
+              <AdminLicensingView user={user} />
+            </div>
+          )}
+        </div>
+      </main>
 
-      {/* User Detail Modal */}
-      {viewingUser && (
-        <UserModal user={viewingUser} onClose={() => setViewingUser(null)} />
+      {/* Modals & Overlays */}
+      {viewingUser && <UserModal user={viewingUser} onClose={() => setViewingUser(null)} />}
+      
+      {selectedSubmission && (
+         <TenderDetailModal 
+            tender={selectedSubmission} 
+            onClose={() => setSelectedSubmission(null)}
+            onAddNote={handleAddNote}
+            onStatusChange={handleStatusChange}
+            loading={submissionsLoading}
+            adminNote={adminNote}
+            setAdminNote={setAdminNote}
+         />
       )}
     </div>
   );

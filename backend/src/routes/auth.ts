@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { validatePassword } from '../utils/passwordValidator.js';
+import { logUserAction, ACTIVITY_TYPES } from '../utils/activityLogger.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -55,6 +57,8 @@ router.post('/login', async (req: LoginRequest, res: Response) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
+      // Log failed login attempt
+      await logUserAction(user.id, 'Failed login attempt', ACTIVITY_TYPES.USER_LOGIN, req.ip, req.headers['user-agent'], 'Failed login', undefined);
       res.status(401).json({ error: 'Invalid email or password' });
       return;
     }
@@ -72,6 +76,9 @@ router.post('/login', async (req: LoginRequest, res: Response) => {
       JWT_SECRET,
       { expiresIn: '7d' }
     );
+
+    // Log successful login
+    await logUserAction(user.id, 'User logged in', ACTIVITY_TYPES.USER_LOGIN, req.ip, req.headers['user-agent']);
 
     res.json({
       token,
@@ -103,6 +110,16 @@ router.post('/register', async (req: RegisterRequest, res: Response) => {
       return;
     }
 
+    // Validate password against security policy
+    const passwordValidation = await validatePassword(password);
+    if (!passwordValidation.valid) {
+      res.status(400).json({
+        error: 'Password does not meet security requirements',
+        details: passwordValidation.errors,
+      });
+      return;
+    }
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -127,6 +144,9 @@ router.post('/register', async (req: RegisterRequest, res: Response) => {
         department: userType === 'admin' ? department : null,
       },
     });
+
+    // Log user creation
+    await logUserAction(user.id, 'User account created', ACTIVITY_TYPES.USER_CREATED, req.ip, req.headers['user-agent']);
 
     // Generate JWT token
     const token = jwt.sign(

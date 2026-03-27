@@ -41,8 +41,13 @@ const ComplaintsView = () => {
   const [showNewComplaintForm, setShowNewComplaintForm] = useState(false);
   const [selectedComplaintId, setSelectedComplaintId] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState({
+    status: [],
+    complaintType: [],
+  });
   const [formData, setFormData] = useState({
     complaintType: '',
     againstOperator: '',
@@ -109,11 +114,35 @@ const ComplaintsView = () => {
     setShowDetailModal(true);
   };
 
-  const filteredComplaints = complaints.filter(complaint =>
-    complaint.ticketNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    complaint.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    complaint.againstOperator?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleFilterToggle = (filterType, value) => {
+    setSelectedFilters(prev => {
+      const currentFilters = prev[filterType] || [];
+      if (currentFilters.includes(value)) {
+        return { ...prev, [filterType]: currentFilters.filter(f => f !== value) };
+      } else {
+        return { ...prev, [filterType]: [...currentFilters, value] };
+      }
+    });
+  };
+
+  const handleClearFilters = () => {
+    setSelectedFilters({ status: [], complaintType: [] });
+  };
+
+  const filteredComplaints = complaints.filter(complaint => {
+    // Search filter
+    const matchesSearch = complaint.ticketNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.againstOperator?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Status filter
+    const matchesStatus = selectedFilters.status.length === 0 || selectedFilters.status.includes(complaint.status);
+
+    // Complaint type filter
+    const matchesType = selectedFilters.complaintType.length === 0 || selectedFilters.complaintType.includes(complaint.complaintType);
+
+    return matchesSearch && matchesStatus && matchesType;
+  });
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -133,13 +162,16 @@ const ComplaintsView = () => {
           <p className="text-slate-500 mt-2">Log and monitor consumer disputes with service providers ({complaints.length})</p>
         </div>
         <div className="flex items-center space-x-3">
-          <Button className="flex items-center space-x-2 px-4 py-2.5 bg-orange-600 hover:bg-[#F47920] rounded-xl text-white font-bold text-sm" onClick={() => setShowNewComplaintForm(true)}>
+          <button onClick={() => setShowNewComplaintForm(true)} className="flex items-center space-x-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 rounded-xl text-white font-bold text-sm">
             <Plus className="w-4 h-4" />
             <span>New Complaint</span>
-          </Button>
-          <button className="flex items-center space-x-2 px-4 py-2.5 bg-[#0a0f1e] border border-[#1e293b] rounded-xl text-slate-400 hover:text-white transition-all text-sm font-bold shadow-lg">
+          </button>
+          <button onClick={() => setShowFilterModal(true)} className="flex items-center space-x-2 px-4 py-2.5 bg-[#0a0f1e] border border-[#1e293b] rounded-xl text-slate-400 hover:text-white transition-all text-sm font-bold shadow-lg">
             <Filter className="w-4 h-4" />
             <span>Filter</span>
+            {(selectedFilters.status.length > 0 || selectedFilters.complaintType.length > 0) && (
+              <span className="ml-1 text-orange-400">•</span>
+            )}
           </button>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -200,6 +232,81 @@ const ComplaintsView = () => {
         </div>
       )}
 
+      {/* Filter Modal */}
+      {showFilterModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+          <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-[2.5rem] p-8 max-w-md w-full">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-bold text-slate-100">Filter Complaints</h3>
+              <button onClick={() => setShowFilterModal(false)} className="p-2 hover:bg-slate-800/50 rounded-lg transition-all">
+                <X className="w-6 h-6 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-bold text-slate-300 mb-3">Status</label>
+                <div className="space-y-2">
+                  {['Registered', 'Acknowledged', 'In Progress', 'Resolved', 'Closed'].map(status => (
+                    <label key={status} className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={selectedFilters.status.includes(status)}
+                        onChange={() => handleFilterToggle('status', status)}
+                        className="w-4 h-4 rounded border-[#1e293b] bg-[#0f1419] accent-orange-500 cursor-pointer"
+                      />
+                      <span className="text-sm text-slate-300 group-hover:text-white transition-colors">{status}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Complaint Type Filter */}
+              <div>
+                <label className="block text-sm font-bold text-slate-300 mb-3">Complaint Type</label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'service_quality', label: 'Service Quality' },
+                    { value: 'billing', label: 'Billing Issue' },
+                    { value: 'customer_service', label: 'Customer Service' },
+                    { value: 'network', label: 'Network Problem' },
+                    { value: 'other', label: 'Other' },
+                  ].map(type => (
+                    <label key={type.value} className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={selectedFilters.complaintType.includes(type.value)}
+                        onChange={() => handleFilterToggle('complaintType', type.value)}
+                        className="w-4 h-4 rounded border-[#1e293b] bg-[#0f1419] accent-orange-500 cursor-pointer"
+                      />
+                      <span className="text-sm text-slate-300 group-hover:text-white transition-colors">{type.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-8 border-t border-[#1e293b] mt-8">
+              <Button 
+                variant="outline"
+                onClick={handleClearFilters}
+                className="flex-1 rounded-xl px-6 py-3"
+              >
+                Clear All
+              </Button>
+              <Button 
+                onClick={() => setShowFilterModal(false)}
+                className="flex-1 bg-orange-600 hover:bg-orange-500 rounded-xl px-6 py-3 text-white font-bold"
+              >
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Complaints List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -228,6 +335,11 @@ const ComplaintsView = () => {
                   <Badge variant="outline" className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(complaint.status)}`}>
                     {complaint.status}
                   </Badge>
+                  {complaint.adminNotes && (
+                    <Badge variant="outline" className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border-blue-500/30 text-blue-400 bg-blue-500/10" title={`Admin feedback: ${complaint.adminNotes.substring(0, 50)}...`}>
+                      ℹ️ Feedback
+                    </Badge>
+                  )}
                 </div>
               </div>
 

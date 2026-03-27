@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Briefcase, 
   Clock, 
@@ -10,10 +10,12 @@ import {
   AlertCircle,
   Calendar,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Loader
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import TenderSpecsModal from '../components/TenderSpecsModal';
 
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
@@ -23,65 +25,74 @@ const Tenders = () => {
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [tenders, setTenders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [categories, setCategories] = useState(['All']);
+  const [selectedTender, setSelectedTender] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const API_URL = '/api';
 
-  const handleTenderAction = (tenderId) => {
-    toast({
-      title: "Reviewing Specifications",
-      description: `Opening procurement package for ${tenderId}...`,
-    });
-    // For demo, we navigate to submission
-    setTimeout(() => navigate('/tender-submission'), 1000);
+  // Fetch tender postings on mount
+  useEffect(() => {
+    fetchTenderPostings();
+  }, []);
+
+  const fetchTenderPostings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`${API_URL}/tender-postings/available?limit=20`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch tender postings');
+      }
+      
+      const data = await response.json();
+      const postings = data.postings || [];
+      
+      // Transform API data to match component structure
+      const transformedTenders = postings.map((posting) => ({
+        id: posting.tenderNumber,
+        title: posting.title,
+        category: posting.category || 'General',
+        status: posting.status,
+        closingDate: posting.closingDate ? new Date(posting.closingDate).toISOString().split('T')[0] : 'N/A',
+        location: posting.location || 'Not specified',
+        description: posting.description,
+        type: 'Public Tender',
+        estimatedValue: posting.estimatedValue,
+        tenderNumber: posting.tenderNumber,
+        documents: posting.documents || []
+      }));
+      
+      setTenders(transformedTenders);
+      
+      // Extract unique categories
+      const uniqueCategories = ['All', ...new Set(transformedTenders.map(t => t.category))];
+      setCategories(uniqueCategories);
+    } catch (err) {
+      console.error('Error fetching tenders:', err);
+      setError(err.message);
+      toast({
+        title: "Error",
+        description: "Failed to load tenders. Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const tenders = [
-    {
-      id: "BOCRA/TEN/001/2024",
-      title: "Provision of Quality of Service Monitoring Solutions",
-      category: "IT & Telecommunications",
-      status: "Open",
-      closingDate: "2024-04-15",
-      location: "Gaborone, Botswana",
-      description: "Invitation for tenders for the supply, installation and commissioning of a nationwide QoS monitoring system for mobile and fixed networks.",
-      type: "Public Tender"
-    },
-    {
-      id: "BOCRA/TEN/002/2024",
-      title: "Consultancy for Spectrum Management Framework",
-      category: "Consultancy",
-      status: "Closed",
-      closingDate: "2024-03-20",
-      location: "Gaborone, Botswana",
-      description: "Requests for proposals from qualified consultants to review and update the national spectrum management framework.",
-      type: "Request for Proposal"
-    },
-    {
-      id: "BOCRA/TEN/003/2024",
-      title: "Supply of Technical Lab Equipment",
-      category: "Equipment",
-      status: "Open",
-      closingDate: "2024-05-10",
-      location: "Gaborone, Botswana",
-      description: "Bidders are invited to supply and deliver various laboratory testing instruments for technical compliance monitoring.",
-      type: "Supply Contract"
-    },
-    {
-      id: "BOCRA/TEN/004/2024",
-      title: "Information Security Audit Services",
-      category: "IT & Telecommunications",
-      status: "Open",
-      closingDate: "2024-04-30",
-      location: "Remote/Gaborone",
-      description: "Annual security audit of internal systems and regional communication infrastructure.",
-      type: "Services"
-    }
-  ];
-
-  const categories = ['All', 'IT & Telecommunications', 'Consultancy', 'Equipment', 'Services'];
-
-  const filteredTenders = tenders.filter(t => 
+  const filteredTenders = tenders.filter((t) => 
     (activeCategory === 'All' || t.category === activeCategory) &&
     (t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.id.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  const handleTenderAction = (tender) => {
+    setSelectedTender(tender);
+    setModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-100 pb-20 pt-28">
@@ -142,7 +153,29 @@ const Tenders = () => {
 
         {/* Tenders Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {filteredTenders.length > 0 ? (
+          {loading ? (
+            <div className="lg:col-span-2 py-20 text-center">
+              <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-400 animate-spin">
+                <Loader className="w-10 h-10" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-2 tracking-tighter">Loading Tenders</h3>
+              <p className="text-slate-500 font-medium tracking-tight">Fetching the latest procurement opportunities...</p>
+            </div>
+          ) : error ? (
+            <div className="lg:col-span-2 py-20 text-center">
+              <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 text-red-400">
+                <AlertCircle className="w-10 h-10" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-2 tracking-tighter">Error Loading Tenders</h3>
+              <p className="text-slate-500 font-medium tracking-tight">{error}</p>
+              <Button 
+                onClick={fetchTenderPostings}
+                className="mt-6 bg-[#00897B] hover:bg-[#4DB6AC] text-white rounded-2xl px-8 py-2 font-black uppercase tracking-widest text-[10px]"
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : filteredTenders.length > 0 ? (
             filteredTenders.map((tender, i) => (
               <div 
                 key={tender.id} 
@@ -199,6 +232,8 @@ const Tenders = () => {
                   <Button 
                     onClick={() => handleTenderAction(tender.id)}
                     className="bg-[#00897B] hover:bg-[#4DB6AC] text-white rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[#001F40]/20 group-hover:scale-105 transition-all"
+                    onClick={() => handleTenderAction(tender)}
+                    className="bg-[#00897B] hover:bg-[#4DB6AC] text-white rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-teal-900/20 group-hover:scale-105 transition-all"
                   >
                     View Specs
                     <ChevronRight className="ml-2 w-4 h-4" />
@@ -247,6 +282,16 @@ const Tenders = () => {
           </div>
         </div>
       </div>
+
+      {/* Tender Specs Modal */}
+      <TenderSpecsModal 
+        tender={selectedTender} 
+        isOpen={modalOpen} 
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedTender(null);
+        }} 
+      />
     </div>
   );
 };

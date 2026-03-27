@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { documents } from '../mockData';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Link } from 'react-router-dom';
+import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   FileText,
   Download,
@@ -11,12 +13,20 @@ import {
   ShieldCheck,
   Scale,
   ClipboardList,
-  ArrowRight
+  ArrowRight,
+  Filter,
+  Layers,
+  Archive,
+  ArrowUpRight,
+  ChevronDown
 } from 'lucide-react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 
 const Documents = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const { scrollYProgress } = useScroll();
+  const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
   const categories = useMemo(() => {
     const unique = [...new Set(documents.map((doc) => doc.category))];
@@ -36,217 +46,268 @@ const Documents = () => {
     });
   }, [searchTerm, activeCategory]);
 
-  const getCategoryAccent = (category) => {
-    const tones = {
+  const getCategoryStyles = (category) => {
+    const styles = {
       Legislation: {
-        bg: 'bg-[#E8F0F9]',
-        text: 'text-[#2C7DA0]',
-        border: 'border-[#cfe0f1]',
+        color: 'from-[#0A192F] to-[#25406E]',
+        accent: '#75B2DD',
         icon: Scale,
+        label: 'Legal'
       },
       Framework: {
-        bg: 'bg-[#E6F4EC]',
-        text: 'text-[#2EAD6F]',
-        border: 'border-[#cde8d7]',
-        icon: ClipboardList,
+        color: 'from-[#16A34A] to-[#0D5A2E]',
+        accent: '#16A34A',
+        icon: Layers,
+        label: 'Sector'
       },
       Guidelines: {
-        bg: 'bg-[#FFF5DA]',
-        text: 'text-[#8A6A00]',
-        border: 'border-[#f2e0a2]',
+        color: 'from-[#F59E0B] to-[#B45309]',
+        accent: '#F59E0B',
         icon: ShieldCheck,
+        label: 'Technical'
       },
     };
 
-    return (
-      tones[category] || {
-        bg: 'bg-[#FFF0E6]',
-        text: 'text-[#F47920]',
-        border: 'border-[#ffd8bf]',
-        icon: FileText,
-      }
-    );
+    return styles[category] || {
+      color: 'from-slate-700 to-slate-900',
+      accent: '#94A3B8',
+      icon: FileText,
+      label: 'Other'
+    };
   };
 
-  const summaryCards = [
-    {
-      label: 'Total Resources',
-      value: documents.length,
-      icon: FileText,
-      tone: 'icon-badge-navy',
-    },
-    {
-      label: 'Legislation',
-      value: documents.filter((doc) => doc.category === 'Legislation').length,
-      icon: Scale,
-      tone: 'icon-badge-orange',
-    },
-    {
-      label: 'Frameworks',
-      value: documents.filter((doc) => doc.category === 'Framework').length,
-      icon: ClipboardList,
-      tone: 'icon-badge-navy',
-    },
-    {
-      label: 'Guidelines',
-      value: documents.filter((doc) => doc.category === 'Guidelines').length,
-      icon: ShieldCheck,
-      tone: 'icon-badge-orange',
-    },
+  const stats = [
+    { label: 'Total Resources', value: documents.length, icon: Archive, delay: 0 },
+    { label: 'Legislation', value: documents.filter(d => d.category === 'Legislation').length, icon: Scale, delay: 0.1 },
+    { label: 'Frameworks', value: documents.filter(d => d.category === 'Framework').length, icon: Layers, delay: 0.2 },
+    { label: 'Technical Guidelines', value: documents.filter(d => d.category === 'Guidelines').length, icon: ShieldCheck, delay: 0.3 },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F5F3] relative">
-      <section className="relative bg-[#003366] py-24 overflow-hidden">
-        <div className="heritage-overlay basket-pattern text-white opacity-[0.04]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white relative z-10">
-          <p className="section-kicker text-[#F47920] mb-3">Public resources</p>
-          <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mx-auto mb-6">
-            <BookOpen className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-6">Documents & Resources</h1>
-          <p className="text-lg sm:text-xl max-w-3xl mx-auto text-white/80 leading-relaxed">
-            Access BOCRA legislation, frameworks, guidelines, and other public regulatory resources in one place.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen bg-white overflow-x-hidden">
+      {/* Immersive Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <motion.div style={{ y: yBg }} className="absolute inset-0 opacity-[0.03]">
+          <div className="absolute inset-0 bg-[#0A192F]" style={{ maskImage: 'radial-gradient(circle at 2px 2px, black 1px, transparent 0)', maskSize: '40px 40px' }} />
+        </motion.div>
+        <div className="absolute top-[-20%] right-[-10%] w-[1000px] h-[1000px] bg-[#75B2DD]/5 rounded-full blur-[150px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[800px] h-[800px] bg-blue-900/5 rounded-full blur-[120px]" />
+      </div>
 
-      <section className="py-12 -mt-10 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
-            {summaryCards.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Card key={item.label} className="soft-panel">
-                  <CardContent className="pt-6 text-center">
-                    <div className={`w-12 h-12 ${item.tone} mx-auto mb-4`}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <div className="text-3xl font-bold text-slate-900">{item.value}</div>
-                    <div className="text-sm text-slate-600">{item.label}</div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="section-shell p-6 sm:p-8">
-            <div className="flex flex-col lg:flex-row gap-5 lg:items-center lg:justify-between">
-              <div>
-                <p className="section-kicker mb-2">Find a document</p>
-                <h2 className="section-title">Browse Resources</h2>
-              </div>
-
-              <div className="w-full lg:max-w-md relative">
-                <Search className="h-4 w-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <Input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by title or category..."
-                  className="pl-11 h-12 bg-white border-[#d9e6f4] focus-visible:ring-[#003366]"
-                />
-              </div>
+      <main className="relative z-10">
+        {/* Modern Hero Section */}
+        <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+            <div className="max-w-2xl text-center lg:text-left">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex justify-center lg:justify-start gap-2 mb-8"
+              >
+                {['#DC2626', '#16A34A', '#F59E0B', '#75B2DD'].map((color, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: color }}
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                  />
+                ))}
+              </motion.div>
+              
+              <motion.p 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-[#0A192F] font-black tracking-[0.4em] uppercase text-[10px] mb-4"
+              >
+                Knowledge Repository
+              </motion.p>
+              
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="font-heading font-black text-5xl lg:text-8xl text-[#0A192F] mb-8 tracking-tighter leading-[0.85]"
+              >
+                Resource <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#75B2DD] via-[#0A192F] to-[#75B2DD] animate-gradient-x bg-[length:200%_auto]">
+                  LIBRARY
+                </span>
+              </motion.h1>
+              
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-xl"
+              >
+                Centralized access to Botswana's communications legislation, 
+                regulatory frameworks, and technical guidelines.
+              </motion.p>
             </div>
 
-            <div className="flex flex-wrap gap-3 mt-6">
-              {categories.map((category) => {
-                const active = activeCategory === category;
-                return (
-                  <button
-                    key={category}
-                    onClick={() => setActiveCategory(category)}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border ${
-                      active
-                        ? 'bg-[#003366] text-white border-[#003366]'
-                        : 'bg-white text-[#003366] border-[#d9e6f4] hover:bg-[#E8F0F9]'
-                    }`}
-                  >
-                    {category}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-10 pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {filteredDocuments.length === 0 ? (
-            <Card className="section-shell text-center py-12">
-              <CardContent>
-                <div className="w-16 h-16 icon-badge-navy mx-auto mb-4">
-                  <Search className="h-7 w-7" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-3">No matching resources</h3>
-                <p className="text-slate-600 max-w-md mx-auto">
-                  Try adjusting your search term or selecting a different category.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredDocuments.map((doc) => {
-                const tone = getCategoryAccent(doc.category);
-                const Icon = tone.icon;
-
-                return (
-                  <Card key={doc.id} className="section-shell h-full relative overflow-hidden">
-                    <div className="absolute top-0 left-0 h-full w-1.5 rounded-full bg-[#003366]"></div>
-
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div
-                          className={`w-14 h-14 rounded-2xl flex items-center justify-center ${tone.bg} ${tone.text} border ${tone.border}`}
-                        >
-                          <Icon className="h-7 w-7" />
-                        </div>
-
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] border ${tone.bg} ${tone.text} ${tone.border}`}
-                        >
-                          {doc.category}
-                        </span>
-                      </div>
-
-                      <CardTitle className="text-xl leading-snug mt-4">{doc.title}</CardTitle>
-                    </CardHeader>
-
-                    <CardContent className="pt-0 flex flex-col justify-between h-full">
-                      <p className="text-slate-600 text-sm leading-relaxed mb-6">
-                        Access this BOCRA resource for reference, compliance guidance, and regulatory information.
-                      </p>
-
-                      <div className="flex flex-wrap gap-3 mt-auto">
-                        <a
-                          href={doc.downloadUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="w-full sm:w-auto"
-                        >
-                          <Button variant="cta" className="rounded-xl w-full sm:w-auto">
-                            <Download className="h-4 w-4 mr-2" />
-                            Download
-                          </Button>
-                        </a>
-
-                        <Button variant="outline" className="rounded-xl w-full sm:w-auto">
-                          View Details
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      </div>
+            <div className="grid grid-cols-2 gap-4 w-full lg:w-[480px]">
+              {stats.map((stat) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: stat.delay }}
+                >
+                  <Card className="border-0 shadow-[0_10px_30px_rgba(10,25,47,0.04)] rounded-[2rem] bg-white/40 backdrop-blur-xl border border-white/50 hover:bg-white transition-all duration-500 overflow-hidden group">
+                    <CardContent className="p-8">
+                       <div className="flex items-center justify-between mb-4">
+                          <div className="w-10 h-10 rounded-xl bg-[#0A192F]/5 flex items-center justify-center text-[#0A192F] group-hover:bg-[#0A192F] group-hover:text-white transition-all duration-500">
+                             <stat.icon className="w-5 h-5" />
+                          </div>
+                          <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-[#75B2DD] transition-colors" />
+                       </div>
+                       <p className="text-3xl font-black text-[#0A192F] tracking-tighter mb-1">{stat.value}</p>
+                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</p>
                     </CardContent>
                   </Card>
-                );
-              })}
+                </motion.div>
+              ))}
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+
+        {/* Search & Global Filter */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+           <div className="bg-[#0A192F] rounded-[2.5rem] p-4 lg:p-6 shadow-2xl flex flex-col lg:flex-row items-center gap-4 border border-white/10">
+              <div className="relative w-full flex-1 group">
+                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 transition-colors group-hover:text-[#75B2DD]" />
+                 <Input 
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   placeholder="Search regulatory documents..."
+                   className="bg-slate-900/50 border-0 h-16 rounded-[1.5rem] pl-16 text-white text-lg placeholder:text-slate-600 focus-visible:ring-1 focus-visible:ring-[#75B2DD]/50"
+                 />
+              </div>
+              
+              <div className="flex gap-2 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+                 {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`h-16 px-8 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                        activeCategory === cat 
+                        ? 'bg-[#75B2DD] text-[#0A192F] shadow-[0_10px_20px_rgba(117,178,221,0.2)]' 
+                        : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-white/5'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                 ))}
+              </div>
+           </div>
+        </section>
+
+        {/* Resources Grid */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 min-h-[600px]">
+           <AnimatePresence mode="popLayout">
+              {filteredDocuments.length === 0 ? (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="flex flex-col items-center justify-center text-center pt-20"
+                >
+                   <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mb-8">
+                      <Search className="w-10 h-10 text-slate-300" />
+                   </div>
+                   <h2 className="text-3xl font-black text-[#0A192F] mb-4 tracking-tighter">No items found</h2>
+                   <p className="text-slate-500 font-medium">Try refining your search terms or category selection.</p>
+                </motion.div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                   {filteredDocuments.map((doc, i) => {
+                      const styles = getCategoryStyles(doc.category);
+                      return (
+                        <motion.div
+                          key={doc.id}
+                          layout
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ delay: (i % 9) * 0.05 }}
+                        >
+                          <Card className="border-0 shadow-[0_15px_45px_rgba(10,25,47,0.04)] rounded-[2.5rem] h-full transition-all duration-500 bg-white/60 backdrop-blur-xl border border-white/40 hover:bg-white hover:translate-y-[-8px] group overflow-hidden">
+                             <div className="p-8 pb-4 flex flex-col h-full">
+                                <div className="flex items-center justify-between mb-8">
+                                   <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${styles.color} flex items-center justify-center text-white shadow-xl group-hover:rotate-6 transition-transform duration-500`}>
+                                      <styles.icon className="w-7 h-7" />
+                                   </div>
+                                   <Badge className="bg-slate-100 text-[#0A192F] border-0 px-3 py-1 font-black text-[9px] uppercase tracking-widest">
+                                      {styles.label}
+                                   </Badge>
+                                </div>
+                                
+                                <h3 className="font-heading font-black text-xl text-[#0A192F] mb-4 leading-[1.2] tracking-tight group-hover:text-[#75B2DD] transition-colors">
+                                   {doc.title}
+                                </h3>
+                                
+                                <p className="text-slate-500 text-sm font-medium leading-relaxed mb-10 opacity-70">
+                                   Official {doc.category.toLowerCase()} resource provided by BOCRA for regulatory compliance and public information within the communication sector.
+                                </p>
+
+                                <div className="mt-auto flex items-center justify-between gap-4 pt-6 border-t border-slate-50">
+                                   <a 
+                                     href={doc.downloadUrl} 
+                                     className="flex-1"
+                                   >
+                                      <Button className="w-full bg-[#0A192F] hover:bg-slate-800 text-white rounded-2xl h-14 font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-950/10">
+                                         <Download className="w-4 h-4 mr-2" />
+                                         Download PDF
+                                      </Button>
+                                   </a>
+                                   <Button variant="ghost" className="w-14 h-14 rounded-2xl bg-slate-50 text-[#0A192F] hover:bg-[#75B2DD]/10 hover:text-[#75B2DD]">
+                                      <ArrowRight className="w-5 h-5" />
+                                   </Button>
+                                </div>
+                             </div>
+                          </Card>
+                        </motion.div>
+                      );
+                   })}
+                </div>
+              )}
+           </AnimatePresence>
+        </section>
+
+        {/* Global Archive Indicator */}
+        <section className="py-32 px-4">
+           <div className="max-w-3xl mx-auto text-center">
+              <BookOpen className="w-12 h-12 text-[#0A192F]/5 mx-auto mb-10" />
+              <h2 className="text-3xl font-black text-[#0A192F] mb-6 tracking-tighter leading-tight">Can't find what you're looking for?</h2>
+              <p className="text-slate-500 font-medium mb-12 text-lg">
+                 Our technical support team can assist you with specific documentation requests or 
+                 clarify regulatory requirements for your application.
+              </p>
+              <Button asChild size="lg" className="bg-[#0A192F] hover:bg-white text-white hover:text-[#0A192F] font-black rounded-full px-12 h-16 transition-all duration-500 shadow-2xl border-2 border-transparent hover:border-[#0A192F]">
+                <Link to="/contact">Contact Support Hub</Link>
+              </Button>
+           </div>
+        </section>
+      </main>
+
+      {/* Global CSS for the library */}
+      <style>{`
+        .animate-gradient-x {
+          background-size: 200% 100%;
+          animation: gradient-x 5s ease infinite;
+        }
+        @keyframes gradient-x {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };

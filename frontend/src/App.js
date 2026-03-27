@@ -18,17 +18,19 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TypeApproval from './pages/TypeApproval';
-import LicenseApplication from './pages/LicenseApplication';
-import Complaints from './pages/Complaints';
 import QoSReporting from './pages/QoSReporting';
 import AdminDashboard from './pages/AdminDashboard';
 import DomainRegistry from './pages/DomainRegistry';
 import LiveQoSMonitoring from './pages/LiveQoSMonitoring';
 import Tenders from './pages/Tenders';
+import TenderDetail from './pages/TenderDetail';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import CyberIncidentReport from './pages/CyberIncidentReport';
 import TenderSubmission from './pages/TenderSubmission';
+import Analytics from './pages/Analytics';
+import Services from './pages/Services';
+import Careers from './pages/Careers';
 
 import Ruby from './components/Chatbot';
 import CookieConsent from './components/CookieConsent';
@@ -73,16 +75,18 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/type-approval" element={<TypeApproval />} />
-            <Route path="/license-application" element={<LicenseApplication />} />
-            <Route path="/complaints" element={<Complaints />} />
             <Route path="/qos-reporting" element={<QoSReporting />} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/domain-registry" element={<DomainRegistry />} />
             <Route path="/live-qos" element={<LiveQoSMonitoring />} />
             <Route path="/tenders" element={<Tenders />} />
+            <Route path="/tenders/:tenderId" element={<TenderDetail />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/cyber-incident" element={<CyberIncidentReport />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/careers" element={<Careers />} />
           <Route path="/tender-submission" element={<ProtectedRoute><TenderSubmission /></ProtectedRoute>} />
         </Routes>
         </Layout>

@@ -152,10 +152,10 @@ const ComplaintDetail = ({ complaintId, onClose, onUpdate, onDelete }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-lg shadow-xl max-w-2xl w-full my-8">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-[#0a0f1e] border border-[#1e293b] rounded-lg shadow-xl max-w-2xl w-full max-h-[calc(100vh-2rem)] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#1e293b]">
+        <div className="flex items-center justify-between p-6 border-b border-[#1e293b] flex-shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={onClose} className="text-slate-400 hover:text-slate-200">
               <ChevronLeft className="w-5 h-5" />
@@ -168,7 +168,7 @@ const ComplaintDetail = ({ complaintId, onClose, onUpdate, onDelete }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {/* Ticket and Status */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -188,6 +188,36 @@ const ComplaintDetail = ({ complaintId, onClose, onUpdate, onDelete }) => {
             <p className="text-slate-400 text-sm font-medium mb-2">Progress</p>
             <ComplaintTimeline status={complaint.status} />
           </div>
+
+          {/* Admin Feedback Section */}
+          {(complaint.adminNotes || complaint.reviewedBy) && (
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 space-y-3">
+              <h3 className="text-slate-300 font-semibold flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                Admin Response
+              </h3>
+              {complaint.reviewedBy && (
+                <div className="flex items-center justify-between text-sm">
+                  <div className="space-y-1">
+                    <p className="text-slate-400">Reviewed by</p>
+                    <p className="text-white font-medium">{complaint.reviewedBy}</p>
+                  </div>
+                  {complaint.reviewedAt && (
+                    <div className="space-y-1 text-right">
+                      <p className="text-slate-400">Date</p>
+                      <p className="text-white font-medium">{new Date(complaint.reviewedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {complaint.adminNotes && (
+                <div className="bg-[#0f1419] rounded p-3 border border-blue-500/20">
+                  <p className="text-slate-400 text-xs font-medium mb-2">Notes</p>
+                  <p className="text-slate-200 text-sm leading-relaxed">{complaint.adminNotes}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Complaint Details */}
           <div className="space-y-4">
@@ -307,7 +337,7 @@ const ComplaintDetail = ({ complaintId, onClose, onUpdate, onDelete }) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 p-6 border-t border-[#1e293b]">
+        <div className="flex gap-2 p-6 border-t border-[#1e293b] flex-shrink-0 bg-[#0a0f1e]">
           {isEditing ? (
             <>
               <Button

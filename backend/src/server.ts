@@ -9,6 +9,10 @@ import authRoutes from './routes/auth.js';
 import citizenRoutes from './routes/citizen.js';
 import usersRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
+import publicRoutes from './routes/public.js';
+import settingsRoutes from './routes/settings.js';
+import activitiesRoutes from './routes/activities.js';
+import typeApprovalRoutes from './routes/typeApproval.js';
 // @ts-ignore
 import * as fs from 'fs';
 
@@ -21,8 +25,15 @@ const app: Express = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use(
   cors({
     credentials: true,
@@ -31,6 +42,9 @@ app.use(
     allowedHeaders: ['*'],
   })
 );
+
+// Serve uploaded files
+app.use('/uploads', express.static(uploadsDir));
 
 // Request logging middleware (Audit Logging for Cybersecurity Act)
 const auditLogStream = fs.createWriteStream(path.join(__dirname, '../audit.log'), { flags: 'a' });
@@ -72,8 +86,20 @@ apiRouter.use('/auth', authRoutes);
 // User management routes (superadmin only)
 apiRouter.use('/users', usersRoutes);
 
+// System settings routes (superadmin only)
+apiRouter.use('/settings', settingsRoutes);
+
+// Activity log routes (superadmin only)
+apiRouter.use('/activities', activitiesRoutes);
+
 // Admin routes (admin level users)
 apiRouter.use('/admin', adminRoutes);
+
+// Type Approval routes (public, no authentication required)
+apiRouter.use('/type-approval', typeApprovalRoutes);
+
+// Public routes (isps, tender postings, etc.)
+apiRouter.use('/', publicRoutes);
 
 // Citizen routes (protected)
 apiRouter.use('/', citizenRoutes);
@@ -140,10 +166,24 @@ apiRouter.get('/status/:id', async (req: Request, res: Response) => {
 // Mount API router with /api prefix
 app.use('/api', apiRouter);
 
+// Function to print all routes for debug
+const printRoutes = (path: string, layer: any) => {
+  if (layer.route) {
+    layer.route.stack.forEach((s: any) => {
+      const method = s.method.toUpperCase();
+      console.log(`${method} ${path}${layer.route.path}`);
+    });
+  } else if (layer.name === 'router' && layer.handle.stack) {
+    layer.handle.stack.forEach((s: any) => {
+      printRoutes(`${path}${layer.regexp.source.replace('\\/?(?=\\/|$)', '')}`, s);
+    });
+  }
+};
+
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error('SERVER ERROR:', err);
+  res.status(500).json({ error: 'Internal server error', details: err.message });
 });
 
 // Graceful shutdown
